@@ -1,0 +1,19 @@
+name: OWASP ZAP Security Scan
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      - name: Ejecutar OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'https://example.com'
+          cmd_options: '-a'
