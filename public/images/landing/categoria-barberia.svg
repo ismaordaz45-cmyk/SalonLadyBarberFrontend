@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">
+  <rect width="400" height="280" fill="#f1f5f9"/>
+  <rect x="140" y="60" width="120" height="160" rx="8" fill="#dc2626"/>
+  <rect x="155" y="75" width="90" height="130" fill="#f8fafc"/>
+  <rect x="155" y="75" width="45" height="130" fill="#1e293b"/>
+  <text x="200" y="250" text-anchor="middle" fill="#334155" font-family="system-ui,sans-serif" font-size="13" font-weight="600">Barbería</text>
+</svg>

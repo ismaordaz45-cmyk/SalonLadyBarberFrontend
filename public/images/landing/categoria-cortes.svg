@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">
+  <rect width="400" height="280" fill="#e0f2fe"/>
+  <path d="M120 80 L200 200 L280 80" fill="none" stroke="#0369a1" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="200" y="250" text-anchor="middle" fill="#0369a1" font-family="system-ui,sans-serif" font-size="14" font-weight="600">Cortes</text>
+</svg>

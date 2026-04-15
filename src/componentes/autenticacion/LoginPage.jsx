@@ -272,7 +272,12 @@ function LoginPage({
                 borderRadius: "12px",
                 bgcolor: COLORS.primaryBlue,
                 boxShadow: "none",
-                "&:hover": { bgcolor: "#1D4ED8", boxShadow: "none" }
+                "&:hover": { bgcolor: "#1D4ED8", boxShadow: "none" },
+                ...(isLoading
+                  ? {
+                      animation: "barberSubmitGlow 1.15s ease-in-out infinite"
+                    }
+                  : {})
               }}
             >
               {isLoading ? "Iniciando…" : "Iniciar sesión"}

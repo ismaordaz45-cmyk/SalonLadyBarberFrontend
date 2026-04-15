@@ -5,6 +5,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
+import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
+import BarberPole from "./BarberPole";
 
 import {
   Menu as MenuIcon
@@ -70,7 +72,7 @@ const EncabezadoPublico = () => {
     const path = location.pathname;
 
     if (path === "/" || path === "") setActive("inicio");
-    else if (path.includes("/catalogo")) setActive("catalogo");
+    else if (path.includes("/catalogo")) setActive("servicios");
     else if (path.includes("/login")) setActive("login");
     else if (path.includes("/nosotros") || path.includes("/contacto")) setActive("nosotros");
     else if (path.includes("/servicios")) setActive("servicios");
@@ -86,16 +88,16 @@ const EncabezadoPublico = () => {
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}/api/perfil-empresa`
-        );
+        const { data } = await axios.get(`${API_BASE_URL}/api/perfil-empresa`, {
+          barberOverlay: false
+        });
 
         if (data?.nombre) {
           setNombreEmpresa(data.nombre);
         }
 
         if (data?.logo) {
-          setLogoUrl(`data:image/jpeg;base64,${data.logo}`);
+          setLogoUrl(logoBase64ToDataUrl(data.logo));
         }
       } catch (error) {
         console.warn("Perfil público no disponible:", error?.message);
@@ -108,7 +110,6 @@ const EncabezadoPublico = () => {
   const getPath = (key) => {
     const paths = {
       inicio: "/",
-      catalogo: "/catalogo",
       servicios: "/servicios",
       nosotros: "/nosotros",
       novedades: "/novedades",
@@ -122,10 +123,6 @@ const EncabezadoPublico = () => {
     {
       key: "inicio",
       label: "Inicio"
-    },
-    {
-      key: "catalogo",
-      label: "Catálogo"
     },
     {
       key: "servicios",
@@ -170,18 +167,22 @@ const EncabezadoPublico = () => {
                 src={logoUrl}
                 alt="Logo"
                 sx={{
-                  width: 42,
-                  height: 42,
+                  width: 56,
+                  height: 56,
                   borderRadius: 1.5,
                   border: `1px solid ${COLORS.border}`,
-                  objectFit: "cover"
+                  objectFit: "contain",
+                  objectPosition: "center",
+                  bgcolor: "#F8FAFC",
+                  p: 0.1,
+                  boxSizing: "border-box"
                 }}
               />
             ) : (
               <Box
                 sx={{
-                  width: 42,
-                  height: 42,
+                  width: 56,
+                  height: 56,
                   borderRadius: 1.5,
                   bgcolor: "#F8FAFC",
                   color: COLORS.text,
@@ -196,6 +197,8 @@ const EncabezadoPublico = () => {
                 LB
               </Box>
             )}
+
+            <BarberPole size={38} width={11} sx={{ display: { xs: "none", md: "flex" } }} />
 
             <Box
               component="span"
@@ -306,10 +309,12 @@ const EncabezadoPublico = () => {
               sx={{
                 backgroundColor: COLORS.loginBg,
                 color: COLORS.white,
-                borderRadius: "12px",
-                px: 2.1,
-                py: 0.9,
+                borderRadius: "10px",
+                px: 1.7,
+                py: 0.7,
                 fontWeight: 600,
+                fontSize: "0.86rem",
+                minHeight: 36,
                 textTransform: "none",
                 "&:hover": {
                   backgroundColor: "#0F172A"

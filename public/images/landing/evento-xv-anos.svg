@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="xv" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ede9fe"/>
+      <stop offset="100%" stop-color="#ddd6fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#xv)"/>
+  <text x="400" y="260" text-anchor="middle" fill="#6d28d9" font-family="system-ui,sans-serif" font-size="120" font-weight="700" opacity="0.2">XV</text>
+  <circle cx="400" cy="240" r="100" fill="none" stroke="#7c3aed" stroke-width="6" stroke-opacity="0.4"/>
+  <text x="400" y="420" text-anchor="middle" fill="#5b21b6" font-family="system-ui,sans-serif" font-size="22" font-weight="600">XV Años</text>
+</svg>

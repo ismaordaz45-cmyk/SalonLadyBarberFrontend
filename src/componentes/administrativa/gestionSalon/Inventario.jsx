@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import {
   Box,
-  Container,
   Paper,
   Typography,
   Button,
@@ -30,7 +29,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Card,
   CardContent,
   Grid,
   FormControlLabel,
@@ -38,6 +36,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
+import { resolveServicioImagenUrl } from "../../../utils/resolveServicioImagenUrl";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -47,6 +46,11 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+
+import AdminPageShell from "../../../ui/admin/AdminPageShell";
+import AdminHeader from "../../../ui/admin/AdminHeader";
+import { GlassCard } from "../../../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 const PALETA = {
   principal: "#2C3E50",
@@ -127,7 +131,9 @@ function Inventario() {
     setLoadingInsumos(true);
     try {
       const { data } = await api.get("/api/insumos", {
-        params: { incluirInactivos: 1 }
+        params: { incluirInactivos: 1 },
+        barberHeadline: "Inventario",
+        barberMessage: "Cargando productos e insumos…"
       });
       setInsumos(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -229,37 +235,21 @@ function Inventario() {
     setSavingInsumo(true);
     try {
       if (insumoEditando) {
-        const { data } = await api.put(`/api/insumos/${insumoEditando.id}`, payload);
+        const { data } = await api.put(`/api/insumos/${insumoEditando.id}`, payload, {
+          barberHeadline: "Inventario",
+          barberMessage: "Guardando cambios del producto…"
+        });
         setInsumos((prev) =>
           prev.map((p) => (p.id === insumoEditando.id ? data : p))
         );
         handleCloseModal();
-        MySwal.fire({
-          icon: "success",
-          title: "Producto actualizado",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: alpha(PALETA.acento, 0.15),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
-        });
       } else {
-        const { data } = await api.post("/api/insumos", payload);
+        const { data } = await api.post("/api/insumos", payload, {
+          barberHeadline: "Inventario",
+          barberMessage: "Registrando el nuevo producto…"
+        });
         setInsumos((prev) => [data, ...prev]);
         handleCloseModal();
-        MySwal.fire({
-          icon: "success",
-          title: "Producto agregado",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: alpha(PALETA.acento, 0.15),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
-        });
       }
     } catch (err) {
       await MySwal.fire({
@@ -279,9 +269,14 @@ function Inventario() {
       prev.map((p) => (p.id === insumo.id ? { ...p, estaActivo: nuevoActivo } : p))
     );
     try {
-      await api.patch(`/api/insumos/${insumo.id}/activo`, {
-        estaActivo: nuevoActivo
-      });
+      await api.patch(
+        `/api/insumos/${insumo.id}/activo`,
+        { estaActivo: nuevoActivo },
+        {
+          barberHeadline: "Inventario",
+          barberMessage: "Actualizando estado del producto…"
+        }
+      );
     } catch (err) {
       // Revertir
       setInsumos((prev) =>
@@ -331,7 +326,7 @@ function Inventario() {
   };
 
   const imagenPreview = form.imagen
-    ? `data:image/jpeg;base64,${form.imagen}`
+    ? resolveServicioImagenUrl(form.imagen, api.defaults.baseURL)
     : null;
 
   if (loadingInsumos) {
@@ -352,62 +347,24 @@ function Inventario() {
   }
 
   return (
-    <Box sx={{ bgcolor: "#FFFFFF", py: 5, minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ fontFamily: "'Geist Sans', Arial, sans-serif" }}>
-        {/* ========== TÍTULO PÁGINA ========== */}
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2, mb: 4 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box
-              sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: PALETA.fondoIcono()
-              }}
-            >
-              <Inventory2RoundedIcon sx={{ color: PALETA.principal, fontSize: 30 }} />
-            </Box>
-            <Box>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{ fontFamily: "'Playfair Display', serif", color: PALETA.oscuro }}
-              >
-                Gestión de inventario
-              </Typography>
-              <Typography variant="body2" sx={{ color: PALETA.borde(0.8), mt: 0.5 }}>
-                Administra insumos, stock y productos del salón.
-              </Typography>
-            </Box>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddRoundedIcon />}
-            onClick={() => handleOpenModal()}
-            sx={{
-              bgcolor: PALETA.principal,
-              fontWeight: 600,
-              "&:hover": { bgcolor: PALETA.oscuro }
-            }}
-          >
-            Agregar producto
-          </Button>
-        </Box>
+    <>
+      <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+        <AdminHeader
+          eyebrow="Gestión del salón"
+          title="Gestión de inventario"
+          subtitle="Administra insumos, stock y productos del salón."
+          icon={<Inventory2RoundedIcon sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+          right={
+            <Button variant="contained" color="primary" startIcon={<AddRoundedIcon />} onClick={() => handleOpenModal()}>
+              Agregar producto
+            </Button>
+          }
+        />
 
         {/* ========== RESUMEN RÁPIDO ========== */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2,
-                bgcolor: alpha(PALETA.acento, 0.06)
-              }}
-            >
+            <GlassCard elevation={0} sx={{ bgcolor: alpha(P.accent, 0.06) }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -431,17 +388,10 @@ function Inventario() {
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2,
-                bgcolor: stockBajo > 0 ? alpha("#F59E0B", 0.08) : undefined
-              }}
-            >
+            <GlassCard elevation={0} sx={{ borderRadius: 2, bgcolor: stockBajo > 0 ? alpha("#F59E0B", 0.08) : undefined }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -465,16 +415,10 @@ function Inventario() {
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2
-              }}
-            >
+            <GlassCard elevation={0} sx={{ borderRadius: 2 }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -498,7 +442,7 @@ function Inventario() {
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
         </Grid>
 
@@ -641,7 +585,10 @@ function Inventario() {
                           {insumo.imagen ? (
                             <Box
                               component="img"
-                              src={`data:image/jpeg;base64,${insumo.imagen}`}
+                              src={resolveServicioImagenUrl(
+                                insumo.imagen,
+                                api.defaults.baseURL
+                              )}
                               alt={insumo.nombre}
                               sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
@@ -705,7 +652,7 @@ function Inventario() {
             </Table>
           </TableContainer>
         </Paper>
-      </Container>
+      </AdminPageShell>
 
       {/* ========== MODAL AGREGAR / EDITAR ========== */}
       <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
@@ -874,7 +821,7 @@ function Inventario() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 }
 

@@ -6,11 +6,9 @@ import {
   Checkbox,
   CircularProgress,
   FormControl,
-  FormControlLabel,
   FormGroup,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   Stack,
   Table,
@@ -30,6 +28,10 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ContentCutRoundedIcon from "@mui/icons-material/ContentCutRounded";
+
+import { GlassCard, IconWrapper } from "../../../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 function CsvImportExport({ mostrarTitulo = true }) {
 
@@ -514,29 +516,33 @@ function CsvImportExport({ mostrarTitulo = true }) {
     <Box sx={{ mt: 3.5 }}>
 
       {mostrarTitulo && (
-        <Typography
-          variant="h6"
-          fontWeight={800}
-          sx={{ color: "#1A252F", mb: 1.5 }}
-        >
-          Importar / Exportar CSV (Excel)
-        </Typography>
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+          <Box
+            sx={{
+              width: 46,
+              height: 46,
+              borderRadius: 3,
+              display: "grid",
+              placeItems: "center",
+              bgcolor: alpha(P.blue, 0.10),
+              border: `1px solid ${alpha(P.blue, 0.22)}`
+            }}
+          >
+            <ContentCutRoundedIcon sx={{ color: P.blue }} />
+          </Box>
+          <Box>
+            <Typography className="pcDisplay" sx={{ fontWeight: 900, color: P.primary, fontSize: "1.5rem" }}>
+              Importar / Exportar CSV
+            </Typography>
+            <Typography sx={{ color: P.secondary, fontSize: "0.92rem" }}>
+              Gestiona tus datos con archivos Excel
+            </Typography>
+          </Box>
+        </Stack>
       )}
 
-      <Typography
-        variant="body1"
-        sx={{ color: alpha("#1A252F", 0.85), mb: 3 }}
-      >
-      </Typography>
-
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2.5, md: 3 },
-          borderRadius: 4,
-          border: `1px solid ${alpha("#2C3E50", 0.12)}`
-        }}
-      >
+      <GlassCard elevation={0}>
+        <Box sx={{ p: { xs: 2.25, md: 2.75 } }}>
 
         <Stack spacing={2.25}>
 
@@ -607,31 +613,41 @@ function CsvImportExport({ mostrarTitulo = true }) {
             severity="info"
             sx={{
               borderRadius: 3,
-              bgcolor: alpha("#2C3E50", 0.06),
-              "& .MuiAlert-icon": { color: "#2C3E50" }
+              border: `1px solid ${alpha(P.blue, 0.22)}`,
+              bgcolor: alpha(P.blue, 0.06),
+              "& .MuiAlert-icon": { color: P.blue }
             }}
           >
-            Recomendación: exporta primero una plantilla CSV, edítala en Excel y luego impórtala.
+            <Typography variant="body2" sx={{ color: P.secondary }}>
+              <Box component="span" sx={{ fontWeight: 900, color: P.primary }}>
+                Recomendación:
+              </Box>{" "}
+              exporta primero una plantilla CSV, edítala en Excel y luego impórtala.
+            </Typography>
           </Alert>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 
             {/* EXPORTAR */}
 
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.5,
-                borderRadius: 4,
-                border: `1px solid ${alpha("#2C3E50", 0.12)}`
-              }}
-            >
+            <GlassCard elevation={0}>
+              <Box sx={{ p: 2.5 }}>
 
               <Stack spacing={1.75}>
 
-                <Typography fontWeight={800}>
-                  Exportar a CSV
-                </Typography>
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <IconWrapper bgcolor={P.blue}>
+                    <DownloadRoundedIcon sx={{ color: P.blue, fontSize: 18 }} />
+                  </IconWrapper>
+                  <Box>
+                    <Typography sx={{ fontWeight: 900, color: P.primary }}>
+                      Exportar a CSV
+                    </Typography>
+                    <Typography sx={{ color: P.secondary, fontSize: "0.85rem" }}>
+                      Descarga tus datos en formato Excel
+                    </Typography>
+                  </Box>
+                </Stack>
 
                 <FormControl size="small" fullWidth>
                   <InputLabel>Tipo de datos</InputLabel>
@@ -655,9 +671,7 @@ function CsvImportExport({ mostrarTitulo = true }) {
                   onClick={manejarExportacion}
                   disabled={cargando}
                   sx={{
-                    backgroundColor: "#D4AF37",
-                    color: "#1A252F",
-                    fontWeight: 800,
+                    fontWeight: 900,
                     borderRadius: 3
                   }}
                 >
@@ -671,12 +685,12 @@ function CsvImportExport({ mostrarTitulo = true }) {
                   disabled={!puedeImportar || cargando}
                   sx={{
                     borderRadius: 3,
-                    fontWeight: 700,
-                    color: "#2C3E50",
-                    borderColor: "rgba(44, 62, 80, 0.35)",
+                    fontWeight: 900,
+                    color: P.navy,
+                    borderColor: alpha(P.navy, 0.25),
                     "&:hover": {
-                      borderColor: "rgba(44, 62, 80, 0.6)",
-                      bgcolor: "rgba(44, 62, 80, 0.04)"
+                      borderColor: alpha(P.navy, 0.4),
+                      bgcolor: alpha(P.navy, 0.05)
                     }
                   }}
                 >
@@ -688,11 +702,11 @@ function CsvImportExport({ mostrarTitulo = true }) {
                     mt: 1.25,
                     p: 1.5,
                     borderRadius: 3,
-                    border: `1px solid ${alpha("#2C3E50", 0.12)}`,
-                    bgcolor: alpha("#2C3E50", 0.02)
+                    border: `1px solid ${alpha(P.border, 0.9)}`,
+                    bgcolor: alpha(P.border, 0.20)
                   }}
                 >
-                  <Typography sx={{ fontWeight: 800, mb: 1, color: "#2C3E50" }}>
+                  <Typography sx={{ fontWeight: 900, mb: 1, color: P.primary }}>
                     Campos a incluir en CSV
                   </Typography>
 
@@ -719,20 +733,24 @@ function CsvImportExport({ mostrarTitulo = true }) {
                         {camposExportables
                           .filter((c) => c !== "id")
                           .map((campo) => (
-                            <FormControlLabel
-                              key={campo}
-                              control={
-                                <Checkbox
-                                  checked={camposSeleccionados.includes(campo)}
-                                  onChange={() => toggleCampo(campo)}
-                                  size="small"
-                                />
-                              }
-                              label={campo}
-                            />
+                            <Box key={campo} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <Checkbox
+                                checked={camposSeleccionados.includes(campo)}
+                                onChange={() => toggleCampo(campo)}
+                                size="small"
+                                sx={{
+                                  "&.Mui-checked": { color: P.blue },
+                                  color: alpha(P.navy, 0.4)
+                                }}
+                              />
+                              <Typography variant="body2" sx={{ color: P.secondary, fontWeight: 700 }}>
+                                {campo}
+                              </Typography>
+                            </Box>
                           ))}
                       </Box>
                       <Typography variant="caption" sx={{ color: alpha("#1A252F", 0.7), mt: 0.5 }}>
+                        Campos por defecto: {Array.isArray(camposPorDefecto) ? camposPorDefecto.filter((c) => c !== "id").join(", ") : ""}
                       </Typography>
                     </FormGroup>
                   )}
@@ -885,24 +903,29 @@ function CsvImportExport({ mostrarTitulo = true }) {
 
               </Stack>
 
-            </Paper>
+              </Box>
+            </GlassCard>
 
             {/* IMPORTAR */}
 
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2.5,
-                borderRadius: 4,
-                border: `1px solid ${alpha("#2C3E50", 0.12)}`
-              }}
-            >
+            <GlassCard elevation={0}>
+              <Box sx={{ p: 2.5 }}>
 
               <Stack spacing={1.75}>
 
-                <Typography fontWeight={800}>
-                  Importar desde CSV
-                </Typography>
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <IconWrapper bgcolor={P.blue}>
+                    <UploadFileRoundedIcon sx={{ color: P.blue, fontSize: 18 }} />
+                  </IconWrapper>
+                  <Box>
+                    <Typography sx={{ fontWeight: 900, color: P.primary }}>
+                      Importar desde CSV
+                    </Typography>
+                    <Typography sx={{ color: P.secondary, fontSize: "0.85rem" }}>
+                      Carga datos desde un archivo Excel
+                    </Typography>
+                  </Box>
+                </Stack>
 
                 <FormControl size="small" fullWidth>
 
@@ -1001,6 +1024,20 @@ function CsvImportExport({ mostrarTitulo = true }) {
                         </Box>
                       )}
 
+                      {importPreviewExtras.length > 0 && (
+                        <Typography variant="caption" sx={{ display: "block", color: alpha("#1A252F", 0.75), mb: 1 }}>
+                          Columnas extra detectadas: <b>{importPreviewExtras.slice(0, 10).join(", ")}</b>
+                          {importPreviewExtras.length > 10 ? "…" : ""}
+                        </Typography>
+                      )}
+
+                      {importPreviewDuplicados.length > 0 && (
+                        <Typography variant="caption" sx={{ display: "block", color: alpha("#1A252F", 0.75), mb: 1 }}>
+                          Posibles duplicados (insumos nombre+unidad): <b>{importPreviewDuplicados.slice(0, 6).join(" · ")}</b>
+                          {importPreviewDuplicados.length > 6 ? "…" : ""}
+                        </Typography>
+                      )}
+
                       {importPreviewFaltantes.length > 0 && (
                         <Typography variant="body2" sx={{ color: "error.main", mb: 1 }}>
                           No se puede importar: faltan columnas requeridas ({importPreviewFaltantes.join(", ")}).
@@ -1044,28 +1081,27 @@ function CsvImportExport({ mostrarTitulo = true }) {
                 </Box>
 
                 <Button
-                  variant="contained"
                   onClick={manejarImportacion}
                   disabled={!puedeEjecutarImportacion}
-                  sx={{
-                    backgroundColor: "#2C3E50",
-                    color: "#FFFFFF",
-                    fontWeight: 800,
-                    borderRadius: 3
-                  }}
+                  variant="contained"
+                  color="primary"
+                  startIcon={<UploadFileRoundedIcon />}
+                  sx={{ fontWeight: 900, borderRadius: 3 }}
                 >
                   Importar {nombreTipo}
                 </Button>
 
               </Stack>
 
-            </Paper>
+              </Box>
+            </GlassCard>
 
           </Box>
 
         </Stack>
 
-      </Paper>
+        </Box>
+      </GlassCard>
 
     </Box>
   );

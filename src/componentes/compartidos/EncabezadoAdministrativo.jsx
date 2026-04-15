@@ -5,6 +5,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
 
 import {
   LogoutRounded,
@@ -27,6 +28,7 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
+import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
 const API_URL = "http://localhost:4000";
 
@@ -37,6 +39,7 @@ const API_URL = "http://localhost:4000";
 const EncabezadoAdministrativo = () => {
 
   const navigate = useNavigate();
+  const { runWithOverlay } = useBarberActionOverlay();
   const menuRef = useRef(null);
 
   const [active, setActive] = useState('inicio');
@@ -55,19 +58,15 @@ const EncabezadoAdministrativo = () => {
     const fetchPerfil = async () => {
       try {
 
-        const response = await axios.get(
-          `${API_URL}/api/perfil-empresa`
-        );
+        const response = await axios.get(`${API_URL}/api/perfil-empresa`, {
+          barberOverlay: false
+        });
 
         const data = response.data;
 
         setNombreEmpresa(data?.nombre || "Lady Barber ID'M");
 
-        setLogoUrl(
-          data?.logo
-            ? `data:image/jpeg;base64,${data.logo}`
-            : ''
-        );
+        setLogoUrl(data?.logo ? logoBase64ToDataUrl(data.logo) : "");
 
       } catch (error) {
         console.error('❌ Error al obtener perfil de la empresa:', error);
@@ -149,6 +148,10 @@ const EncabezadoAdministrativo = () => {
         navigate('/admin/estadisticas');
         break;
 
+      case "proyeccionCitas":
+        navigate('/admin/proyeccion-citas');
+        break;
+
       case "promociones":
         navigate('/admin/promociones');
         break;
@@ -170,14 +173,22 @@ const EncabezadoAdministrativo = () => {
   // Logout
   // ============================================
 
-  const handleLogout = () => {
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-
-    navigate("/login", { replace: true });
+  const handleLogout = async () => {
+    await runWithOverlay(
+      async () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        await new Promise((resolve) => setTimeout(resolve, 320));
+      },
+      "Cerrando tu sesión de administración…",
+      { headline: "¡Hasta pronto!", minMs: 880 }
+    );
+    navigate("/", { replace: true });
   };
 
   // ============================================
@@ -228,13 +239,26 @@ const EncabezadoAdministrativo = () => {
       >
         <Toolbar
           sx={{
-            minHeight: 84,
+            minHeight: { xs: "unset !important", md: 84 },
+            alignItems: { xs: "flex-start", md: "center" },
             px: { xs: 2.5, md: 4 },
-            py: 2
+            py: { xs: 2, md: 2 },
+            flexWrap: { xs: "wrap", md: "nowrap" },
+            rowGap: { xs: 1.5, md: 0 },
+            columnGap: 2
           }}
         >
           {/* Logo y nombre */}
-          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexGrow: 1,
+              minWidth: 0,
+              flexBasis: { xs: "100%", md: "auto" },
+              pr: { md: 2 }
+            }}
+          >
             {logoUrl ? (
               <Box
                 component="img"
@@ -247,7 +271,11 @@ const EncabezadoAdministrativo = () => {
                   mr: 2,
                   border: "3px solid #D4AF37",
                   boxShadow: 2,
-                  objectFit: "cover"
+                  objectFit: "contain",
+                  objectPosition: "center",
+                  bgcolor: "#F8FAFC",
+                  p: 0.35,
+                  boxSizing: "border-box"
                 }}
               />
             ) : (
@@ -278,7 +306,9 @@ const EncabezadoAdministrativo = () => {
                 letterSpacing: 0.5,
                 color: "#F9FAFB",
                 fontFamily: "'Playfair Display', serif",
-                fontSize: { xs: "1.3rem", md: "1.6rem" }
+                fontSize: { xs: "1.3rem", md: "1.6rem" },
+                wordBreak: "break-word",
+                lineHeight: 1.25
               }}
             >
               {nombreEmpresa}
@@ -291,8 +321,14 @@ const EncabezadoAdministrativo = () => {
               sx={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "flex-end",
                 gap: 1.5,
-                fontFamily: "'Geist Sans', Arial, sans-serif"
+                flexWrap: "wrap",
+                rowGap: 1,
+                fontFamily: "'Geist Sans', Arial, sans-serif",
+                flex: { md: "1 1 auto" },
+                minWidth: 0,
+                maxWidth: { md: "100%" }
               }}
             >
               <Button
@@ -475,6 +511,14 @@ const EncabezadoAdministrativo = () => {
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
+                    handleClick("proyeccionCitas");
+                    handleMenuClick("proyeccionCitas");
+                  }}
+                >
+                  Predicción de citas
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
                     handleClick("promociones");
                     handleMenuClick("promociones");
                   }}
@@ -604,6 +648,25 @@ const EncabezadoAdministrativo = () => {
             >
               <StorefrontOutlined sx={{ color: "#4ADE80", mr: 1 }} />
               Gestión del Salón
+            </Box>
+
+            <Box
+              component="li"
+              sx={{
+                py: 1.5,
+                px: 1,
+                pl: 3,
+                cursor: "pointer",
+                "&:hover": { bgcolor: alpha("#22C55E", 0.15) },
+                fontSize: "0.95rem",
+                color: alpha("#F9FAFB", 0.85)
+              }}
+              onClick={() => {
+                handleClick("proyeccionCitas");
+                handleMenuClick("proyeccionCitas");
+              }}
+            >
+              Predicción de citas
             </Box>
 
             <Box

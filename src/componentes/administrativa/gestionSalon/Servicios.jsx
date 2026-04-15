@@ -11,7 +11,6 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import {
   Box,
-  Container,
   Paper,
   Typography,
   Button,
@@ -24,13 +23,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Card,
   CardContent,
   Grid,
   FormControlLabel,
@@ -39,6 +36,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
+import { resolveServicioImagenUrl } from "../../../utils/resolveServicioImagenUrl";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -48,6 +46,11 @@ import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+
+import AdminPageShell from "../../../ui/admin/AdminPageShell";
+import AdminHeader from "../../../ui/admin/AdminHeader";
+import { GlassCard } from "../../../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 const MySwal = withReactContent(Swal);
 
@@ -109,7 +112,9 @@ function Servicios() {
     setLoadingServicios(true);
     try {
       const { data } = await api.get("/api/servicios", {
-        params: { incluirInactivos: 1 }
+        params: { incluirInactivos: 1 },
+        barberHeadline: "Catálogo de servicios",
+        barberMessage: "Cargando servicios del salón…"
       });
       setServicios(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -277,9 +282,14 @@ function Servicios() {
     );
     (async () => {
       try {
-        await api.patch(`/api/servicios/${servicio.id}/activo`, {
-          estaActivo: nuevo
-        });
+        await api.patch(
+          `/api/servicios/${servicio.id}/activo`,
+          { estaActivo: nuevo },
+          {
+            barberHeadline: "Catálogo de servicios",
+            barberMessage: "Actualizando visibilidad en el catálogo…"
+          }
+        );
       } catch (err) {
         // Revertir
         setServicios((prev) =>
@@ -330,7 +340,7 @@ function Servicios() {
       : 0;
 
   const imagenPreview = form.imagen
-    ? `data:image/jpeg;base64,${form.imagen}`
+    ? resolveServicioImagenUrl(form.imagen, api.defaults.baseURL)
     : null;
 
   if (loadingServicios) {
@@ -351,82 +361,24 @@ function Servicios() {
   }
 
   return (
-    <Box sx={{ bgcolor: "#FFFFFF", py: 5, minHeight: "100vh" }}>
-      <Container
-        maxWidth="lg"
-        sx={{ fontFamily: "'Geist Sans', Arial, sans-serif" }}
-      >
-        {/* ========== TÍTULO PÁGINA ========== */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 2,
-            mb: 4
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Box
-              sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: PALETA.fondoIcono()
-              }}
-            >
-              <StorefrontRoundedIcon
-                sx={{ color: PALETA.principal, fontSize: 30 }}
-              />
-            </Box>
-            <Box>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{
-                  fontFamily: "'Playfair Display', serif",
-                  color: PALETA.oscuro
-                }}
-              >
-                Catálogo de servicios
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: PALETA.borde(0.8), mt: 0.5 }}
-              >
-                Administra los servicios disponibles en la barbería.
-              </Typography>
-            </Box>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddRoundedIcon />}
-            onClick={() => handleOpenModal()}
-            sx={{
-              bgcolor: PALETA.principal,
-              fontWeight: 600,
-              "&:hover": { bgcolor: PALETA.oscuro }
-            }}
-          >
+    <>
+    <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+      <AdminHeader
+        eyebrow="Catálogo"
+        title="Catálogo de servicios"
+        subtitle="Administra los servicios disponibles en la barbería."
+        icon={<StorefrontRoundedIcon sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+        right={
+          <Button variant="contained" color="primary" startIcon={<AddRoundedIcon />} onClick={() => handleOpenModal()}>
             Agregar servicio
           </Button>
-        </Box>
+        }
+      />
 
         {/* ========== RESUMEN RÁPIDO ========== */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2,
-                bgcolor: alpha(PALETA.acento, 0.06)
-              }}
-            >
+            <GlassCard elevation={0} sx={{ bgcolor: alpha(P.accent, 0.06) }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -436,11 +388,11 @@ function Servicios() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    bgcolor: alpha(PALETA.acento, 0.2)
+                    bgcolor: alpha(P.accent, 0.2)
                   }}
                 >
                   <CategoryRoundedIcon
-                    sx={{ color: PALETA.acento, fontSize: 24 }}
+                    sx={{ color: P.accent, fontSize: 24 }}
                   />
                 </Box>
                 <Box>
@@ -450,22 +402,16 @@ function Servicios() {
                   <Typography
                     variant="h6"
                     fontWeight={700}
-                    color={PALETA.oscuro}
+                    color={P.primary}
                   >
                     {totalServicios}
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2
-              }}
-            >
+            <GlassCard elevation={0} sx={{ borderRadius: 2 }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -495,16 +441,10 @@ function Servicios() {
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Card
-              elevation={0}
-              sx={{
-                border: `1px solid ${PALETA.borde()}`,
-                borderRadius: 2
-              }}
-            >
+            <GlassCard elevation={0} sx={{ borderRadius: 2 }}>
               <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Box
                   sx={{
@@ -534,7 +474,7 @@ function Servicios() {
                   </Typography>
                 </Box>
               </CardContent>
-            </Card>
+            </GlassCard>
           </Grid>
         </Grid>
 
@@ -605,9 +545,6 @@ function Servicios() {
               <TableHead>
                 <TableRow sx={{ bgcolor: PALETA.fondoIcono(0.08) }}>
                   <TableCell sx={{ fontWeight: 700, color: PALETA.oscuro }}>
-                    Imagen
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, color: PALETA.oscuro }}>
                     Nombre
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, color: PALETA.oscuro }}>
@@ -639,7 +576,7 @@ function Servicios() {
               <TableBody>
                 {serviciosFiltrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} sx={{ py: 6, textAlign: "center" }}>
+                    <TableCell colSpan={7} sx={{ py: 6, textAlign: "center" }}>
                       <StorefrontRoundedIcon
                         sx={{
                           fontSize: 48,
@@ -662,37 +599,6 @@ function Servicios() {
                         opacity: servicio.estaActivo === 0 ? 0.7 : 1
                       }}
                     >
-                      <TableCell>
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 1,
-                            overflow: "hidden",
-                            bgcolor: PALETA.fondoIcono(0.3),
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          {servicio.imagenUrl ? (
-                            <Box
-                              component="img"
-                              src={`data:image/jpeg;base64,${servicio.imagenUrl}`}
-                              alt={servicio.nombre}
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover"
-                              }}
-                            />
-                          ) : (
-                            <ImageOutlinedIcon
-                              sx={{ color: PALETA.borde(0.5) }}
-                            />
-                          )}
-                        </Box>
-                      </TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
                           {servicio.nombre}
@@ -751,7 +657,7 @@ function Servicios() {
             </Table>
           </TableContainer>
         </Paper>
-      </Container>
+    </AdminPageShell>
 
       {/* ========== MODAL AGREGAR / EDITAR ========== */}
       <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
@@ -932,7 +838,7 @@ function Servicios() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 }
 

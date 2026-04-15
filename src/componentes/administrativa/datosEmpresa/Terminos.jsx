@@ -144,7 +144,10 @@ function Terminos() {
         fechaPublicacion: form.fechaPublicacion || null,
         activo: form.activo ? 1 : 0
       };
-      const { data } = await axios.post(`${API_URL}/api/terminos-condiciones`, payload);
+      const { data } = await axios.post(`${API_URL}/api/terminos-condiciones`, payload, {
+        barberHeadline: "Términos y condiciones",
+        barberMessage: "Guardando el nuevo documento…"
+      });
       setTerminos((prev) => [
         {
           id: data.id,
@@ -155,18 +158,6 @@ function Terminos() {
         ...prev
       ]);
       setForm({ titulo: "", contenido: "", version: "", fechaPublicacion: "", activo: true });
-      await MySwal.fire({
-        icon: "success",
-        title: "Agregado",
-        text: "Los términos se guardaron correctamente",
-        position: "center",
-        timer: 2000,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        background: PALETA.fondoIcono(0.2),
-        color: PALETA.oscuro,
-        iconColor: PALETA.principal
-      });
     } catch (err) {
       await MySwal.fire({
         icon: "error",
@@ -214,7 +205,10 @@ function Terminos() {
         fechaPublicacion: formEdit.fechaPublicacion || null,
         activo: formEdit.activo ? 1 : 0
       };
-      await axios.put(`${API_URL}/api/terminos-condiciones/${editando.id}`, payload);
+      await axios.put(`${API_URL}/api/terminos-condiciones/${editando.id}`, payload, {
+        barberHeadline: "Términos y condiciones",
+        barberMessage: "Guardando los cambios del documento…"
+      });
       setTerminos((prev) =>
         prev.map((t) =>
           t.id === editando.id
@@ -227,18 +221,6 @@ function Terminos() {
             : t
         )
       );
-      await MySwal.fire({
-        icon: "success",
-        title: "Actualizado",
-        text: "Los cambios se guardaron correctamente",
-        position: "center",
-        timer: 2000,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        background: PALETA.fondoIcono(0.2),
-        color: PALETA.oscuro,
-        iconColor: PALETA.principal
-      });
       closeEditar();
     } catch (err) {
       await MySwal.fire({
@@ -271,20 +253,11 @@ function Terminos() {
     if (!isConfirmed) return;
 
     try {
-      await axios.delete(`${API_URL}/api/terminos-condiciones/${row.id}`);
-      setTerminos((prev) => prev.filter((t) => t.id !== row.id));
-      await MySwal.fire({
-        icon: "success",
-        title: "Eliminado",
-        text: "Se eliminó correctamente",
-        position: "center",
-        timer: 1800,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        background: PALETA.fondoIcono(0.2),
-        color: PALETA.oscuro,
-        iconColor: PALETA.principal
+      await axios.delete(`${API_URL}/api/terminos-condiciones/${row.id}`, {
+        barberHeadline: "Términos y condiciones",
+        barberMessage: "Eliminando el registro…"
       });
+      setTerminos((prev) => prev.filter((t) => t.id !== row.id));
     } catch (err) {
       await MySwal.fire({
         icon: "error",

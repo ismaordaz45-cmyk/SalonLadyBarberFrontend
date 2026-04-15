@@ -9,8 +9,24 @@ function AdminLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#F1F5F9" }}>
-      <Box sx={{ display: { xs: "none", md: "block" } }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        bgcolor: "#F8FAFC",
+        overflow: "hidden"
+      }}
+    >
+      <Box
+        sx={{
+          display: { xs: "none", md: "block" },
+          position: "sticky",
+          top: 0,
+          alignSelf: "flex-start",
+          height: "100vh",
+          flexShrink: 0
+        }}
+      >
         <Sidebar drawerWidth={DRAWER_WIDTH} />
       </Box>
 
@@ -30,9 +46,25 @@ function AdminLayout({ children }) {
         <Sidebar drawerWidth={DRAWER_WIDTH} onNavigate={() => setMobileOpen(false)} />
       </Drawer>
 
-      <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden"
+        }}
+      >
         <Topbar onOpenSidebar={() => setMobileOpen(true)} />
-        <Box sx={{ flex: 1, p: { xs: 2, md: 3 } }}>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            p: { xs: 2, md: 3 }
+          }}
+        >
           {children}
         </Box>
       </Box>

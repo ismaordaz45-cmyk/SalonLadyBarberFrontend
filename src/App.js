@@ -1,11 +1,13 @@
 import React from "react";
 import "./App.css";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+import { BarberActionOverlayProvider } from "./context/BarberActionOverlayContext";
 import MigasDePan from "./componentes/compartidos/MigasDePan";
 
 import LayoutConEncabezado from "./componentes/layout/LayoutConEncabezado";
 import AdminLayout from "./componentes/layout/AdminLayout";
+import ClienteLayout from "./componentes/layout/ClienteLayout";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 // ===== Páginas / vistas disponibles =====
@@ -15,7 +17,14 @@ import PaginaNosotrosPublico from "./paginas/PaginaNosotrosPublico";
 import PaginaNovedadesPublico from "./paginas/PaginaNovedadesPublico";
 import PaginaPrincipalAdministrativa from "./paginas/PaginaPrincipalAdminitrativo";
 import PaginaAdminBaseDatos from "./paginas/PaginaAdminBaseDatos";
-import PaginaPrincipalCliente from "./paginas/PaginaPrincipalCliente";
+import PaginaAdminRespaldo from "./paginas/PaginaAdminRespaldo";
+import PaginaAdminImportExport from "./paginas/PaginaAdminImportExport";
+import PaginaAdminMonitoreo from "./paginas/PaginaAdminMonitoreo";
+import InicioCliente from "./componentes/cliente/InicioCliente";
+import ServiciosClienteReservar from "./componentes/cliente/ServiciosClienteReservar";
+import ProductosCliente from "./componentes/cliente/ProductosCliente";
+import MisCitasCliente from "./componentes/cliente/MisCitasCliente";
+import MiPerfilCliente from "./componentes/cliente/MiPerfilCliente";
 import PaginaPrincipalRecepcion from "./paginas/PaginaPrincipalRecepcion";
 import PaginaError404 from "./paginas/PaginaError404";
 import PaginaError501 from "./paginas/PaginaError501";
@@ -34,6 +43,8 @@ import Barberos from "./componentes/administrativa/gestionSalon/Barberos";
 import Clientes from "./componentes/administrativa/gestionSalon/Clientes";
 import Inventario from "./componentes/administrativa/gestionSalon/Inventario";
 import Promociones from "./componentes/administrativa/gestionSalon/Promociones";
+import Estadisticas from "./componentes/administrativa/gestionSalon/Estadisticas";
+import ProyeccionCitas from "./componentes/administrativa/gestionSalon/ProyeccionCitas";
 
 
 // ============================================
@@ -54,6 +65,7 @@ const LayoutPublico = ({ children }) => {
 // ============================================
 const App = () => {
   return (
+    <BarberActionOverlayProvider>
     <LayoutConEncabezado>
       <Routes>
 
@@ -134,41 +146,51 @@ const App = () => {
         <Route
           path="/admin/perfil"
           element={
-            <AdminLayout>
-              <Perfil />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Perfil />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/terminos"
           element={
-            <AdminLayout>
-              <Terminos />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Terminos />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/politicas"
           element={
-            <AdminLayout>
-              <Politicas />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Politicas />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/mision"
           element={
-            <AdminLayout>
-              <Mision />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Mision />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/vision"
           element={
-            <AdminLayout>
-              <Vision />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Vision />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
 
@@ -195,17 +217,21 @@ const App = () => {
         <Route
           path="/admin/barberos"
           element={
-            <AdminLayout>
-              <Barberos />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA", "EMPLEADA"]}>
+              <AdminLayout>
+                <Barberos />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/clientes"
           element={
-            <AdminLayout>
-              <Clientes />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Clientes />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
@@ -221,62 +247,114 @@ const App = () => {
         <Route
           path="/admin/estadisticas"
           element={
-            <AdminLayout>
-              <PaginaError501
-                modulo="Estadísticas"
-                descripcion="El módulo de estadísticas está en construcción."
-              />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Estadisticas />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/proyeccion-citas"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <ProyeccionCitas />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/reportes"
           element={
-            <AdminLayout>
-              <PaginaError501
-                modulo="Reportes"
-                descripcion="El módulo de reportes estará disponible próximamente."
-              />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaError501
+                  modulo="Reportes"
+                  descripcion="El módulo de reportes estará disponible próximamente."
+                />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/pagos"
           element={
-            <AdminLayout>
-              <PaginaError501
-                modulo="Pagos"
-                descripcion="El módulo de pagos aún no ha sido desarrollado."
-              />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaError501
+                  modulo="Pagos"
+                  descripcion="El módulo de pagos aún no ha sido desarrollado."
+                />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/configuracion"
           element={
-            <AdminLayout>
-              <PaginaError501
-                modulo="Configuración"
-                descripcion="La configuración avanzada todavía no está disponible."
-              />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaError501
+                  modulo="Configuración"
+                  descripcion="La configuración avanzada todavía no está disponible."
+                />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/admin/promociones"
           element={
-            <AdminLayout>
-              <Promociones />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA", "EMPLEADA"]}>
+              <AdminLayout>
+                <Promociones />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/admin/base-datos"
           element={
-            <AdminLayout>
-              <PaginaAdminBaseDatos />
-            </AdminLayout>
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <Navigate to="/admin/base-datos/respaldo" replace />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/base-datos/respaldo"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaAdminRespaldo />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/base-datos/import-export"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaAdminImportExport />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/base-datos/monitoreo"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <PaginaAdminMonitoreo />
+              </AdminLayout>
+            </ProtectedRoute>
           }
         />
 
@@ -284,12 +362,17 @@ const App = () => {
           path="/cliente"
           element={
             <ProtectedRoute allowedRoles={["CLIENTE"]}>
-              <LayoutPublico>
-                <PaginaPrincipalCliente />
-              </LayoutPublico>
+              <ClienteLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<InicioCliente />} />
+          <Route path="servicios" element={<ServiciosClienteReservar />} />
+          <Route path="productos" element={<ProductosCliente />} />
+          <Route path="citas" element={<MisCitasCliente />} />
+          <Route path="perfil" element={<MiPerfilCliente />} />
+          <Route path="*" element={<Navigate to="/cliente" replace />} />
+        </Route>
 
         <Route
           path="/recepcion"
@@ -313,6 +396,7 @@ const App = () => {
 
       </Routes>
     </LayoutConEncabezado>
+    </BarberActionOverlayProvider>
   );
 };
 

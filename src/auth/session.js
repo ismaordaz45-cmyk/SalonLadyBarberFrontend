@@ -1,6 +1,6 @@
 export function getStoredUser() {
   try {
-    const raw = localStorage.getItem("user");
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);

@@ -5,6 +5,7 @@ import withReactContent from "sweetalert2-react-content";
 import axios from "axios";
 import DOMPurify from "dompurify";
 import LoginPage from "./LoginPage";
+import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
 const MySwal = withReactContent(Swal);
 
@@ -21,6 +22,7 @@ const MSG_LOGIN_INVALIDO =
 
 function Login() {
   const navigate = useNavigate();
+  const { runWithOverlay } = useBarberActionOverlay();
 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,10 +62,17 @@ function Login() {
     setError("");
 
     try {
-      const { data } = await axios.post(`${API_URL}/api/login`, {
-        correo: formData.correo,
-        password: formData.password
-      });
+      const { data } = await axios.post(
+        `${API_URL}/api/login`,
+        {
+          correo: formData.correo,
+          password: formData.password
+        },
+        {
+          barberHeadline: "¡Bienvenido!",
+          barberMessage: "Iniciando sesión…"
+        }
+      );
 
       if (!data?.user) {
         throw new Error("Respuesta inválida del servidor");
@@ -100,18 +109,11 @@ function Login() {
           break;
       }
 
-      await MySwal.fire({
-        icon: "success",
-        title: "¡Bienvenido!",
-        text: "Sesión iniciada correctamente",
-        position: "center",
-        timer: 2000,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        background: "#F8FAFC",
-        color: "#1E293B",
-        iconColor: "#2563EB"
-      });
+      await runWithOverlay(
+        () => new Promise((resolve) => setTimeout(resolve, 420)),
+        "Preparando tu espacio en el sistema…",
+        { headline: "¡Bienvenido!", minMs: 720 }
+      );
 
       navigate(redirectPath, { replace: true });
     } catch (err) {

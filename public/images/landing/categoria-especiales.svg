@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="280" viewBox="0 0 400 280">
+  <rect width="400" height="280" fill="#ecfdf5"/>
+  <path d="M200 70 L215 115 L265 115 L225 145 L240 190 L200 160 L160 190 L175 145 L135 115 L185 115 Z" fill="#059669" fill-opacity="0.45"/>
+  <text x="200" y="250" text-anchor="middle" fill="#047857" font-family="system-ui,sans-serif" font-size="12" font-weight="600">Especiales</text>
+</svg>

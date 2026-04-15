@@ -1,12 +1,22 @@
+import { logoBase64ToDataUrl } from "./logoDataUrl";
+
 /**
- * Convierte imagenUrl del servicio (API) a una URL usable en <img src="...">.
- * Soporta:
- * - data: URL completa
- * - http(s) absolutas
- * - rutas relativas o absolutas (/uploads/foo.jpg)
- * - base64 crudo (como lo guarda Servicios.jsx en admin: solo el payload tras la coma)
+ * Base64 estándar o url-safe (sin prefijo data:).
+ * Debe evaluarse ANTES de tratar cadenas que empiezan por "/" como rutas:
+ * el JPEG en base64 suele comenzar con "/9j/".
  */
-export function resolveServicioImagenUrl(imagenUrl) {
+function looksLikeRawBase64(s) {
+  if (s.length < 32) return false;
+  return /^[A-Za-z0-9+/=_-]+$/.test(s);
+}
+
+/**
+ * Convierte imagenUrl del servicio (o insumo) a URL usable en <img src="...">.
+ *
+ * @param {string|null|undefined} imagenUrl
+ * @param {string|null|undefined} apiBaseUrl Origen del API (p. ej. http://localhost:4000) para rutas bajo /uploads
+ */
+export function resolveServicioImagenUrl(imagenUrl, apiBaseUrl) {
   if (imagenUrl == null) return null;
   const t = String(imagenUrl).trim();
   if (!t) return null;
@@ -15,20 +25,32 @@ export function resolveServicioImagenUrl(imagenUrl) {
   if (t.startsWith("http://") || t.startsWith("https://")) return t;
   if (t.startsWith("blob:")) return t;
 
+  const base = apiBaseUrl ? String(apiBaseUrl).replace(/\/$/, "") : "";
+
+  const absolutizeUploads = (path) => {
+    const p = path.startsWith("/") ? path : `/${path.replace(/^\//, "")}`;
+    if (base && p.startsWith("/uploads")) return `${base}${p}`;
+    return p;
+  };
+
+  /* Rutas estáticas del frontend (CRA public/) */
+  if (t.startsWith("/images/")) return t;
+
+  /* Archivos subidos servidos por el backend */
+  if (t.startsWith("/uploads")) return absolutizeUploads(t);
+
+  const clean = t.replace(/\r|\n|\s/g, "");
+
+  if (looksLikeRawBase64(clean)) {
+    const dataUrl = logoBase64ToDataUrl(clean);
+    return dataUrl || null;
+  }
+
   if (t.startsWith("/")) return t;
 
   if (/\.(jpe?g|png|gif|webp|svg)(\?|#|$)/i.test(t)) {
-    return `/${t.replace(/^\//, "")}`;
+    return absolutizeUploads(`/${t.replace(/^\//, "")}`);
   }
 
-  const clean = t.replace(/\r|\n|\s/g, "");
-  if (/^[A-Za-z0-9+/=]+$/.test(clean) && clean.length >= 50) {
-    if (clean.startsWith("iVBOR")) return `data:image/png;base64,${clean}`;
-    if (clean.startsWith("/9j/")) return `data:image/jpeg;base64,${clean}`;
-    if (clean.startsWith("R0lGOD")) return `data:image/gif;base64,${clean}`;
-    if (clean.startsWith("UklGR")) return `data:image/webp;base64,${clean}`;
-    return `data:image/jpeg;base64,${clean}`;
-  }
-
-  return `/${t.replace(/^\//, "")}`;
+  return absolutizeUploads(`/${t.replace(/^\//, "")}`);
 }

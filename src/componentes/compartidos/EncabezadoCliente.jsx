@@ -23,7 +23,7 @@ import {
   PersonRounded,
   LogoutRounded
 } from "@mui/icons-material";
-import Swal from "sweetalert2";
+import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
 const COLORS = {
   bg: "#F8FAFC",
@@ -37,6 +37,7 @@ const COLORS = {
 function EncabezadoCliente() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { runWithOverlay } = useBarberActionOverlay();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorUser, setAnchorUser] = useState(null);
 
@@ -62,22 +63,21 @@ function EncabezadoCliente() {
   const isActive = (itemPath) => location.pathname === itemPath;
 
   const handleLogout = async () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-
-    await Swal.fire({
-      title: "Sesion cerrada",
-      text: "Has salido correctamente.",
-      icon: "success",
-      timer: 1400,
-      showConfirmButton: false,
-      background: COLORS.bg,
-      color: COLORS.primary
-    });
-
-    navigate("/login", { replace: true });
+    await runWithOverlay(
+      async () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        await new Promise((resolve) => setTimeout(resolve, 320));
+      },
+      "Has salido de forma segura. Gracias por tu visita.",
+      { headline: "Sesión cerrada", minMs: 880 }
+    );
+    navigate("/", { replace: true });
   };
 
   return (

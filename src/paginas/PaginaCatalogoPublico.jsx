@@ -34,6 +34,8 @@ function PaginaCatalogoPublico() {
 
   const [servicios, setServicios] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [imgErrorById, setImgErrorById] = useState({});
+  const [showCards, setShowCards] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -53,6 +55,12 @@ function PaginaCatalogoPublico() {
       cancel = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (cargando) return;
+    const t = setTimeout(() => setShowCards(true), 60);
+    return () => clearTimeout(t);
+  }, [cargando]);
 
   const categorias = useMemo(() => {
     const set = new Set();
@@ -76,11 +84,21 @@ function PaginaCatalogoPublico() {
   }, [servicios, filtroCat]);
 
   return (
-    <Box sx={{ bgcolor: PALETTE.pageBg, minHeight: "100vh", py: { xs: 3, md: 5 } }}>
+    <Box
+      sx={{
+        bgcolor: PALETTE.pageBg,
+        minHeight: "100vh",
+        py: { xs: 3, md: 5 },
+        "@keyframes slb-riseIn": {
+          "0%": { opacity: 0, transform: "translateY(14px) scale(0.992)" },
+          "100%": { opacity: 1, transform: "translateY(0) scale(1)" }
+        }
+      }}
+    >
       <Container maxWidth="lg">
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ color: PALETTE.text, fontWeight: 700, flex: "1 1 auto" }}>
-            Catálogo de servicios
+            Servicios
           </Typography>
           <Button component={RouterLink} to="/" variant="outlined" sx={{ textTransform: "none", borderColor: PALETTE.primary, color: PALETTE.primary }}>
             Volver al inicio
@@ -111,8 +129,9 @@ function PaginaCatalogoPublico() {
         )}
 
         <Grid container spacing={2}>
-          {filtrados.map((s) => {
-            const imgSrc = resolveServicioImagenUrl(s.imagenUrl);
+          {filtrados.map((s, idx) => {
+            const imgSrc = resolveServicioImagenUrl(s.imagenUrl, API_URL);
+            const imgFailed = Boolean(imgErrorById[s.id]);
             return (
             <Grid item xs={12} sm={6} md={4} key={s.id}>
               <Card
@@ -122,16 +141,36 @@ function PaginaCatalogoPublico() {
                   border: `1px solid ${PALETTE.border}`,
                   borderRadius: 2,
                   bgcolor: PALETTE.card,
-                  overflow: "hidden"
+                  overflow: "hidden",
+                  transform: showCards ? "none" : "translateY(12px)",
+                  opacity: showCards ? 1 : 0,
+                  animation: showCards ? "slb-riseIn 650ms cubic-bezier(0.2,0.8,0.2,1) both" : "none",
+                  animationDelay: `${Math.min(idx, 8) * 70}ms`,
+                  boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
+                  transition: "transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease",
+                  "&:hover": {
+                    transform: "translateY(-6px)",
+                    boxShadow: "0 22px 60px rgba(15, 23, 42, 0.16)",
+                    borderColor: "rgba(30, 41, 59, 0.35)"
+                  }
                 }}
               >
-                {imgSrc ? (
+                {imgSrc && !imgFailed ? (
                   <CardMedia
                     component="img"
                     height="160"
                     image={imgSrc}
                     alt={s.nombre}
-                    sx={{ objectFit: "cover", bgcolor: PALETTE.pageBg }}
+                    onError={() =>
+                      setImgErrorById((prev) => ({ ...prev, [s.id]: true }))
+                    }
+                    sx={{
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      bgcolor: PALETTE.pageBg,
+                      filter: "saturate(1.04) contrast(1.04)",
+                      p: 1
+                    }}
                   />
                 ) : (
                   <Box sx={{ height: 160, bgcolor: PALETTE.border }} aria-hidden />

@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { logoBase64ToDataUrl } from '../../utils/logoDataUrl';
 import { Link } from 'react-router-dom';
 
 import {
@@ -53,9 +54,9 @@ const PieDePaginaPublico = () => {
     const fetchPerfil = async () => {
       try {
 
-        const response = await axios.get(
-          `${API_BASE_URL}/api/perfil-empresa`
-        );
+        const response = await axios.get(`${API_BASE_URL}/api/perfil-empresa`, {
+          barberOverlay: false
+        });
 
         const data = response.data;
 
@@ -74,11 +75,7 @@ const PieDePaginaPublico = () => {
 
           setNombreEmpresa(data.nombre || "Lady Barber ID'M");
 
-          setLogoUrl(
-            data.logo
-              ? `data:image/jpeg;base64,${data.logo}`
-              : ''
-          );
+          setLogoUrl(data.logo ? logoBase64ToDataUrl(data.logo) : '');
 
           setDatosEmpresa(prev => ({
             ...prev,
@@ -152,7 +149,11 @@ const PieDePaginaPublico = () => {
           width: 56px;
           height: 56px;
           border-radius: 50%;
-          object-fit: cover;
+          object-fit: contain;
+          object-position: center;
+          background: rgba(248, 250, 252, 0.08);
+          padding: 3px;
+          box-sizing: border-box;
           border: 2px solid rgba(212, 175, 55, 0.4);
         }
         .footer-publico .footer-logo span {

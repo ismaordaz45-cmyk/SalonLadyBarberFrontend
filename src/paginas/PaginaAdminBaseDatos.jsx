@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Container, Paper, Typography, Button, Tabs, Tab } from "@mui/material";
+import { Box, Paper, Typography, Tabs, Tab, Button } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
 import StorageRoundedIcon from "@mui/icons-material/StorageRounded";
@@ -8,18 +8,14 @@ import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import MonitorHeartRoundedIcon from "@mui/icons-material/MonitorHeartRounded";
 import CsvImportExport from "../componentes/administrativa/baseDatos/CsvImportExport";
 import MonitorDashboard from "../componentes/administrativa/baseDatos/MonitorDashboard";
+import Respaldo from "../componentes/administrativa/baseDatos/Respaldo";
+
+import AdminPageShell from "../ui/admin/AdminPageShell";
+import AdminHeader from "../ui/admin/AdminHeader";
+import { GlassCard } from "../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 
 function PaginaAdminBaseDatos() {
-  const COLORS = {
-    bg: "#F1F5F9",
-    surface: "#FFFFFF",
-    surfaceAlt: "#F8FAFC",
-    border: "#E2E8F0",
-    textPrimary: "#1E293B",
-    textSecondary: "#64748B",
-    primary: "#1E293B"
-  };
-
   const [tabActiva, setTabActiva] = useState(0);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
@@ -63,87 +59,50 @@ function PaginaAdminBaseDatos() {
 
   const handleCambiarTab = (_event, value) => setTabActiva(value);
   return (
-    <Box
-      sx={{
-        bgcolor: COLORS.bg,
-        py: 1,
-        fontFamily: "'Geist Sans', Arial, sans-serif"
-      }}
-    >
-      <Container maxWidth="md">
-        <Paper
-          elevation={3}
-          sx={{
-            borderRadius: 4,
-            overflow: "hidden",
-            border: `1px solid ${COLORS.border}`,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)"
-          }}
-        >
-          <Box
-            sx={{
-              background: `linear-gradient(135deg, ${COLORS.surface} 0%, ${COLORS.surfaceAlt} 100%)`,
-              color: COLORS.textPrimary,
-              px: { xs: 3, md: 4 },
-              py: 4,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              borderBottom: `1px solid ${COLORS.border}`
-            }}
+    <AdminPageShell maxWidth="md" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+      <AdminHeader
+        eyebrow="Sistema"
+        title="Base de datos"
+        subtitle="Respaldo, importación/exportación y monitoreo."
+        icon={<StorageRoundedIcon sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+        right={
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<BackupRoundedIcon />}
+            onClick={generarRespaldo}
+            disabled={cargando}
           >
-            <Box
-              sx={{
-                width: 52,
-                height: 52,
-                borderRadius: 3,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: alpha(COLORS.primary, 0.1)
-              }}
-            >
-              <StorageRoundedIcon sx={{ fontSize: 30, color: COLORS.primary }} />
-            </Box>
+            {cargando ? "Generando..." : "Generar respaldo"}
+          </Button>
+        }
+      />
 
-            <Box>
-              <Typography
-                variant="h4"
-                fontWeight={800}
-                sx={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: { xs: "1.9rem", md: "2.2rem" },
-                  color: COLORS.textPrimary
-                }}
-              >
-                Admin Base de datos
+      <GlassCard elevation={0} sx={{ borderRadius: 4 }}>
+        <Paper elevation={0} sx={{ borderRadius: 4, overflow: "hidden", bgcolor: "transparent" }}>
+          <Box sx={{ px: { xs: 2.5, md: 3 }, py: 2.5 }}>
+            {mensaje ? (
+              <Typography sx={{ color: P.secondary, fontWeight: 700, mb: 2 }}>
+                {mensaje}
               </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: COLORS.textSecondary, fontSize: { xs: "1rem", md: "1.05rem" } }}
-              >
-                Herramientas para administración y respaldos.
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ px: { xs: 3, md: 4 }, py: 4 }}>
+            ) : null}
             <Paper
               elevation={0}
               sx={{
-                border: `1px solid ${COLORS.border}`,
+                border: `1px solid ${alpha(P.border, 0.9)}`,
                 borderRadius: 3,
-                overflow: "hidden"
+                overflow: "hidden",
+                bgcolor: "transparent"
               }}
             >
               <Tabs
                 value={tabActiva}
                 onChange={handleCambiarTab}
                 sx={{
-                  borderBottom: `1px solid ${COLORS.border}`,
-                  bgcolor: COLORS.surfaceAlt,
+                  borderBottom: `1px solid ${alpha(P.border, 0.9)}`,
+                  bgcolor: alpha(P.navy, 0.06),
                   "& .MuiTab-root": { fontWeight: 700, textTransform: "none" },
-                  "& .Mui-selected": { color: COLORS.primary }
+                  "& .Mui-selected": { color: P.navy }
                 }}
               >
                 <Tab
@@ -165,48 +124,7 @@ function PaginaAdminBaseDatos() {
 
               <Box sx={{ p: { xs: 2.5, md: 3 } }}>
                 {tabActiva === 0 ? (
-                  <>
-                    <Typography
-                      variant="h6"
-                      fontWeight={800}
-                      sx={{ color: COLORS.textPrimary, mb: 1.5, fontSize: { xs: "1.2rem", md: "1.35rem" } }}
-                    >
-                      Respaldo automático
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: COLORS.textSecondary, mb: 3, fontSize: { xs: "1rem", md: "1.05rem" } }}
-                    >
-                      ESTE SECCION ES PARA GENEREAR UN RESPALDO DE LA BASE
-                      DE DATOS DE EMERGENCIA
-                    </Typography>
-
-                    <Button
-                      variant="contained"
-                      size="large"
-                      startIcon={<BackupRoundedIcon />}
-                      onClick={generarRespaldo}
-                      disabled={cargando}
-                      sx={{
-                        backgroundColor: COLORS.primary,
-                        color: "#FFFFFF",
-                        fontWeight: 700,
-                        px: 3.5,
-                        py: 1.4,
-                        borderRadius: 3,
-                        "&:hover": {
-                          backgroundColor: "#0F172A"
-                        }
-                      }}
-                    >
-                      {cargando ? "Generando..." : "Generar respaldo automático"}
-                    </Button>
-                    {mensaje && (
-                      <Typography sx={{ mt: 2 }}>
-                        {mensaje}
-                      </Typography>
-                    )}
-                  </>
+                  <Respaldo embedded />
                 ) : tabActiva === 1 ? (
                   <CsvImportExport mostrarTitulo={false} />
                 ) : (
@@ -216,8 +134,8 @@ function PaginaAdminBaseDatos() {
             </Paper>
           </Box>
         </Paper>
-      </Container>
-    </Box>
+      </GlassCard>
+    </AdminPageShell>
   );
 }
 

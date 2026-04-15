@@ -5,7 +5,6 @@ import withReactContent from "sweetalert2-react-content";
 
 import {
   Box,
-  Container,
   Paper,
   Typography,
   TextField,
@@ -41,8 +40,15 @@ import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
-import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
+import { logoBase64ToDataUrl } from "../../../utils/logoDataUrl";
+import { compressLogoImageFile } from "../../../utils/compressLogoImage";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
+import HorarioSemanalPerfil from "./HorarioSemanalPerfil.jsx";
+
+import AdminPageShell from "../../../ui/admin/AdminPageShell";
+import AdminHeader from "../../../ui/admin/AdminHeader";
+import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 const MySwal = withReactContent(Swal);
 const API_URL = "http://localhost:4000";
@@ -54,20 +60,6 @@ const PALETA = {
   borde: (opacity = 0.12) => alpha("#2C3E50", opacity),
   fondoIcono: (opacity = 0.1) => alpha("#2C3E50", opacity)
 };
-
-// Convierte archivo a base64 (texto para guardar en BD)
-const fileToBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const result = reader.result;
-      // Quitar prefijo "data:image/...;base64," para guardar solo el texto base64
-      const base64 = typeof result === "string" && result.includes(",") ? result.split(",")[1] : result;
-      resolve(base64);
-    };
-    reader.onerror = reject;
-  });
 
 function Perfil() {
   const [perfilId, setPerfilId] = useState(null);
@@ -102,10 +94,22 @@ function Perfil() {
     const file = e.target?.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = await compressLogoImageFile(file);
       setPerfil((prev) => ({ ...prev, logo: base64 }));
     } catch (err) {
-      console.error("Error al leer imagen:", err);
+      console.error("Error al procesar imagen:", err);
+      await MySwal.fire({
+        icon: "error",
+        title: "No se pudo procesar la imagen",
+        text: "Prueba con otro archivo o uno más pequeño.",
+        timer: 2800,
+        showConfirmButton: false,
+        background: PALETA.fondoIcono(0.2),
+        color: PALETA.oscuro,
+        iconColor: PALETA.principal
+      });
+    } finally {
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -210,6 +214,32 @@ function Perfil() {
       });
       return;
     }
+
+    const { isConfirmed } = await MySwal.fire({
+      icon: "question",
+      title: "Confirmar cambios",
+      html: `
+        <p style="margin:0 0 10px;font-size:15px;line-height:1.5;color:#334155;">
+          Los datos modificados (incluido el logo, si lo cambió) actualizarán el perfil público de la empresa
+          y lo verán clientes y el panel administrativo.
+        </p>
+        <p style="margin:0;font-size:14px;line-height:1.5;color:#64748B;">
+          ¿Desea aplicar estos cambios ahora?
+        </p>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Sí, guardar cambios",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      focusCancel: false,
+      background: "#FFFFFF",
+      color: PALETA.oscuro,
+      iconColor: PALETA.principal,
+      confirmButtonColor: PALETA.principal,
+      cancelButtonColor: "#94A3B8"
+    });
+    if (!isConfirmed) return;
+
     setSavingPerfil(true);
     try {
       const payload = {
@@ -219,40 +249,22 @@ function Perfil() {
         correo: perfil.correo || null,
         direccion: perfil.direccion || null,
         ubicacion: perfil.ubicacion || null,
-        horarioAtencion: perfil.horarioAtencion || null,
         sitioWeb: perfil.sitioWeb || null,
         logo: perfil.logo || null,
         activo: 1
       };
+      const barberOpts = {
+        barberHeadline: "Perfil de la empresa",
+        barberMessage: "Guardando datos, contacto y logo…"
+      };
       if (perfilId) {
-        await axios.put(`${API_URL}/api/perfil-empresa/${perfilId}`, payload);
-        await MySwal.fire({
-          icon: "success",
-          title: "Perfil actualizado",
-          text: "Los datos se guardaron correctamente",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: PALETA.fondoIcono(0.2),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
-        });
+        await axios.put(`${API_URL}/api/perfil-empresa/${perfilId}`, payload, barberOpts);
       } else {
-        const { data } = await axios.post(`${API_URL}/api/perfil-empresa`, payload);
-        setPerfilId(data.id);
-        await MySwal.fire({
-          icon: "success",
-          title: "Perfil creado",
-          text: "Los datos se guardaron correctamente",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: PALETA.fondoIcono(0.2),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
+        const { data } = await axios.post(`${API_URL}/api/perfil-empresa`, payload, {
+          ...barberOpts,
+          barberMessage: "Registrando la información de tu negocio…"
         });
+        setPerfilId(data.id);
       }
     } catch (err) {
       await MySwal.fire({
@@ -304,12 +316,19 @@ function Perfil() {
     setSavingRed(true);
     try {
       if (redEditando) {
-        await axios.put(`${API_URL}/api/redes-sociales/${redEditando.id}`, {
-          nombreRed: formRed.nombreRed.trim(),
-          url: formRed.url.trim(),
-          icono: redEditando.icono ?? null,
-          activo: redEditando.activo === 1 || redEditando.activo === true ? 1 : 0
-        });
+        await axios.put(
+          `${API_URL}/api/redes-sociales/${redEditando.id}`,
+          {
+            nombreRed: formRed.nombreRed.trim(),
+            url: formRed.url.trim(),
+            icono: redEditando.icono ?? null,
+            activo: redEditando.activo === 1 || redEditando.activo === true ? 1 : 0
+          },
+          {
+            barberHeadline: "Redes sociales",
+            barberMessage: "Actualizando enlace y nombre…"
+          }
+        );
         setRedes((prev) =>
           prev.map((r) =>
             r.id === redEditando.id
@@ -317,38 +336,21 @@ function Perfil() {
               : r
           )
         );
-        await MySwal.fire({
-          icon: "success",
-          title: "Red actualizada",
-          text: "Los cambios se guardaron correctamente",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: PALETA.fondoIcono(0.2),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
-        });
       } else {
-        const { data } = await axios.post(`${API_URL}/api/redes-sociales`, {
-          nombreRed: formRed.nombreRed.trim(),
-          url: formRed.url.trim(),
-          perfilEmpresaId: perfilId,
-          activo: 1
-        });
+        const { data } = await axios.post(
+          `${API_URL}/api/redes-sociales`,
+          {
+            nombreRed: formRed.nombreRed.trim(),
+            url: formRed.url.trim(),
+            perfilEmpresaId: perfilId,
+            activo: 1
+          },
+          {
+            barberHeadline: "Redes sociales",
+            barberMessage: "Añadiendo la nueva red…"
+          }
+        );
         setRedes((prev) => [...prev, { id: data.id, ...formRed, icono: null, activo: true }]);
-        await MySwal.fire({
-          icon: "success",
-          title: "Red agregada",
-          text: "La red social se agregó correctamente",
-          position: "center",
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-          background: PALETA.fondoIcono(0.2),
-          color: PALETA.oscuro,
-          iconColor: PALETA.principal
-        });
       }
       handleCloseModalRed();
     } catch (err) {
@@ -381,20 +383,11 @@ function Perfil() {
     });
     if (!isConfirmed) return;
     try {
-      await axios.delete(`${API_URL}/api/redes-sociales/${id}`);
-      setRedes((prev) => prev.filter((r) => r.id !== id));
-      await MySwal.fire({
-        icon: "success",
-        title: "Eliminada",
-        text: "La red social se eliminó correctamente",
-        position: "center",
-        timer: 2000,
-        showConfirmButton: false,
-        timerProgressBar: true,
-        background: PALETA.fondoIcono(0.2),
-        color: PALETA.oscuro,
-        iconColor: PALETA.principal
+      await axios.delete(`${API_URL}/api/redes-sociales/${id}`, {
+        barberHeadline: "Redes sociales",
+        barberMessage: "Eliminando enlace…"
       });
+      setRedes((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
       await MySwal.fire({
         icon: "error",
@@ -414,12 +407,19 @@ function Perfil() {
   const handleToggleActivoRed = async (red) => {
     const nuevoActivo = red.activo !== false ? 0 : 1;
     try {
-      await axios.put(`${API_URL}/api/redes-sociales/${red.id}`, {
-        nombreRed: red.nombreRed,
-        url: red.url,
-        icono: red.icono ?? null,
-        activo: nuevoActivo
-      });
+      await axios.put(
+        `${API_URL}/api/redes-sociales/${red.id}`,
+        {
+          nombreRed: red.nombreRed,
+          url: red.url,
+          icono: red.icono ?? null,
+          activo: nuevoActivo
+        },
+        {
+          barberHeadline: "Redes sociales",
+          barberMessage: "Actualizando visibilidad…"
+        }
+      );
       setRedes((prev) =>
         prev.map((r) => (r.id === red.id ? { ...r, activo: nuevoActivo } : r))
       );
@@ -439,9 +439,7 @@ function Perfil() {
     }
   };
 
-  const logoPreview = perfil.logo
-    ? `data:image/jpeg;base64,${perfil.logo}`
-    : null;
+  const logoPreview = perfil.logo ? logoBase64ToDataUrl(perfil.logo) : null;
 
   if (loadingPerfil) {
     return (
@@ -452,36 +450,25 @@ function Perfil() {
   }
 
   return (
-    <Box sx={{ bgcolor: "#FFFFFF", py: 5, minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ fontFamily: "'Geist Sans', Arial, sans-serif" }}>
-        {/* ========== TÍTULO PÁGINA ========== */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-          <Box
-            sx={{
-              width: 56,
-              height: 56,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: PALETA.fondoIcono()
-            }}
-          >
-            <PersonOutlineRoundedIcon sx={{ color: PALETA.principal, fontSize: 30 }} />
-          </Box>
-          <Box>
-            <Typography
-              variant="h4"
-              fontWeight={700}
-              sx={{ fontFamily: "'Playfair Display', serif", color: PALETA.oscuro }}
+    <>
+      <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+        <AdminHeader
+          eyebrow="Empresa"
+          title="Perfil de la empresa"
+          subtitle="Administra los datos públicos y el logo del salón."
+          icon={<PersonOutlineRoundedIcon sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+          right={
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<CloudUploadRoundedIcon />}
+              onClick={handleGuardarPerfil}
+              disabled={savingPerfil || loadingPerfil}
             >
-              Perfil de la empresa
-            </Typography>
-            <Typography variant="body2" sx={{ color: PALETA.borde(0.8), mt: 0.5 }}>
-              Administra los datos públicos y el logo del salón.
-            </Typography>
-          </Box>
-        </Box>
+              {savingPerfil ? "Guardando..." : "Guardar"}
+            </Button>
+          }
+        />
 
         {/* ========== SECCIÓN 1: DATOS DEL PERFIL + LOGO ========== */}
         <Paper
@@ -501,7 +488,7 @@ function Perfil() {
             {/* Logo: subida y vista previa */}
             <Box sx={{ flexShrink: 0 }}>
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
-                Logo
+                Logo de la empresa
               </Typography>
               <input
                 ref={inputLogoRef}
@@ -511,19 +498,17 @@ function Perfil() {
                 style={{ display: "none" }}
               />
               <Box
-                onClick={() => inputLogoRef.current?.click()}
                 sx={{
                   width: 160,
                   height: 160,
                   borderRadius: 2,
-                  border: `2px dashed ${PALETA.borde(0.4)}`,
+                  border: `1px solid ${PALETA.borde(0.25)}`,
                   bgcolor: PALETA.fondoIcono(0.05),
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  cursor: "pointer",
-                  "&:hover": { borderColor: PALETA.acento, bgcolor: PALETA.fondoIcono(0.08) }
+                  boxShadow: "0 1px 3px rgba(44, 62, 80, 0.08)"
                 }}
               >
                 {logoPreview ? (
@@ -535,13 +520,39 @@ function Perfil() {
                   />
                 ) : (
                   <Box sx={{ textAlign: "center", px: 2 }}>
-                    <ImageOutlinedIcon sx={{ color: PALETA.borde(0.6), fontSize: 48 }} />
-                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
-                      Clic para subir
+                    <ImageOutlinedIcon sx={{ color: PALETA.borde(0.5), fontSize: 44 }} />
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, lineHeight: 1.35 }}>
+                      Sin imagen
                     </Typography>
                   </Box>
                 )}
               </Box>
+              <Button
+                type="button"
+                variant="outlined"
+                size="small"
+                startIcon={<CloudUploadRoundedIcon />}
+                onClick={() => inputLogoRef.current?.click()}
+                sx={{
+                  mt: 1.5,
+                  minWidth: 160,
+                  borderColor: PALETA.principal,
+                  color: PALETA.principal,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  py: 0.75,
+                  "&:hover": {
+                    borderColor: PALETA.acento,
+                    color: PALETA.oscuro,
+                    bgcolor: alpha(PALETA.acento, 0.12)
+                  }
+                }}
+              >
+                {logoPreview ? "Cambiar imagen" : "Subir imagen"}
+              </Button>
+              <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, maxWidth: 200, lineHeight: 1.45 }}>
+                JPG, PNG o WebP. Se ajusta tamaño y se guarda como JPEG para evitar errores con imágenes muy pesadas. Use &quot;Guardar perfil&quot; para aplicar.
+              </Typography>
             </Box>
 
             {/* Campos del perfil */}
@@ -635,21 +646,13 @@ function Perfil() {
                   sx: { "& fieldset": { borderColor: PALETA.borde(0.3) }, "&:hover fieldset": { borderColor: PALETA.principal } }
                 }}
               />
-              <TextField
-                label="Horario de atención"
-                value={perfil.horarioAtencion}
-                onChange={handlePerfilChange("horarioAtencion")}
-                fullWidth
-                size="small"
-                placeholder="Ej: Lun–Vie 9:00–18:00"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <ScheduleRoundedIcon sx={{ color: PALETA.principal, fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                  sx: { "& fieldset": { borderColor: PALETA.borde(0.3) }, "&:hover fieldset": { borderColor: PALETA.principal } }
-                }}
+              <HorarioSemanalPerfil
+                apiBaseUrl={API_URL}
+                palette={PALETA}
+                horarioResumen={perfil.horarioAtencion}
+                onHorarioAtencionUpdated={(texto) =>
+                  setPerfil((prev) => ({ ...prev, horarioAtencion: texto }))
+                }
               />
               <TextField
                 label="Sitio web"
@@ -888,8 +891,8 @@ function Perfil() {
             </Button>
           </DialogActions>
         </Dialog>
-      </Container>
-    </Box>
+      </AdminPageShell>
+    </>
   );
 }
 

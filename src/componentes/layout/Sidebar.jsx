@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   Box,
   Divider,
@@ -17,21 +18,26 @@ import {
   PaymentsRounded,
   AssessmentRounded,
   BarChartRounded,
+  AutoGraphRounded,
   GroupRounded,
+  EventAvailableRounded,
   StorageRounded,
-  PrecisionManufacturingRounded,
+  BackupRounded,
+  UploadFileRounded,
+  MonitorHeartRounded,
   SettingsRounded,
   LogoutRounded
 } from "@mui/icons-material";
 import Swal from "sweetalert2";
+import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
 const COLORS = {
   sidebarBg: "#F8FAFC",
-  border: "#E5E7EB",
-  textPrimary: "#1E293B",
+  border: "#1E3A5F",
+  textPrimary: "#1E3A5F",
   textSecondary: "#64748B",
-  hover: "#E2E8F0",
-  active: "#1E293B",
+  hover: "#1E3A5F",
+  active: "#1E3A5F",
   white: "#FFFFFF"
 };
 
@@ -43,18 +49,53 @@ const menuPrincipal = [
   { label: "Pagos", path: "/admin/pagos", icon: <PaymentsRounded /> },
   { label: "Reportes", path: "/admin/reportes", icon: <AssessmentRounded /> },
   { label: "Estadísticas", path: "/admin/estadisticas", icon: <BarChartRounded /> },
+  {
+    label: "Predicción de citas",
+    path: "/admin/proyeccion-citas",
+    icon: <AutoGraphRounded />
+  },
   { label: "Usuarios", path: "/admin/clientes", icon: <GroupRounded /> },
-  { label: "Base de datos", path: "/admin/base-datos", icon: <StorageRounded /> }
+  {
+    label: "Gestión de citas",
+    path: "/admin/citas",
+    icon: <EventAvailableRounded />
+  },
+  { label: "Respaldo automático", path: "/admin/base-datos/respaldo", icon: <BackupRounded /> },
+  { label: "Importación / Exportación", path: "/admin/base-datos/import-export", icon: <UploadFileRounded /> },
+  { label: "Monitoreo", path: "/admin/base-datos/monitoreo", icon: <MonitorHeartRounded /> }
 ];
 
 const menuSecundario = [
-  { label: "Operación técnica", path: "/admin/base-datos", icon: <PrecisionManufacturingRounded /> },
   { label: "Configuración", path: "/admin/configuracion", icon: <SettingsRounded /> }
 ];
+
+const API_URL = "http://localhost:4000";
 
 function Sidebar({ drawerWidth = 240, onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { runWithOverlay } = useBarberActionOverlay();
+  const [nombreEmpresa, setNombreEmpresa] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchNombre = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/api/perfil-empresa`, {
+          barberOverlay: false
+        });
+        if (!cancelled && data?.nombre) {
+          setNombreEmpresa(String(data.nombre).trim());
+        }
+      } catch {
+        if (!cancelled) setNombreEmpresa("");
+      }
+    };
+    fetchNombre();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isActive = (path) => {
     if (path === "/admin") return location.pathname === "/admin";
@@ -118,24 +159,23 @@ function Sidebar({ drawerWidth = 240, onNavigate }) {
 
     if (!result.isConfirmed) return;
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-
-    await Swal.fire({
-      title: "Sesión cerrada",
-      text: "Has salido correctamente.",
-      icon: "success",
-      timer: 1400,
-      showConfirmButton: false,
-      background: COLORS.sidebarBg,
-      color: COLORS.textPrimary,
-      iconColor: COLORS.textPrimary
-    });
+    await runWithOverlay(
+      async () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        await new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+        await new Promise((resolve) => setTimeout(resolve, 320));
+      },
+      "Has salido del panel administrativo.",
+      { headline: "Sesión cerrada", minMs: 900 }
+    );
 
     if (onNavigate) onNavigate();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   return (
@@ -143,38 +183,45 @@ function Sidebar({ drawerWidth = 240, onNavigate }) {
       sx={{
         width: drawerWidth,
         height: "100vh",
+        maxHeight: "100vh",
         bgcolor: COLORS.sidebarBg,
         borderRight: `1px solid ${COLORS.border}`,
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        minHeight: 0
       }}
     >
-      <Box sx={{ px: 2, py: 2.25 }}>
+      <Box sx={{ px: 2, py: 2.25, flexShrink: 0 }}>
         <Typography
           sx={{
             fontWeight: 700,
             color: COLORS.textPrimary,
             fontSize: "1.12rem",
-            lineHeight: 1.2
+            lineHeight: 1.35,
+            wordBreak: "break-word"
           }}
         >
-          Lady Barber Itza
-        </Typography>
-        <Typography
-          sx={{
-            fontWeight: 700,
-            color: COLORS.textPrimary,
-            fontSize: "1.12rem",
-            lineHeight: 1.2
-          }}
-        >
-          D&apos;M
+          {nombreEmpresa || "\u00a0"}
         </Typography>
       </Box>
 
-      <Divider />
+      <Divider sx={{ flexShrink: 0 }} />
 
-      <Box sx={{ px: 1.5, py: 1.5, overflowY: "auto" }}>
+      <Box
+        sx={{
+          px: 1.5,
+          py: 1.5,
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+          // Scrollbar invisible (look pro, pero mantiene scroll)
+          scrollbarWidth: "none", // Firefox
+          msOverflowStyle: "none", // IE/Edge legacy
+          "&::-webkit-scrollbar": { width: 0, height: 0 } // Chrome/Safari
+        }}
+      >
         <List disablePadding>{menuPrincipal.map(renderItem)}</List>
 
         <Typography

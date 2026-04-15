@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="p" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#p)"/>
+  <rect x="220" y="160" width="360" height="200" rx="12" fill="#1e293b" fill-opacity="0.08" stroke="#475569" stroke-width="2"/>
+  <rect x="260" y="200" width="280" height="16" rx="4" fill="#64748b" fill-opacity="0.35"/>
+  <rect x="260" y="236" width="200" height="12" rx="3" fill="#94a3b8" fill-opacity="0.4"/>
+  <rect x="260" y="268" width="240" height="12" rx="3" fill="#94a3b8" fill-opacity="0.3"/>
+  <text x="400" y="420" text-anchor="middle" fill="#334155" font-family="system-ui,sans-serif" font-size="22" font-weight="600">Presentaciones</text>
+</svg>

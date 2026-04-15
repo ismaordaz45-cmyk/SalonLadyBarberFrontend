@@ -3,402 +3,324 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Container,
   Grid,
-  Paper,
   Typography,
   Button,
-  Card,
   CardContent,
-  Chip,
-  CircularProgress,
+  Skeleton,
   Alert
 } from "@mui/material";
+import {
+  CalendarMonthRounded,
+  EventAvailableRounded,
+  PeopleAltRounded,
+  StorefrontRounded,
+  HistoryRounded
+} from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import AdminPageShell from "../ui/admin/AdminPageShell";
+import AdminHeader from "../ui/admin/AdminHeader";
+import { GlassCard, IconWrapper } from "../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 
-import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomizeRounded";
-import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
-import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
-import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
+function readStoredUser() {
+  try {
+    const raw =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 function PaginaPrincipalAdministrativa() {
   const navigate = useNavigate();
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
-
-  const COLORS = {
-    bg: "#F1F5F9",
-    surface: "#FFFFFF",
-    surfaceAlt: "#F8FAFC",
-    border: "#E2E8F0",
-    textPrimary: "#1A252F",
-    textSecondary: "#52606D",
-    primary: "#2C3E50",
-    accent: "#D4AF37"
-  };
-
   const [resumen, setResumen] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const storedUser = useMemo(() => readStoredUser(), []);
+  const nombreMostrar =
+    storedUser?.nombre ||
+    storedUser?.correo ||
+    "Administración";
+  const rolLabel = storedUser?.rol
+    ? String(storedUser.rol).replace(/_/g, " ")
+    : "PROPIETARIA";
+
   useEffect(() => {
-    const cargarResumen = async () => {
+    let cancel = false;
+    const cargar = async () => {
       try {
         setLoading(true);
         setError("");
-        const { data } = await axios.get(`${API_URL}/api/dashboard/resumen`, { timeout: 8000 });
-        setResumen(data || null);
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const { data } = await axios.get(`${API_URL}/api/dashboard/resumen`, {
+          timeout: 8000,
+          headers
+        });
+        if (!cancel) setResumen(data || null);
       } catch (e) {
-        setError(
-          e?.response?.data?.error ||
-            e?.message ||
-            "No se pudo cargar el resumen del dashboard."
-        );
+        if (!cancel) {
+          setError(
+            e?.response?.data?.error ||
+              e?.message ||
+              "No se pudo cargar el resumen del dashboard."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancel) setLoading(false);
       }
     };
+    cargar();
+    return () => {
+      cancel = true;
+    };
+  }, []);
 
-    cargarResumen();
-  }, [API_URL]);
-
-  const stats = useMemo(() => [
-    {
-      label: "Citas de hoy",
-      value: loading ? "..." : resumen?.citas?.hoy ?? 0,
-      icon: <EventAvailableRoundedIcon />,
-      color: COLORS.primary,
-      helper: loading ? "Cargando..." : `${resumen?.citas?.pendientesHoy ?? 0} pendientes`
-    },
-    {
-      label: "Clientes activos",
-      value: loading ? "..." : resumen?.clientes?.activos ?? 0,
-      icon: <PeopleAltRoundedIcon />,
-      color: "#334155",
-      helper: loading ? "Cargando..." : `${resumen?.clientes?.total ?? 0} clientes totales`
-    },
-    {
-      label: "Servicios activos",
-      value: loading ? "..." : resumen?.servicios?.activos ?? 0,
-      icon: <StorefrontRoundedIcon />,
-      color: COLORS.accent,
-      helper: loading ? "Cargando..." : `${resumen?.servicios?.total ?? 0} en catálogo`
-    }
-  ], [COLORS.accent, COLORS.primary, loading, resumen]);
-
-  const quickActions = [
-    {
-      label: "Gestionar citas",
-      description: "Administra la agenda diaria y confirma turnos",
-      onClick: () => navigate("/admin/citas")
-    },
-    {
-      label: "Actualizar perfil",
-      description: "Edita datos, logo e información de tu salón",
-      onClick: () => navigate("/admin/perfil")
-    },
-    {
-      label: "Gestionar servicios",
-      description: "Actualiza precios, categorías y disponibilidad",
-      onClick: () => navigate("/admin/servicios")
-    }
-  ];
+  const citas = resumen?.citas || {};
+  const clientes = resumen?.clientes || {};
+  const servicios = resumen?.servicios || {};
 
   return (
-    <Box
-      sx={{
-        bgcolor: COLORS.bg,
-        py: 1
-      }}
-    >
-      <Container maxWidth="lg" sx={{ fontFamily: "'Geist Sans', Arial, sans-serif" }}>
-        {/* Encabezado de página */}
-        <Box
-          sx={{
-            mb: 4,
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap"
-          }}
-        >
-          <Box
-            sx={{
-              width: 56,
-              height: 56,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: alpha(COLORS.primary, 0.1)
-            }}
-          >
-            <DashboardCustomizeRoundedIcon sx={{ color: COLORS.primary, fontSize: 30 }} />
-          </Box>
+    <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+      <AdminHeader
+        eyebrow="Panel administrativo"
+        title={loading ? <Skeleton width={320} /> : `Hola, ${nombreMostrar}`}
+        subtitle={`Rol: ${rolLabel}`}
+        icon={<EventAvailableRounded sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+        right={
+          <Button variant="contained" color="primary" onClick={() => navigate("/admin/citas")}>
+            Gestión de citas
+          </Button>
+        }
+      />
 
-          <Box sx={{ fontFamily: "'Geist Sans', Arial, sans-serif" }}>
-            <Typography
-              variant="h4"
-              fontWeight={700}
-              sx={{
-                fontFamily: "'Playfair Display', serif",
-                color: COLORS.textPrimary,
-                fontSize: { xs: "2rem", md: "2.3rem" }
-              }}
-            >
-              Panel administrativo
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ color: COLORS.textSecondary, fontSize: { xs: "0.95rem", md: "1.05rem" } }}
-            >
-              Esta es la página principal del área administrativa de Lady Barber
-              ID&apos;M.
-            </Typography>
-          </Box>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          <Chip
-            label="Rol: PROPIETARIA"
-            sx={{
-              bgcolor: alpha(COLORS.primary, 0.08),
-              color: COLORS.primary,
-              fontWeight: 600,
-              fontSize: "0.9rem"
-            }}
-          />
-        </Box>
-
-        {/* Resumen principal */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={8}>
-            <Paper
-              elevation={3}
-              sx={{
-                p: 3.5,
-                borderRadius: 3,
-                border: `1px solid ${COLORS.border}`,
-                background: `linear-gradient(135deg, ${COLORS.surface} 0%, ${COLORS.surfaceAlt} 100%)`
-              }}
-            >
-              <Typography
-                variant="h6"
-                fontWeight={700}
-                sx={{ mb: 1.5, color: COLORS.textPrimary, fontSize: { xs: "1.15rem", md: "1.3rem" } }}
-              >
-                Bienvenida al panel
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ mb: 2.5, color: COLORS.textSecondary, fontSize: { xs: "0.95rem", md: "1.05rem" } }}
-              >
-                Visualiza el estado general del negocio con indicadores reales de la base de
-                datos y enfoca tu operación diaria.
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{ color: COLORS.textSecondary, fontSize: { xs: "0.9rem", md: "1rem" } }}
-              >
-                {loading
-                  ? "Sincronizando datos del backend..."
-                  : `Hoy tienes ${resumen?.citas?.pendientesHoy ?? 0} citas pendientes, ${resumen?.citas?.completadasHoy ?? 0} completadas y ${resumen?.clientes?.activos ?? 0} clientes activos.`}
-              </Typography>
-
-              <Box sx={{ mt: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <Button
-                  variant="contained"
-                  onClick={() => navigate("/admin/citas")}
-                  sx={{
-                    bgcolor: COLORS.primary,
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    px: 3,
-                    py: 1.2,
-                    "&:hover": { bgcolor: "#0F172A" }
-                  }}
-                >
-                  Ir a gestión de citas
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate("/admin/perfil")}
-                  sx={{
-                    borderColor: COLORS.border,
-                    color: COLORS.textPrimary,
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    px: 3,
-                    py: 1.2,
-                    "&:hover": {
-                      borderColor: COLORS.primary,
-                      backgroundColor: alpha(COLORS.primary, 0.06)
-                    }
-                  }}
-                >
-                  Configurar datos de la empresa
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
-
-          {/* Tarjetas de resumen */}
+        <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <Grid container spacing={2}>
-              {stats.map((stat) => (
-                <Grid item xs={12} key={stat.label}>
-                  <Card
-                    elevation={2}
-                    sx={{
-                      borderRadius: 3,
-                      border: `1px solid ${COLORS.border}`,
-                      backgroundColor: COLORS.surface
-                    }}
-                  >
-                    <CardContent
+            <GlassCard elevation={0}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Box>
+                    <Typography
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2
+                        color: P.secondary,
+                        fontWeight: 700,
+                        fontSize: "0.85rem"
                       }}
                     >
-                      <Box
-                        sx={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: 2,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          bgcolor: alpha(stat.color, 0.12),
-                          color: stat.color,
-                          fontSize: 26
-                        }}
-                      >
-                        {stat.icon}
-                      </Box>
+                      Citas hoy
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: P.primary,
+                        fontWeight: 900,
+                        fontSize: "2rem",
+                        mt: 0.5
+                      }}
+                    >
+                      {loading ? <Skeleton width={56} /> : citas.hoy ?? 0}
+                    </Typography>
+                    <Typography sx={{ color: P.secondary, fontSize: "0.8rem", mt: 0.5 }}>
+                      {loading ? (
+                        <Skeleton width={200} />
+                      ) : (
+                        <>
+                          {citas.pendientesHoy ?? 0} pendientes · {citas.completadasHoy ?? 0}{" "}
+                          completadas
+                        </>
+                      )}
+                    </Typography>
+                  </Box>
+                  <IconWrapper bgcolor={P.navy}>
+                    <EventAvailableRounded sx={{ color: P.navy }} />
+                  </IconWrapper>
+                </Box>
+                <Button
+                  onClick={() => navigate("/admin/citas")}
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Gestión de citas
+                </Button>
+              </CardContent>
+            </GlassCard>
+          </Grid>
 
-                      <Box>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ color: COLORS.textSecondary, fontSize: "0.9rem" }}
-                        >
-                          {stat.label}
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          fontWeight={700}
-                          sx={{ color: COLORS.textPrimary, fontSize: "1.3rem" }}
-                        >
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: COLORS.textSecondary }}>
-                          {stat.helper}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <GlassCard elevation={0}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: P.secondary,
+                        fontWeight: 700,
+                        fontSize: "0.85rem"
+                      }}
+                    >
+                      Clientes activos
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: P.primary,
+                        fontWeight: 900,
+                        fontSize: "2rem",
+                        mt: 0.5
+                      }}
+                    >
+                      {loading ? <Skeleton width={56} /> : clientes.activos ?? 0}
+                    </Typography>
+                    <Typography sx={{ color: P.secondary, fontSize: "0.8rem", mt: 0.5 }}>
+                      {loading ? (
+                        <Skeleton width={160} />
+                      ) : (
+                        <>{clientes.total ?? 0} registros en total</>
+                      )}
+                    </Typography>
+                  </Box>
+                  <IconWrapper bgcolor={P.accent}>
+                    <PeopleAltRounded sx={{ color: P.accent }} />
+                  </IconWrapper>
+                </Box>
+                <Button
+                  onClick={() => navigate("/admin/clientes")}
+                  variant="outlined"
+                  fullWidth
+                  sx={{
+                    mt: 2,
+                    borderColor: P.navy,
+                    color: P.navy,
+                    "&:hover": { borderColor: P.navy, bgcolor: alpha(P.navy, 0.06) }
+                  }}
+                >
+                  Ver usuarios
+                </Button>
+              </CardContent>
+            </GlassCard>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <GlassCard elevation={0}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: P.secondary,
+                        fontWeight: 700,
+                        fontSize: "0.85rem"
+                      }}
+                    >
+                      Servicios activos
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: P.primary,
+                        fontWeight: 900,
+                        fontSize: "2rem",
+                        mt: 0.5
+                      }}
+                    >
+                      {loading ? <Skeleton width={56} /> : servicios.activos ?? 0}
+                    </Typography>
+                    <Typography sx={{ color: P.secondary, fontSize: "0.8rem", mt: 0.5 }}>
+                      {loading ? (
+                        <Skeleton width={140} />
+                      ) : (
+                        <>{servicios.total ?? 0} en catálogo</>
+                      )}
+                    </Typography>
+                  </Box>
+                  <IconWrapper bgcolor={P.green}>
+                    <StorefrontRounded sx={{ color: P.green }} />
+                  </IconWrapper>
+                </Box>
+                <Button
+                  onClick={() => navigate("/admin/servicios")}
+                  variant="text"
+                  fullWidth
+                  startIcon={<CalendarMonthRounded />}
+                  sx={{
+                    mt: 2,
+                    fontWeight: 800,
+                    color: P.primary,
+                    "&:hover": { bgcolor: alpha(P.primary, 0.06) }
+                  }}
+                >
+                  Ir al catálogo
+                </Button>
+              </CardContent>
+            </GlassCard>
           </Grid>
         </Grid>
 
-        {loading && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              mb: 3,
-              borderRadius: 3,
-              border: `1px solid ${COLORS.border}`,
-              display: "flex",
-              alignItems: "center",
-              gap: 1.25
-            }}
-          >
-            <CircularProgress size={20} sx={{ color: COLORS.primary }} />
-            <Typography sx={{ color: COLORS.textSecondary, fontWeight: 600 }}>
-              Cargando indicadores del dashboard...
-            </Typography>
-          </Paper>
+        {!loading && resumen && (
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} sm={6}>
+              <GlassCard elevation={0}>
+                <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <CalendarMonthRounded sx={{ color: P.navy, fontSize: 36 }} />
+                  <Box>
+                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
+                      Citas en agenda (hoy o futuras, activas)
+                    </Typography>
+                    <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1.5rem" }}>
+                      {citas.agendaActivas ?? 0}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </GlassCard>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <GlassCard elevation={0}>
+                <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <HistoryRounded sx={{ color: P.secondary, fontSize: 36 }} />
+                  <Box>
+                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
+                      Citas cerradas (completadas, canceladas, no asistió)
+                    </Typography>
+                    <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1.5rem" }}>
+                      {citas.historialCerradas ?? 0}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </GlassCard>
+            </Grid>
+          </Grid>
         )}
 
         {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 3, borderRadius: 2, border: `1px solid ${alpha("#B91C1C", 0.2)}` }}
-          >
+          <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
             {error}
           </Alert>
         )}
-
-        {/* Accesos rápidos */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            sx={{ mb: 2.5, color: COLORS.textPrimary, fontSize: { xs: "1.1rem", md: "1.25rem" } }}
-          >
-            Accesos rápidos
-          </Typography>
-
-          <Grid container spacing={2}>
-            {quickActions.map((action) => (
-              <Grid item xs={12} md={4} key={action.label}>
-                <Paper
-                  elevation={1}
-                  sx={{
-                    p: 3,
-                    borderRadius: 3,
-                    border: `1px solid ${COLORS.border}`,
-                    bgcolor: COLORS.surface,
-                    transition: "all 180ms ease",
-                    "&:hover": {
-                      borderColor: alpha(COLORS.primary, 0.3),
-                      boxShadow: "0 8px 24px rgba(26, 37, 47, 0.08)",
-                      transform: "translateY(-2px)"
-                    }
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={600}
-                    sx={{ mb: 0.8, color: COLORS.textPrimary, fontSize: "1rem" }}
-                  >
-                    {action.label}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: COLORS.textSecondary, fontSize: "0.95rem" }}
-                  >
-                    {action.description}
-                  </Typography>
-                  <Button
-                    variant="text"
-                    onClick={action.onClick}
-                    sx={{
-                      mt: 1.5,
-                      px: 0,
-                      minWidth: "auto",
-                      color: COLORS.primary,
-                      fontWeight: 700,
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                        color: COLORS.accent
-                      }
-                    }}
-                  >
-                    Ir al módulo
-                  </Button>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-      </Container>
-    </Box>
+    </AdminPageShell>
   );
 }
 

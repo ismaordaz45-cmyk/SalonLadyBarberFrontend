@@ -1,8 +1,12 @@
+/* SweetAlert2 por encima del overlay de barbería (z-index ~20000) */
+.swal2-container {
+  z-index: 25050 !important;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+    "Noto Sans", "Liberation Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -10,4 +14,106 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Poste de barbero (BarberPole.jsx) */
+@keyframes barberPoleScrollY {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 36px;
+  }
+}
+
+@keyframes barberPoleScrollX {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 120px 0;
+  }
+}
+
+/* Overlay de acción (BarberActionOverlayContext) */
+@keyframes barberOverlayEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes barberOverlayBurst {
+  0% {
+    opacity: 0;
+    transform: scale(1.4);
+    background: radial-gradient(
+      circle at 50% 45%,
+      rgba(248, 250, 252, 0.55) 0%,
+      rgba(185, 28, 28, 0.15) 35%,
+      transparent 70%
+    );
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+    background: radial-gradient(
+      circle at 50% 45%,
+      rgba(248, 250, 252, 0) 0%,
+      transparent 65%
+    );
+  }
+}
+
+@keyframes barberOverlayShimmer {
+  0% {
+    background-position: 120% 50%;
+  }
+  100% {
+    background-position: -120% 50%;
+  }
+}
+
+@keyframes barberActionPoleBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.barber-action-overlay-root {
+  animation: barberOverlayEnter 0.35s ease-out;
+}
+
+.barber-action-overlay-burst {
+  animation: barberOverlayBurst 0.55s ease-out forwards;
+}
+
+.barber-action-pole-wrap {
+  animation: barberActionPoleBob 0.85s ease-in-out infinite;
+}
+
+/* Botón envío mientras carga (login / registro) */
+@keyframes barberSubmitGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(185, 28, 28, 0.35),
+      0 4px 18px rgba(30, 64, 175, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(30, 64, 175, 0.45),
+      0 4px 22px rgba(185, 28, 28, 0.25);
+  }
 }

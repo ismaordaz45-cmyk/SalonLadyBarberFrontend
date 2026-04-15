@@ -2,12 +2,11 @@
 // COMPONENTE: LayoutConEncabezado.jsx
 // ============================================
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 // Encabezados
 import EncabezadoPublico from "../compartidos/EncabezadoPublico";
-import EncabezadoCliente from "../compartidos/EncabezadoCliente";
 
 // Pies de página
 import PieDePaginaPublico from "../compartidos/PieDePaginaPublico";
@@ -19,6 +18,24 @@ import PieDePaginaPublico from "../compartidos/PieDePaginaPublico";
 const LayoutConEncabezado = ({ children }) => {
 
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isCliente = location.pathname.startsWith("/cliente");
+  const isPublico = !isAdmin && !isCliente;
+
+  useEffect(() => {
+    const cls = "publico-scroll-invisible";
+    if (isPublico) {
+      document.documentElement.classList.add(cls);
+      document.body.classList.add(cls);
+    } else {
+      document.documentElement.classList.remove(cls);
+      document.body.classList.remove(cls);
+    }
+    return () => {
+      document.documentElement.classList.remove(cls);
+      document.body.classList.remove(cls);
+    };
+  }, [isPublico]);
 
   let encabezado = null;
   let pie = null;
@@ -28,12 +45,12 @@ const LayoutConEncabezado = ({ children }) => {
   // (versión limpia – sin auth ni roles todavía)
   // ============================================
 
-  if (location.pathname.startsWith("/admin")) {
+  if (isAdmin) {
     encabezado = null;
     pie = null;
-  } else if (location.pathname.startsWith("/cliente")) {
-    encabezado = <EncabezadoCliente />;
-    pie = <PieDePaginaPublico />;
+  } else if (isCliente) {
+    encabezado = null;
+    pie = null;
 
   } else {
 
@@ -48,13 +65,13 @@ const LayoutConEncabezado = ({ children }) => {
   // ============================================
 
   return (
-    <div className="layout-container">
+    <div className={`layout-container ${isPublico ? "layout-publico" : ""}`}>
 
-      <header>
+      <header className={isPublico ? "layout-header-publico" : undefined}>
         {encabezado}
       </header>
 
-      <main className="layout-content">
+      <main className={`layout-content ${isPublico ? "layout-content-publico" : ""}`}>
         {children}
       </main>
 
@@ -78,12 +95,40 @@ const LayoutConEncabezado = ({ children }) => {
 
         .layout-content {
           flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
           background-color: #ffffff;
           color: #000000;
         }
 
         header, footer {
           width: 100%;
+        }
+
+        /* ============================
+           SOLO RUTAS PÚBLICAS
+           - Encabezado fijo visible
+           - Scroll normal de la página (footer al final)
+           - Scrollbar derecho invisible
+        ============================ */
+        .layout-container.layout-publico .layout-header-publico {
+          position: sticky;
+          top: 0;
+          z-index: 1200;
+          flex: 0 0 auto;
+        }
+
+        html.publico-scroll-invisible,
+        body.publico-scroll-invisible {
+          -ms-overflow-style: none; /* IE/Edge legacy */
+          scrollbar-width: none; /* Firefox */
+        }
+
+        html.publico-scroll-invisible::-webkit-scrollbar,
+        body.publico-scroll-invisible::-webkit-scrollbar {
+          width: 0;
+          height: 0;
         }
       `}</style>
     </div>

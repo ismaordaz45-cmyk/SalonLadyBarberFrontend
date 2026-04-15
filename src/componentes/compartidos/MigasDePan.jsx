@@ -37,7 +37,13 @@ const rutasALabel = {
 
   // Páginas principales por rol (PROPIETARIA→/admin, EMPLEADA→/recepcion, CLIENTE→/cliente)
   '/admin': 'Administración',
+  '/admin/clientes': 'Usuarios',
+  '/admin/citas': 'Gestión de citas',
+  // Cliente: etiquetas alineadas a los módulos del sidebar (evita duplicar "Inicio" del sitio)
   '/cliente': 'Área cliente',
+  '/cliente/servicios': 'Servicios',
+  '/cliente/citas': 'Mis citas',
+  '/cliente/perfil': 'Perfil',
   '/recepcion': 'Recepción',
 
   // Errores
