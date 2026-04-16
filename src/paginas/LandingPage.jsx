@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Accordion,
@@ -57,25 +57,25 @@ const EVENTOS = [
     key: "bodas",
     titulo: "Bodas",
     subtitulo: "Peinados y maquillaje para el día más especial.",
-    imagen: `${IMG}/evento-bodas.jpg`
+    imagen: `${IMG}/evento-bodas.svg`
   },
   {
     key: "xv",
     titulo: "XV Años",
     subtitulo: "Looks memorables para celebrar tu transición con estilo.",
-    imagen: `${IMG}/evento-xv-anos.jpg`
+    imagen: `${IMG}/evento-xv-anos.svg`
   },
   {
     key: "grad",
     titulo: "Graduaciones",
     subtitulo: "Estilos impecables para tu logro académico.",
-    imagen: `${IMG}/evento-graduaciones.jpg`
+    imagen: `${IMG}/evento-graduaciones.svg`
   },
   {
     key: "pres",
     titulo: "Presentaciones",
     subtitulo: "Imagen cuidada para eventos formales y profesionales.",
-    imagen: `${IMG}/evento-presentaciones.jpg`
+    imagen: `${IMG}/evento-presentaciones.svg`
   }
 ];
 
@@ -157,11 +157,6 @@ function LandingPage() {
     tradicion: false
   }));
 
-  const eventosByKey = useMemo(() => {
-    const map = {};
-    EVENTOS.forEach((e) => (map[e.key] = e));
-    return map;
-  }, []);
 
   return (
     <Box
@@ -192,7 +187,7 @@ function LandingPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundImage: `url(${IMG}/hero-salon.jpg)`,
+          backgroundImage: `url(${IMG}/hero-salon.svg)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           "&::before": {
@@ -669,7 +664,7 @@ function LandingPage() {
             <Grid item xs={12} md={6}>
               <Box
                 component="img"
-                src={`${IMG}/tradicion-calidad.jpg`}
+                src={`${IMG}/tradicion-calidad.svg`}
                 alt="Tradición y calidad"
                 onLoad={() => setImgReady((s) => ({ ...s, tradicion: true }))}
                 sx={{

@@ -16,7 +16,6 @@ import PaginaCatalogoPublico from "./paginas/PaginaCatalogoPublico";
 import PaginaNosotrosPublico from "./paginas/PaginaNosotrosPublico";
 import PaginaNovedadesPublico from "./paginas/PaginaNovedadesPublico";
 import PaginaPrincipalAdministrativa from "./paginas/PaginaPrincipalAdminitrativo";
-import PaginaAdminBaseDatos from "./paginas/PaginaAdminBaseDatos";
 import PaginaAdminRespaldo from "./paginas/PaginaAdminRespaldo";
 import PaginaAdminImportExport from "./paginas/PaginaAdminImportExport";
 import PaginaAdminMonitoreo from "./paginas/PaginaAdminMonitoreo";

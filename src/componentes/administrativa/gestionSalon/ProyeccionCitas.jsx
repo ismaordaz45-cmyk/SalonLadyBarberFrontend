@@ -365,8 +365,8 @@ function ProyeccionCitas() {
     fetchData();
   }, [fetchData]);
 
-  const historico = payload?.historicoSemanal || [];
-  const prediccion = payload?.prediccionSemanas || [];
+  const historico = useMemo(() => payload?.historicoSemanal || [], [payload?.historicoSemanal]);
+  const prediccion = useMemo(() => payload?.prediccionSemanas || [], [payload?.prediccionSemanas]);
   const serviciosTop = payload?.serviciosTop || [];
   const historicoDiario = payload?.historicoDiario || [];
   const prediccionDiaria = payload?.prediccionDiaria || [];

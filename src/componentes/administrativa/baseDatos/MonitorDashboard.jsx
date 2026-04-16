@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { Line } from "react-chartjs-2";
 import {
@@ -18,8 +18,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
-  Divider,
   Grid,
   IconButton,
   Paper,
@@ -275,7 +273,7 @@ function MonitorDashboard({ apiUrl }) {
   const [lastUpdate, setLastUpdate] = useState(null);
   const intervalRef = useRef(null);
 
-  const cargar = async ({ mostrarLoader = false } = {}) => {
+  const cargar = useCallback(async ({ mostrarLoader = false } = {}) => {
     try {
       if (mostrarLoader) setLoading(true);
       else setActualizando(true);
@@ -297,7 +295,7 @@ function MonitorDashboard({ apiUrl }) {
       setLoading(false);
       setActualizando(false);
     }
-  };
+  }, [API_URL]);
 
   useEffect(() => {
     cargar({ mostrarLoader: true });
@@ -309,11 +307,14 @@ function MonitorDashboard({ apiUrl }) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [API_URL]);
+  }, [cargar]);
 
   const dbStatus = data?.dbStatus || {};
   const server = data?.server || {};
-  const queries = Array.isArray(data?.queries) ? data.queries : [];
+  const queries = useMemo(
+    () => (Array.isArray(data?.queries) ? data.queries : []),
+    [data?.queries]
+  );
   const usuarios = Array.isArray(data?.usuarios) ? data.usuarios : [];
   const tablas = Array.isArray(data?.tablas) ? data.tablas : [];
 

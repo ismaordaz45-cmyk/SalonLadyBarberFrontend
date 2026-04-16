@@ -20,7 +20,8 @@ import ErrorOutlineRounded from "@mui/icons-material/ErrorOutlineRounded";
 import Google from "@mui/icons-material/Google";
 import Facebook from "@mui/icons-material/Facebook";
 
-const IMG_LOGIN = `${process.env.PUBLIC_URL || ""}/images/landing/login-salon.jpg`;
+// Imagen pública: usamos asset existente en public/images/landing
+const IMG_LOGIN = `${process.env.PUBLIC_URL || ""}/images/landing/hero-salon.svg`;
 
 const COLORS = {
   text: "#1E293B",

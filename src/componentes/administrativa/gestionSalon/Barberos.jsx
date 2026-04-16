@@ -555,7 +555,7 @@ function Barberos() {
               size="small"
               multiline
               minRows={4}
-              placeholder={`Ej:\n{\n  \"lun\": [{\"inicio\":\"10:00\",\"fin\":\"18:00\"}],\n  \"mar\": [{\"inicio\":\"10:00\",\"fin\":\"18:00\"}]\n}`}
+              placeholder={`Ej:\n{\n  "lun": [{"inicio":"10:00","fin":"18:00"}],\n  "mar": [{"inicio":"10:00","fin":"18:00"}]\n}`}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

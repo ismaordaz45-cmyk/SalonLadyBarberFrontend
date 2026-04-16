@@ -219,9 +219,9 @@ function daysInMonth(year, month1to12) {
 }
 
 function Estadisticas() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const now = useMemo(() => new Date(), []);
+  const [year, setYear] = useState(() => now.getFullYear());
+  const [month, setMonth] = useState(() => now.getMonth() + 1);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -258,8 +258,8 @@ function Estadisticas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year, month]);
 
-  const porDia = data?.porDia || [];
-  const tot = data?.totales || {};
+  const porDia = useMemo(() => data?.porDia || [], [data?.porDia]);
+  const tot = useMemo(() => data?.totales || {}, [data?.totales]);
 
   const diasMes = useMemo(() => daysInMonth(year, month), [year, month]);
 
@@ -383,7 +383,7 @@ function Estadisticas() {
         }
       }
     }),
-    [seriePorDia]
+    []
   );
 
   const areaSeries = useMemo(() => {
@@ -499,43 +499,6 @@ function Estadisticas() {
     []
   );
 
-  const statusBarHData = useMemo(
-    () => ({
-      labels: ["Atendidas", "Canceladas"],
-      datasets: [
-        {
-          label: "Citas",
-          data: [tot.completadas || 0, tot.canceladas || 0],
-          backgroundColor: [alpha(PALETTE.green, 0.9), alpha(PALETTE.red, 0.85)],
-          borderColor: [PALETTE.green, PALETTE.red],
-          borderWidth: 1,
-          borderRadius: 10,
-          barThickness: 20
-        }
-      ]
-    }),
-    [tot.completadas, tot.canceladas]
-  );
-
-  const statusBarHOptions = useMemo(
-    () => ({
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: {
-          grid: { color: alpha(PALETTE.border, 0.9) },
-          ticks: { color: PALETTE.secondary, precision: 0 }
-        },
-        y: {
-          grid: { display: false },
-          ticks: { color: PALETTE.secondary }
-        }
-      }
-    }),
-    []
-  );
 
   const monthLabel = `${MONTHS[month - 1]} ${year}`;
   const promedioDiario = useMemo(() => {

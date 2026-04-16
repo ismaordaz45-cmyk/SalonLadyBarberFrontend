@@ -29,8 +29,8 @@ const API_URL = "http://localhost:4000";
 
 const ROL_CLIENTE = "CLIENTE";
 
-/** `public/images/landing/register-salon.jpg` */
-const IMG_REGISTER = `${process.env.PUBLIC_URL || ""}/images/landing/register-salon.jpg`;
+/** Imagen pública: usamos asset existente en public/images/landing */
+const IMG_REGISTER = `${process.env.PUBLIC_URL || ""}/images/landing/hero-salon.svg`;
 
 const COLORS = {
   text: "#1E293B",

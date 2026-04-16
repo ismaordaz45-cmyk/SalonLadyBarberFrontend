@@ -21,7 +21,6 @@ import {
   AutoGraphRounded,
   GroupRounded,
   EventAvailableRounded,
-  StorageRounded,
   BackupRounded,
   UploadFileRounded,
   MonitorHeartRounded,
