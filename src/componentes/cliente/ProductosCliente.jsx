@@ -24,7 +24,6 @@ import { ADMIN_PALETTE as P } from "../../ui/admin/adminTokens";
 import { resolveServicioImagenUrl } from "../../utils/resolveServicioImagenUrl";
 import { useCart } from "../../context/CartContext";
 import Badge from "@mui/material/Badge";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -46,7 +45,7 @@ export default function ProductosCliente() {
   const [q, setQ] = useState("");
   const [cartModalOpen, setCartModalOpen] = useState(false);
 
-  const { cart, addToCart, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
 
   useEffect(() => {
     let cancel = false;
