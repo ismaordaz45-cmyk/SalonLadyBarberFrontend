@@ -51,7 +51,7 @@ import AdminHeader from "../../../ui/admin/AdminHeader";
 import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 const MySwal = withReactContent(Swal);
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const PALETA = {
   principal: "#2C3E50",

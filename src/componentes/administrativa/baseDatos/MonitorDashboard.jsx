@@ -264,7 +264,7 @@ function getMemoryPercentage(free, total) {
 }
 
 function MonitorDashboard({ apiUrl }) {
-  const API_URL = apiUrl || process.env.REACT_APP_API_URL || "http://localhost:4000";
+  const API_URL = apiUrl || process.env.REACT_APP_API_URL || "https://salonladybarberbackend.onrender.com";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

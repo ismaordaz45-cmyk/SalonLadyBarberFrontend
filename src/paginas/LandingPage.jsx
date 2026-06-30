@@ -164,7 +164,7 @@ function LandingPage() {
   useEffect(() => {
     const fetchPerfil = async () => {
       try {
-        const { data } = await axios.get("http://localhost:4000/api/perfil-empresa");
+        const { data } = await axios.get("https://salonladybarberbackend.onrender.com/api/perfil-empresa");
         setPerfil(data);
       } catch (err) {
         console.error("Error al cargar perfil en landing:", err);

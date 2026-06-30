@@ -30,7 +30,7 @@ import {
 import { alpha, useTheme } from "@mui/material/styles";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 // ============================================
 // COMPONENTE PRINCIPAL

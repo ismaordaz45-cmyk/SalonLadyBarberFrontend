@@ -24,7 +24,7 @@ import { GlassCard, IconWrapper } from "../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+const API_URL = process.env.REACT_APP_API_URL || "https://salonladybarberbackend.onrender.com";
 
 function readStoredUser() {
   try {

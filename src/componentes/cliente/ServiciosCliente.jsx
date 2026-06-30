@@ -20,7 +20,7 @@ import AdminHeader from "../../ui/admin/AdminHeader";
 import { GlassCard } from "../../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../../ui/admin/adminTokens";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 function ServiciosCliente() {
   const [servicios, setServicios] = useState([]);

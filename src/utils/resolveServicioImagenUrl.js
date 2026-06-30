@@ -14,7 +14,7 @@ function looksLikeRawBase64(s) {
  * Convierte imagenUrl del servicio (o insumo) a URL usable en <img src="...">.
  *
  * @param {string|null|undefined} imagenUrl
- * @param {string|null|undefined} apiBaseUrl Origen del API (p. ej. http://localhost:4000) para rutas bajo /uploads
+ * @param {string|null|undefined} apiBaseUrl Origen del API (p. ej. https://salonladybarberbackend.onrender.com) para rutas bajo /uploads
  */
 export function resolveServicioImagenUrl(imagenUrl, apiBaseUrl) {
   if (imagenUrl == null) return null;

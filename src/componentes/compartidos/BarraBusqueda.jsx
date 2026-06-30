@@ -23,7 +23,7 @@ import {
 import SearchRounded from '@mui/icons-material/SearchRounded';
 import TuneRounded from '@mui/icons-material/TuneRounded';
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 // ============================================
 // COMPONENTE PRINCIPAL

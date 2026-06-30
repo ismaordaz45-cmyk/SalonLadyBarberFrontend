@@ -15,7 +15,7 @@ const sanitizeInput = (value) =>
     ALLOWED_ATTR: []
   }).trim();
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const MSG_LOGIN_INVALIDO =
   "Los datos ingresados no son válidos. Por favor, verifica tu correo y contraseña.";

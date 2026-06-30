@@ -25,7 +25,7 @@ import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext
 
 const MySwal = withReactContent(Swal);
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const ROL_CLIENTE = "CLIENTE";
 

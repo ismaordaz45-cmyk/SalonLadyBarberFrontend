@@ -119,7 +119,7 @@ function Respaldo({ embedded = false }) {
     } catch {
       // ignore
     }
-    return "http://localhost:4000";
+    return "https://salonladybarberbackend.onrender.com";
   }, []);
 
   const fetchInfo = useCallback(async () => {

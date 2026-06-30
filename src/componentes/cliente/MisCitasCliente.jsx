@@ -23,7 +23,7 @@ import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
 import BarberPole from "../compartidos/BarberPole";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const COLORS = {
   navy: "#1E3A5A",

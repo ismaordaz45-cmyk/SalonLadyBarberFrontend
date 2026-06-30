@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { resolveServicioImagenUrl } from "../utils/resolveServicioImagenUrl";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const PALETTE = {
   pageBg: "#F1F5F9",

@@ -35,7 +35,7 @@ import { ADMIN_PALETTE as P } from "../../../ui/admin/adminTokens";
 
 function CsvImportExport({ mostrarTitulo = true }) {
 
-  const API_URL = "http://localhost:4000";
+  const API_URL = "https://salonladybarberbackend.onrender.com";
 
   const [tipo, setTipo] = useState("servicios");
   const [archivo, setArchivo] = useState(null);

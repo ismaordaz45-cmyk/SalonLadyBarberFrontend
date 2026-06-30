@@ -25,7 +25,7 @@ import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext
 const MySwal = withReactContent(Swal);
 
 const IMG_RESET = `${process.env.PUBLIC_URL || ""}/images/landing/hero-salon.svg`;
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const COLORS = {
   text: "#1E293B",

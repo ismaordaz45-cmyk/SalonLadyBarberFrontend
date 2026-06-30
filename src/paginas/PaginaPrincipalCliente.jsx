@@ -25,7 +25,7 @@ import VistaPreviaServiciosCliente from "../componentes/cliente/VistaPreviaServi
 import VistaPreviaProductosInventarioCliente from "../componentes/cliente/VistaPreviaProductosInventarioCliente";
 import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 // --------------------------------------------------
 // Página principal cliente

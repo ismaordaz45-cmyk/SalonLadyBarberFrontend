@@ -68,7 +68,7 @@ const menuSecundario = [
   { label: "Configuración", path: "/admin/configuracion", icon: <SettingsRounded /> }
 ];
 
-const API_URL = "http://localhost:4000";
+const API_URL = "https://salonladybarberbackend.onrender.com";
 
 function Sidebar({ drawerWidth = 240, onNavigate }) {
   const location = useLocation();

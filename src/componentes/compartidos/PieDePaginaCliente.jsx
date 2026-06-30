@@ -25,7 +25,7 @@ import {
 } from "@mui/icons-material";
 import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
 
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "https://salonladybarberbackend.onrender.com";
 
 const PieDePaginaCliente = () => {
   const [nombreEmpresa, setNombreEmpresa] = useState("Lady Barber ID'M");

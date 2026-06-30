@@ -20,7 +20,7 @@ import BarberPole from "../compartidos/BarberPole";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
 /** Misma API que Perfil / Encabezado público (logo y nombre empresa). */
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE_URL = "https://salonladybarberbackend.onrender.com";
 
 /**
  * Tokens del sidebar oscuro (alineado a Figma: slate profundo).
