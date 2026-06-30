@@ -542,7 +542,10 @@ function Estadisticas() {
         py: { xs: 2, md: 4 },
         background:
           `linear-gradient(180deg, ${PALETTE.pageBg} 0%, ${alpha(PALETTE.cream, 0.3)} 100%)`,
-        "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif', letterSpacing: "0.02em" }
+        fontFamily: 'Arial, "Segoe UI", Tahoma, sans-serif',
+        fontSize: "12px",
+        "& .MuiTypography-root": { fontFamily: 'Arial, "Segoe UI", Tahoma, sans-serif', fontSize: "12px" },
+        "& .pcDisplay": { fontFamily: 'Arial, "Segoe UI", Tahoma, sans-serif' }
       }}
     >
       <Container maxWidth="xl" disableGutters sx={{ px: { xs: 2, md: 3 } }}>

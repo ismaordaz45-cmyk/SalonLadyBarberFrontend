@@ -21,6 +21,7 @@ import {
   Verified as VerificadoIcon,
   Favorite as FavoritoIcon,
 } from "@mui/icons-material";
+import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
 const MotionCard = motion(Card);
 const MotionBox = motion(Box);
@@ -362,6 +363,11 @@ const PaginaPrincipalRecepcion = () => {
               </Grid>
             ))}
           </Grid>
+        </Box>
+
+        {/* CONECTAR ALEXA */}
+        <Box sx={{ mt: 8 }}>
+          <ConectarAlexa />
         </Box>
 
       </Container>

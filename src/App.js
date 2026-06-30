@@ -3,6 +3,7 @@ import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import { BarberActionOverlayProvider } from "./context/BarberActionOverlayContext";
+import { CartProvider } from "./context/CartContext";
 import MigasDePan from "./componentes/compartidos/MigasDePan";
 
 import LayoutConEncabezado from "./componentes/layout/LayoutConEncabezado";
@@ -29,6 +30,9 @@ import PaginaError404 from "./paginas/PaginaError404";
 import PaginaError501 from "./paginas/PaginaError501";
 import Login from "./componentes/autenticacion/Login";
 import Registro from "./componentes/autenticacion/Registro";
+import RecuperarContraseña from "./componentes/autenticacion/RecuperarContraseña";
+import RestablecerContraseña from "./componentes/autenticacion/RestablecerContraseña";
+import PagoExito from "./paginas/PagoExito";
 
 // ===== Componentes administrativa (PROPIETARIA) =====
 import Perfil from "./componentes/administrativa/datosEmpresa/Perfil";
@@ -65,6 +69,7 @@ const LayoutPublico = ({ children }) => {
 const App = () => {
   return (
     <BarberActionOverlayProvider>
+    <CartProvider>
     <LayoutConEncabezado>
       <Routes>
 
@@ -91,6 +96,24 @@ const App = () => {
           element={
             <LayoutPublico>
               <Registro />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/recovery"
+          element={
+            <LayoutPublico>
+              <RecuperarContraseña />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/restablecer-contrasena"
+          element={
+            <LayoutPublico>
+              <RestablecerContraseña />
             </LayoutPublico>
           }
         />
@@ -393,8 +416,20 @@ const App = () => {
           }
         />
 
+        <Route
+          path="/pago-exito"
+          element={
+            <ProtectedRoute allowedRoles={["CLIENTE"]}>
+              <LayoutConEncabezado>
+                <PagoExito />
+              </LayoutConEncabezado>
+            </ProtectedRoute>
+          }
+        />
+
       </Routes>
     </LayoutConEncabezado>
+    </CartProvider>
     </BarberActionOverlayProvider>
   );
 };

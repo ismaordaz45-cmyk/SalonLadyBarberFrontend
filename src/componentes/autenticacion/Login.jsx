@@ -32,6 +32,19 @@ function Login() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [perfil, setPerfil] = useState(null);
+
+  React.useEffect(() => {
+    const fetchPerfil = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/api/perfil-empresa`);
+        setPerfil(data);
+      } catch (err) {
+        console.error("Error al cargar perfil en login:", err);
+      }
+    };
+    fetchPerfil();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -150,6 +163,7 @@ function Login() {
       showPassword={showPassword}
       onTogglePassword={() => setShowPassword((p) => !p)}
       isLoading={isLoading}
+      perfil={perfil}
     />
   );
 }

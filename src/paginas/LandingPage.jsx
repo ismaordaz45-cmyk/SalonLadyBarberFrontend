@@ -19,6 +19,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import BarberPole from "../componentes/compartidos/BarberPole";
+import axios from "axios";
+import { logoBase64ToDataUrl } from "../utils/logoDataUrl";
 
 const IMG = `${process.env.PUBLIC_URL || ""}/images/landing`;
 
@@ -157,6 +159,24 @@ function LandingPage() {
     tradicion: false
   }));
 
+  const [perfil, setPerfil] = useState(null);
+
+  useEffect(() => {
+    const fetchPerfil = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:4000/api/perfil-empresa");
+        setPerfil(data);
+      } catch (err) {
+        console.error("Error al cargar perfil en landing:", err);
+      }
+    };
+    fetchPerfil();
+  }, []);
+
+  const heroImage = perfil?.hero_image 
+    ? logoBase64ToDataUrl(perfil.hero_image) 
+    : `${IMG}/hero-salon.svg`;
+
 
   return (
     <Box
@@ -187,7 +207,7 @@ function LandingPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundImage: `url(${IMG}/hero-salon.svg)`,
+          backgroundImage: `url(${heroImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           "&::before": {

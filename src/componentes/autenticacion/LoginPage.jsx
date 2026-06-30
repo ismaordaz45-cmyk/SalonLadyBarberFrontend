@@ -19,6 +19,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ErrorOutlineRounded from "@mui/icons-material/ErrorOutlineRounded";
 import Google from "@mui/icons-material/Google";
 import Facebook from "@mui/icons-material/Facebook";
+import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
 
 // Imagen pública: usamos asset existente en public/images/landing
 const IMG_LOGIN = `${process.env.PUBLIC_URL || ""}/images/landing/hero-salon.svg`;
@@ -45,9 +46,14 @@ function LoginPage({
   error,
   showPassword,
   onTogglePassword,
-  isLoading
+  isLoading,
+  perfil
 }) {
   const showErrorAlert = Boolean(error && String(error).trim());
+
+  const dynamicLoginImg = perfil?.login_image 
+    ? logoBase64ToDataUrl(perfil.login_image) 
+    : IMG_LOGIN;
 
   return (
     <Box
@@ -75,7 +81,7 @@ function LoginPage({
       >
         <Box
           component="img"
-          src={IMG_LOGIN}
+          src={dynamicLoginImg}
           alt=""
           sx={{
             width: "100%",

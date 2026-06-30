@@ -23,6 +23,7 @@ import { GlassCard, IconWrapper } from "../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 import VistaPreviaServiciosCliente from "../componentes/cliente/VistaPreviaServiciosCliente";
 import VistaPreviaProductosInventarioCliente from "../componentes/cliente/VistaPreviaProductosInventarioCliente";
+import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
 const API_URL = "http://localhost:4000";
 
@@ -233,6 +234,10 @@ function PaginaPrincipalCliente() {
 
         <VistaPreviaServiciosCliente maxItems={3} />
         <VistaPreviaProductosInventarioCliente maxItems={3} />
+
+        <Box sx={{ mt: 4 }}>
+          <ConectarAlexa />
+        </Box>
     </AdminPageShell>
   );
 }

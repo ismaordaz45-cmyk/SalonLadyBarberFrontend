@@ -7,6 +7,7 @@ export function logoBase64ToDataUrl(base64) {
   const raw = String(base64).trim().replace(/\s/g, "");
   if (!raw) return "";
   if (raw.startsWith("data:image")) return raw;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
 
   let mime = "image/jpeg";
   if (raw.startsWith("iVBORw0KGgo")) mime = "image/png";

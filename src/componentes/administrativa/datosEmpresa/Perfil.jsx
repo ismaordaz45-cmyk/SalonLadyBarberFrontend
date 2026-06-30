@@ -72,7 +72,9 @@ function Perfil() {
     ubicacion: "",
     horarioAtencion: "",
     sitioWeb: "",
-    logo: ""
+    logo: "",
+    hero_image: "",
+    login_image: ""
   });
 
   const [redes, setRedes] = useState([]);
@@ -80,6 +82,8 @@ function Perfil() {
   const [redEditando, setRedEditando] = useState(null);
   const [formRed, setFormRed] = useState({ nombreRed: "", url: "" });
   const inputLogoRef = useRef(null);
+  const inputHeroRef = useRef(null);
+  const inputLoginImgRef = useRef(null);
 
   const [loadingPerfil, setLoadingPerfil] = useState(true);
   const [savingPerfil, setSavingPerfil] = useState(false);
@@ -113,6 +117,52 @@ function Perfil() {
     }
   };
 
+  const handleHeroChange = async (e) => {
+    const file = e.target?.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    try {
+      const base64 = await compressLogoImageFile(file);
+      setPerfil((prev) => ({ ...prev, hero_image: base64 }));
+    } catch (err) {
+      console.error("Error al procesar imagen de fondo:", err);
+      await MySwal.fire({
+        icon: "error",
+        title: "No se pudo procesar la imagen",
+        text: "Prueba con un archivo más pequeño.",
+        timer: 2800,
+        showConfirmButton: false,
+        background: PALETA.fondoIcono(0.2),
+        color: PALETA.oscuro,
+        iconColor: PALETA.principal
+      });
+    } finally {
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleLoginImgChange = async (e) => {
+    const file = e.target?.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    try {
+      const base64 = await compressLogoImageFile(file);
+      setPerfil((prev) => ({ ...prev, login_image: base64 }));
+    } catch (err) {
+      console.error("Error al procesar imagen de login:", err);
+      await MySwal.fire({
+        icon: "error",
+        title: "No se pudo procesar la imagen",
+        text: "Prueba con un archivo más pequeño.",
+        timer: 2800,
+        showConfirmButton: false,
+        background: PALETA.fondoIcono(0.2),
+        color: PALETA.oscuro,
+        iconColor: PALETA.principal
+      });
+    } finally {
+      if (e.target) e.target.value = "";
+    }
+  };
+
   // Cargar perfil al montar
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -129,7 +179,9 @@ function Perfil() {
           ubicacion: data.ubicacion || "",
           horarioAtencion: data.horarioAtencion || "",
           sitioWeb: data.sitioWeb || "",
-          logo: data.logo || ""
+          logo: data.logo || "",
+          hero_image: data.hero_image || "",
+          login_image: data.login_image || ""
         });
       } catch (err) {
         if (err.response?.status === 404) {
@@ -143,7 +195,9 @@ function Perfil() {
             ubicacion: "",
             horarioAtencion: "",
             sitioWeb: "",
-            logo: ""
+            logo: "",
+            hero_image: "",
+            login_image: ""
           });
         } else {
           await MySwal.fire({
@@ -251,6 +305,8 @@ function Perfil() {
         ubicacion: perfil.ubicacion || null,
         sitioWeb: perfil.sitioWeb || null,
         logo: perfil.logo || null,
+        hero_image: perfil.hero_image || null,
+        login_image: perfil.login_image || null,
         activo: 1
       };
       const barberOpts = {
@@ -440,6 +496,8 @@ function Perfil() {
   };
 
   const logoPreview = perfil.logo ? logoBase64ToDataUrl(perfil.logo) : null;
+  const heroPreview = perfil.hero_image ? logoBase64ToDataUrl(perfil.hero_image) : null;
+  const loginPreview = perfil.login_image ? logoBase64ToDataUrl(perfil.login_image) : null;
 
   if (loadingPerfil) {
     return (
@@ -552,6 +610,146 @@ function Perfil() {
               </Button>
               <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, maxWidth: 200, lineHeight: 1.45 }}>
                 JPG, PNG o WebP. Se ajusta tamaño y se guarda como JPEG para evitar errores con imágenes muy pesadas. Use &quot;Guardar perfil&quot; para aplicar.
+              </Typography>
+            </Box>
+
+            {/* Nueva tarjeta para la Imagen de Fondo Hero */}
+            <Box sx={{ flexShrink: 0 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Imagen de fondo (Sección Pública)
+              </Typography>
+              <input
+                ref={inputHeroRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleHeroChange}
+                style={{ display: "none" }}
+              />
+              <Box
+                sx={{
+                  width: 240,
+                  height: 135, // Proporción 16:9 aprox
+                  borderRadius: 2,
+                  border: `1px solid ${PALETA.borde(0.25)}`,
+                  bgcolor: PALETA.fondoIcono(0.05),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  boxShadow: "0 1px 3px rgba(44, 62, 80, 0.08)"
+                }}
+              >
+                {heroPreview ? (
+                  <Box
+                    component="img"
+                    src={heroPreview}
+                    alt="Fondo Hero"
+                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <Box sx={{ textAlign: "center", px: 2 }}>
+                    <ImageOutlinedIcon sx={{ color: PALETA.borde(0.5), fontSize: 44 }} />
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, lineHeight: 1.35 }}>
+                      Sin fondo personalizado
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              <Button
+                type="button"
+                variant="outlined"
+                size="small"
+                startIcon={<CloudUploadRoundedIcon />}
+                onClick={() => inputHeroRef.current?.click()}
+                sx={{
+                  mt: 1.5,
+                  minWidth: 240,
+                  borderColor: PALETA.principal,
+                  color: PALETA.principal,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  py: 0.75,
+                  "&:hover": {
+                    borderColor: PALETA.acento,
+                    color: PALETA.oscuro,
+                    bgcolor: alpha(PALETA.acento, 0.12)
+                  }
+                }}
+              >
+                {heroPreview ? "Cambiar fondo" : "Subir fondo"}
+              </Button>
+              <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, maxWidth: 240, lineHeight: 1.45 }}>
+                Esta imagen aparecerá como fondo principal en la página de inicio pública. Se recomienda una imagen apaisada (Landscape).
+              </Typography>
+            </Box>
+
+            {/* Nueva tarjeta para la Imagen de Login */}
+            <Box sx={{ flexShrink: 0 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5 }}>
+                Imagen de Login (Lateral)
+              </Typography>
+              <input
+                ref={inputLoginImgRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleLoginImgChange}
+                style={{ display: "none" }}
+              />
+              <Box
+                sx={{
+                  width: 160,
+                  height: 200, // Proporción vertical para el login
+                  borderRadius: 2,
+                  border: `1px solid ${PALETA.borde(0.25)}`,
+                  bgcolor: PALETA.fondoIcono(0.05),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  boxShadow: "0 1px 3px rgba(44, 62, 80, 0.08)"
+                }}
+              >
+                {loginPreview ? (
+                  <Box
+                    component="img"
+                    src={loginPreview}
+                    alt="Imagen Login"
+                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <Box sx={{ textAlign: "center", px: 2 }}>
+                    <ImageOutlinedIcon sx={{ color: PALETA.borde(0.5), fontSize: 44 }} />
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, lineHeight: 1.35 }}>
+                      Sin imagen de login
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              <Button
+                type="button"
+                variant="outlined"
+                size="small"
+                startIcon={<CloudUploadRoundedIcon />}
+                onClick={() => inputLoginImgRef.current?.click()}
+                sx={{
+                  mt: 1.5,
+                  minWidth: 160,
+                  borderColor: PALETA.principal,
+                  color: PALETA.principal,
+                  fontWeight: 600,
+                  textTransform: "none",
+                  py: 0.75,
+                  "&:hover": {
+                    borderColor: PALETA.acento,
+                    color: PALETA.oscuro,
+                    bgcolor: alpha(PALETA.acento, 0.12)
+                  }
+                }}
+              >
+                {loginPreview ? "Cambiar imagen" : "Subir imagen"}
+              </Button>
+              <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1, maxWidth: 160, lineHeight: 1.45 }}>
+                Esta imagen aparecerá en el lateral izquierdo de la pantalla de inicio de sesión. Se recomienda una imagen vertical (Portrait).
               </Typography>
             </Box>
 

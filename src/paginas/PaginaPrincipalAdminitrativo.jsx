@@ -22,6 +22,7 @@ import AdminPageShell from "../ui/admin/AdminPageShell";
 import AdminHeader from "../ui/admin/AdminHeader";
 import { GlassCard, IconWrapper } from "../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
+import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
@@ -314,6 +315,12 @@ function PaginaPrincipalAdministrativa() {
             </Grid>
           </Grid>
         )}
+
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid item xs={12}>
+            <ConectarAlexa />
+          </Grid>
+        </Grid>
 
         {error && (
           <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
