@@ -420,9 +420,7 @@ const App = () => {
           path="/pago-exito"
           element={
             <ProtectedRoute allowedRoles={["CLIENTE"]}>
-              <LayoutConEncabezado>
-                <PagoExito />
-              </LayoutConEncabezado>
+              <PagoExito />
             </ProtectedRoute>
           }
         />

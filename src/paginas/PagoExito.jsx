@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import { useCart } from "../context/CartContext";
@@ -11,12 +11,16 @@ const PagoExito = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [loading, setLoading] = useState(true);
+  const hasCalled = useRef(false); // guardia: solo confirmar UNA vez
 
   const pedidoId = searchParams.get("pedidoId");
   const paymentId = searchParams.get("payment_id");
   const status = searchParams.get("status");
 
   useEffect(() => {
+    if (hasCalled.current) return; // ya corrió, no volver a ejecutar
+    hasCalled.current = true;
+
     const confirmarPago = async () => {
       try {
         if (pedidoId && paymentId) {
