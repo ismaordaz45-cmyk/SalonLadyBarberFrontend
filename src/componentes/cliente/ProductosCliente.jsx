@@ -16,6 +16,8 @@ import Inventory2Rounded from "@mui/icons-material/Inventory2Rounded";
 import AddRounded from "@mui/icons-material/AddRounded";
 import ShoppingCartRounded from "@mui/icons-material/ShoppingCartRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
+import BoltRounded from "@mui/icons-material/BoltRounded";
+import CircularProgress from "@mui/material/CircularProgress";
 import InputAdornment from "@mui/material/InputAdornment";
 import AdminPageShell from "../../ui/admin/AdminPageShell";
 import AdminHeader from "../../ui/admin/AdminHeader";
@@ -44,6 +46,7 @@ export default function ProductosCliente() {
   const [productos, setProductos] = useState([]);
   const [q, setQ] = useState("");
   const [cartModalOpen, setCartModalOpen] = useState(false);
+  const [buyingNow, setBuyingNow] = useState(null); // id del producto en proceso
 
   const { cart, addToCart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
 
@@ -238,6 +241,50 @@ export default function ProductosCliente() {
                         }}
                       >
                         {stock <= 0 ? "Sin Stock" : "Agregar"}
+                      </Button>
+
+                      {/* BOTÓN COMPRAR AHORA */}
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={
+                          buyingNow === p.id
+                            ? <CircularProgress size={16} sx={{ color: P.oscuro }} />
+                            : <BoltRounded />
+                        }
+                        disabled={stock <= 0 || buyingNow === p.id}
+                        onClick={async () => {
+                          try {
+                            setBuyingNow(p.id);
+                            // Agregar al carrito primero (con precio normalizado)
+                            addToCart(p);
+                            // Crear preferencia solo con este producto
+                            const precioVenta = Number(p.precioVenta ?? p.precioUnitario ?? 0);
+                            const user = JSON.parse(localStorage.getItem("user") || "{}");
+                            const { data } = await api.post("/api/mercado-pago/crear-preferencia", {
+                              items: [{ ...p, precioVenta, cantidad: 1 }],
+                              clienteId: user.id
+                            });
+                            if (data.init_point) {
+                              window.location.href = data.init_point;
+                            }
+                          } catch (err) {
+                            console.error("Error al iniciar compra rápida:", err);
+                            alert("Hubo un problema al procesar el pago. Intenta de nuevo.");
+                          } finally {
+                            setBuyingNow(null);
+                          }
+                        }}
+                        sx={{
+                          mt: 1,
+                          fontWeight: 900,
+                          bgcolor: P.accent,
+                          color: P.oscuro || "#1a1a2e",
+                          "&:hover": { bgcolor: alpha(P.accent, 0.82) },
+                          "&:disabled": { bgcolor: alpha(P.accent, 0.4) }
+                        }}
+                      >
+                        {buyingNow === p.id ? "Redirigiendo…" : "Comprar ahora"}
                       </Button>
                     </CardContent>
                   </GlassCard>

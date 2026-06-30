@@ -21,16 +21,21 @@ export const CartProvider = ({ children }) => {
   }, [cart]);
 
   const addToCart = (product) => {
+    // Normalizar el precio: los insumos vienen con precioUnitario, el carrito/MP necesita precioVenta
+    const normalizedProduct = {
+      ...product,
+      precioVenta: Number(product.precioVenta ?? product.precioUnitario ?? 0)
+    };
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id);
+      const existingItem = prevCart.find((item) => item.id === normalizedProduct.id);
       if (existingItem) {
         return prevCart.map((item) =>
-          item.id === product.id
+          item.id === normalizedProduct.id
             ? { ...item, cantidad: item.cantidad + 1 }
             : item
         );
       }
-      return [...prevCart, { ...product, cantidad: 1 }];
+      return [...prevCart, { ...normalizedProduct, cantidad: 1 }];
     });
   };
 
