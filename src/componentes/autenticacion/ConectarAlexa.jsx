@@ -48,6 +48,15 @@ const ConectarAlexa = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const formatPin = (pin) => {
+    if (!pin) return "";
+    const clean = String(pin).replace(/\D/g, "");
+    if (clean.length === 6) {
+      return `${clean.slice(0, 3)} ${clean.slice(3)}`;
+    }
+    return clean;
+  };
+
   const generarCodigo = async () => {
     setLoading(true);
     try {
@@ -137,14 +146,16 @@ const ConectarAlexa = () => {
           <Typography
             variant="h2"
             sx={{
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: { xs: "32px", sm: "40px" },
               fontWeight: "bold",
               color: COLORS.accent,
-              letterSpacing: 8,
+              letterSpacing: 4,
               my: 2,
               textShadow: `0 0 15px ${COLORS.accent}44`,
             }}
           >
-            {token}
+            {formatPin(token)}
           </Typography>
 
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1, mb: 3 }}>
