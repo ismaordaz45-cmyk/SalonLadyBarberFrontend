@@ -1,377 +1,445 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Container,
   Grid,
-  Card,
   CardContent,
-  CardMedia,
   Typography,
-  Box,
-  Chip,
   Button,
+  Box,
+  Skeleton,
+  Chip,
+  Alert,
+  Stack
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import { motion } from "framer-motion";
-
 import {
-  ContentCut as BarberIcon,
-  FaceRetouchingNatural as BellezaIcon,
-  School as ClaseIcon,
-  LocalShipping as EnviosIcon,
-  Verified as VerificadoIcon,
-  Favorite as FavoritoIcon,
+  CalendarMonthRounded,
+  AccessTimeRounded,
+  CheckCircleRounded,
+  ChevronRightRounded,
+  EventAvailableRounded
 } from "@mui/icons-material";
+import { alpha } from "@mui/material/styles";
+import AdminPageShell from "../ui/admin/AdminPageShell";
+import AdminHeader from "../ui/admin/AdminHeader";
+import { GlassCard, IconWrapper } from "../ui/admin/components";
+import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
+import api from "../api";
 
-const MotionCard = motion(Card);
-const MotionBox = motion(Box);
+function readStoredUser() {
+  try {
+    const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 const PaginaPrincipalRecepcion = () => {
+  const navigate = useNavigate();
+  const [citas, setCitas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  /*
-    👉 Cuando conectes backend limpio:
-    aquí solo reemplazas este estado por el fetch real.
-  */
-  const [servicios, setServicios] = useState([]);
+  const storedUser = useMemo(() => readStoredUser(), []);
+  const nombreMostrar =
+    storedUser?.nombre ||
+    storedUser?.correo ||
+    "Recepción";
 
   useEffect(() => {
-    // Datos temporales (mock)
-    setServicios([
-      {
-        id: 1,
-        nombre: "Corte Premium",
-        precio: "$299",
-        imagen: "/corte-premium.jpg",
-        categoria: "Barbería",
-      },
-      {
-        id: 2,
-        nombre: "Facial Importado",
-        precio: "$149",
-        imagen: "/facial-importado.jpg",
-        categoria: "Belleza",
-      },
-      {
-        id: 3,
-        nombre: "Clase Artesanal",
-        precio: "$89",
-        imagen: "/clase-artesanal.jpg",
-        categoria: "Clases",
-      },
-      {
-        id: 4,
-        nombre: "Estilo Vintage",
-        precio: "$119",
-        imagen: "/estilo-vintage.jpg",
-        categoria: "Especiales",
-      },
-      {
-        id: 5,
-        nombre: "Tratamiento Gourmet",
-        precio: "$349",
-        imagen: "/tratamiento-gourmet.jpg",
-        categoria: "Belleza",
-      },
-      {
-        id: 6,
-        nombre: "Paquete Mexicano",
-        precio: "$179",
-        imagen: "/paquete-mexicano.jpg",
-        categoria: "Barbería",
-      },
-    ]);
+    let cancel = false;
+    const cargarCitas = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const hoy = new Date().toISOString().slice(0, 10);
+        // Obtener citas programadas para la fecha actual
+        const { data } = await api.get(`/api/citas?fecha=${hoy}`);
+        if (!cancel) setCitas(data || []);
+      } catch (e) {
+        if (!cancel) {
+          setError(
+            e?.response?.data?.error ||
+              e?.message ||
+              "No se pudieron cargar las citas del día."
+          );
+        }
+      } finally {
+        if (!cancel) setLoading(false);
+      }
+    };
+    cargarCitas();
+    return () => {
+      cancel = true;
+    };
   }, []);
 
-  const categorias = [
-    { nombre: "Barbería", icono: <BarberIcon />, color: "#2C3E50" },
-    { nombre: "Belleza", icono: <BellezaIcon />, color: "#D4AF37" },
-    { nombre: "Clases", icono: <ClaseIcon />, color: "#2C3E50" },
-    { nombre: "Especiales", icono: <FavoritoIcon />, color: "#D4AF37" },
-  ];
+  const stats = useMemo(() => {
+    const total = citas.length;
+    const confirmadas = citas.filter(
+      (c) => c.estado === "CONFIRMADA" || c.estado === "APARTADA" || c.estado === "EN_PROCESO"
+    ).length;
+    const completadas = citas.filter((c) => c.estado === "COMPLETADA").length;
 
-  const beneficios = [
-    {
-      icono: <EnviosIcon sx={{ fontSize: 50 }} />,
-      titulo: "Citas Rápidas",
-      descripcion: "Reserva en minutos con disponibilidad real",
-    },
-    {
-      icono: <VerificadoIcon sx={{ fontSize: 50 }} />,
-      titulo: "Calidad Garantizada",
-      descripcion: "Profesionales certificados",
-    },
-    {
-      icono: <FavoritoIcon sx={{ fontSize: 50 }} />,
-      titulo: "Atención Personalizada",
-      descripcion: "Estilos adaptados a cada cliente",
-    },
-  ];
+    // Obtener la hora actual en formato HH:MM
+    const ahoraStr = new Date().toTimeString().slice(0, 5);
+    
+    // Filtrar citas pendientes futuras del día de hoy
+    const proximas = citas
+      .filter(
+        (c) =>
+          c.estado !== "CANCELADA" &&
+          c.estado !== "COMPLETADA" &&
+          c.estado !== "NO_ASISTIO"
+      )
+      .map((c) => {
+        const time = c.horaInicio ? String(c.horaInicio).slice(11, 16) : "";
+        return { ...c, timeStr: time };
+      })
+      .filter((c) => c.timeStr >= ahoraStr)
+      .sort((a, b) => a.timeStr.localeCompare(b.timeStr));
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
+    const proxima = proximas[0] || null;
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.5 },
-    },
+    return { total, confirmadas, completadas, proxima };
+  }, [citas]);
+
+  const getEstadoChip = (estado) => {
+    let label = estado;
+    let bg = P.secondary;
+
+    switch (estado) {
+      case "APARTADA":
+        label = "Apartada";
+        bg = P.blue;
+        break;
+      case "CONFIRMADA":
+        label = "Confirmada";
+        bg = P.navy;
+        break;
+      case "EN_PROCESO":
+        label = "En Proceso";
+        bg = P.accent;
+        break;
+      case "COMPLETADA":
+        label = "Completada";
+        bg = P.green;
+        break;
+      case "CANCELADA":
+        label = "Cancelada";
+        bg = P.red;
+        break;
+      case "NO_ASISTIO":
+        label = "No Asistió";
+        bg = "#475569";
+        break;
+      default:
+        break;
+    }
+
+    return (
+      <Chip
+        label={label}
+        size="small"
+        sx={{
+          bgcolor: alpha(bg, 0.15),
+          color: bg,
+          fontWeight: 800,
+          fontSize: "0.72rem",
+          border: `1px solid ${alpha(bg, 0.25)}`,
+          borderRadius: "6px"
+        }}
+      />
+    );
   };
 
   return (
-    <Box
-      sx={{
-        bgcolor: "#FFFFFF",
-        minHeight: "100vh",
-        py: 6,
-        fontFamily: "'Geist Sans', Arial, sans-serif",
-      }}
-    >
-      <Container maxWidth="lg">
-
-        {/* HERO */}
-        <MotionBox
-          initial={{ opacity: 0, y: -40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          sx={{
-            textAlign: "center",
-            mb: 8,
-            p: 6,
-            background: "linear-gradient(135deg, #2C3E50 0%, #D4AF37 100%)",
-            borderRadius: 12,
-            color: "#FFFFFF",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          }}
-        >
-          <Typography
-            variant="h3"
-            fontWeight={700}
-            fontFamily="'Playfair Display', serif"
-            gutterBottom
-          >
-            Panel de Recepción
-          </Typography>
-
-          <Typography sx={{ mb: 3 }}>
-            Gestión rápida de servicios y atención al cliente
-          </Typography>
-
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#FFFFFF",
-              color: "#2C3E50",
-              "&:hover": {
-                backgroundColor: alpha("#FFFFFF", 0.9),
-                color: "#D4AF37",
-              },
-              borderRadius: 8,
-            }}
-          >
-            Ver servicios
+    <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
+      <AdminHeader
+        eyebrow="Panel de Recepción"
+        title={loading ? <Skeleton width={260} /> : `Hola, ${nombreMostrar}`}
+        subtitle="Agenda de hoy, disponibilidad de personal y vinculación con Alexa."
+        icon={<CalendarMonthRounded sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
+        right={
+          <Button variant="contained" color="primary" onClick={() => navigate("/admin/citas")}>
+            Ver agenda completa
           </Button>
-        </MotionBox>
+        }
+      />
 
-        {/* CATEGORÍAS */}
-        <Box sx={{ mb: 8 }}>
-          <Typography
-            variant="h4"
-            textAlign="center"
-            fontWeight={700}
-            mb={4}
-            fontFamily="'Playfair Display', serif"
-            color="#1A252F"
-          >
-            Categorías
-          </Typography>
-
-          <Grid container spacing={3}>
-            {categorias.map((cat, i) => (
-              <Grid item xs={6} md={3} key={i}>
-                <MotionCard
-                  whileHover={{ scale: 1.05 }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  sx={{
-                    textAlign: "center",
-                    p: 3,
-                    backgroundColor: cat.color,
-                    color: "#fff",
-                    borderRadius: 12,
-                  }}
-                >
-                  <Box sx={{ fontSize: 50, mb: 1 }}>
-                    {cat.icono}
-                  </Box>
-                  <Typography fontWeight={600}>
-                    {cat.nombre}
+      {/* Metrics Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={4}>
+          <GlassCard elevation={0}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Box>
+                  <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
+                    Citas hoy
                   </Typography>
-                </MotionCard>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* SERVICIOS */}
-        <Box sx={{ mb: 8 }}>
-          <Typography
-            variant="h4"
-            textAlign="center"
-            fontWeight={700}
-            mb={4}
-            fontFamily="'Playfair Display', serif"
-            color="#1A252F"
-          >
-            Servicios destacados
-          </Typography>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Grid container spacing={4}>
-              {servicios.map((servicio) => (
-                <Grid item xs={12} sm={6} md={4} key={servicio.id}>
-                  <MotionCard
-                    variants={itemVariants}
-                    whileHover={{ y: -8 }}
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      backgroundColor: "#fff",
-                      border: `1px solid ${alpha("#2C3E50", 0.2)}`,
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
-                      height="220"
-                      image={servicio.imagen}
-                      alt={servicio.nombre}
-                    />
-
-                    <CardContent sx={{ textAlign: "center", flexGrow: 1 }}>
-                      <Chip
-                        label={servicio.categoria}
-                        size="small"
-                        sx={{
-                          mb: 2,
-                          backgroundColor:
-                            servicio.categoria === "Barbería"
-                              ? "#2C3E50"
-                              : "#D4AF37",
-                          color: "#fff",
-                        }}
-                      />
-
-                      <Typography fontWeight={600}>
-                        {servicio.nombre}
-                      </Typography>
-
-                      <Typography
-                        variant="body2"
-                        color={alpha("#1A252F", 0.8)}
-                        sx={{ my: 1 }}
-                      >
-                        Servicio premium
-                      </Typography>
-
-                      <Typography
-                        fontWeight={700}
-                        color="#D4AF37"
-                        mb={2}
-                      >
-                        {servicio.precio}
-                      </Typography>
-
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{
-                          backgroundColor: "#D4AF37",
-                          color: "#1A252F",
-                          borderRadius: 8,
-                          "&:hover": {
-                            backgroundColor: alpha("#D4AF37", 0.9),
-                          },
-                        }}
-                      >
-                        Reservar
-                      </Button>
-                    </CardContent>
-                  </MotionCard>
-                </Grid>
-              ))}
-            </Grid>
-          </motion.div>
-        </Box>
-
-        {/* BENEFICIOS */}
-        <Box>
-          <Typography
-            variant="h4"
-            textAlign="center"
-            fontWeight={700}
-            mb={4}
-            fontFamily="'Playfair Display', serif"
-            color="#1A252F"
-          >
-            ¿Por qué elegirnos?
-          </Typography>
-
-          <Grid container spacing={4}>
-            {beneficios.map((b, i) => (
-              <Grid item xs={12} md={4} key={i}>
-                <MotionBox
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.2 }}
-                  whileHover={{ scale: 1.05 }}
-                  sx={{
-                    textAlign: "center",
-                    p: 4,
-                    backgroundColor: "#fff",
-                    borderRadius: 12,
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <Box sx={{ color: "#D4AF37", mb: 2 }}>
-                    {b.icono}
-                  </Box>
-
-                  <Typography fontWeight={600} gutterBottom>
-                    {b.titulo}
+                  <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "2rem", mt: 0.5 }}>
+                    {loading ? <Skeleton width={48} /> : stats.total}
                   </Typography>
+                </Box>
+                <IconWrapper bgcolor={P.navy}>
+                  <EventAvailableRounded sx={{ color: P.navy }} />
+                </IconWrapper>
+              </Box>
+            </CardContent>
+          </GlassCard>
+        </Grid>
 
+        <Grid item xs={12} sm={6} md={4}>
+          <GlassCard elevation={0}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Box>
+                  <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
+                    Estado de atención
+                  </Typography>
+                  <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1.1rem", mt: 1 }}>
+                    {loading ? (
+                      <Skeleton width={120} />
+                    ) : (
+                      `${stats.completadas} completadas · ${stats.confirmadas} pendientes`
+                    )}
+                  </Typography>
+                </Box>
+                <IconWrapper bgcolor={P.green}>
+                  <CheckCircleRounded sx={{ color: P.green }} />
+                </IconWrapper>
+              </Box>
+            </CardContent>
+          </GlassCard>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <GlassCard elevation={0}>
+            <CardContent sx={{ p: 2.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
+                  <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
+                    Próxima cita
+                  </Typography>
                   <Typography
-                    color={alpha("#1A252F", 0.8)}
+                    noWrap
+                    sx={{ color: P.primary, fontWeight: 900, fontSize: "1.1rem", mt: 1 }}
                   >
-                    {b.descripcion}
+                    {loading ? (
+                      <Skeleton width={120} />
+                    ) : stats.proxima ? (
+                      `${String(stats.proxima.horaInicio).slice(11, 16)} - ${stats.proxima.clienteNombre}`
+                    ) : (
+                      "Sin citas próximas"
+                    )}
                   </Typography>
-                </MotionBox>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
+                </Box>
+                <IconWrapper bgcolor={P.accent}>
+                  <AccessTimeRounded sx={{ color: P.accent }} />
+                </IconWrapper>
+              </Box>
+            </CardContent>
+          </GlassCard>
+        </Grid>
+      </Grid>
 
-        {/* CONECTAR ALEXA */}
-        <Box sx={{ mt: 8 }}>
-          <ConectarAlexa />
-        </Box>
+      <Grid container spacing={3}>
+        {/* Timeline Column */}
+        <Grid item xs={12} md={8}>
+          <GlassCard elevation={0} sx={{ height: "100%" }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ color: P.primary, fontWeight: 800, mb: 2 }}>
+                Agenda de Citas - Hoy
+              </Typography>
 
-      </Container>
-    </Box>
+              {loading ? (
+                <Stack spacing={2}>
+                  <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
+                  <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
+                  <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
+                </Stack>
+              ) : error ? (
+                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                  {error}
+                </Alert>
+              ) : citas.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 6 }}>
+                  <CalendarMonthRounded sx={{ fontSize: 48, color: P.secondary, opacity: 0.5, mb: 1.5 }} />
+                  <Typography sx={{ color: P.secondary, fontWeight: 700 }}>
+                    No hay citas registradas para hoy
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      mt: 2,
+                      borderColor: P.navy,
+                      color: P.navy,
+                      fontWeight: 700,
+                      "&:hover": { borderColor: P.navy, bgcolor: alpha(P.navy, 0.04) }
+                    }}
+                    onClick={() => navigate("/admin/citas")}
+                  >
+                    Agendar primera cita
+                  </Button>
+                </Box>
+              ) : (
+                <Stack spacing={2} sx={{ maxHeight: 550, overflowY: "auto", pr: 1 }}>
+                  {citas.map((cita) => {
+                    const horaInicio = cita.horaInicio ? String(cita.horaInicio).slice(11, 16) : "—";
+                    const horaFin = cita.horaFin ? String(cita.horaFin).slice(11, 16) : "—";
+                    return (
+                      <Box
+                        key={cita.id}
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          border: `1px solid ${alpha(P.border, 0.6)}`,
+                          bgcolor: alpha(P.pageBg, 0.3),
+                          transition: "all 0.2s ease",
+                          "&:hover": {
+                            borderColor: alpha(P.accent, 0.4),
+                            bgcolor: alpha(P.cream, 0.2),
+                            transform: "translateX(4px)"
+                          }
+                        }}
+                      >
+                        <Grid container spacing={1} alignItems="center">
+                          <Grid item xs={12} sm={3}>
+                            <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1.05rem" }}>
+                              {horaInicio} - {horaFin}
+                            </Typography>
+                            <Typography sx={{ color: P.secondary, fontSize: "0.75rem", mt: 0.25 }}>
+                              Precio: ${cita.precioFinal}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} sm={6}>
+                            <Typography sx={{ color: P.primary, fontWeight: 800 }}>
+                              {cita.clienteNombre || "Cliente no especificado"}
+                            </Typography>
+                            <Typography sx={{ color: P.secondary, fontSize: "0.8rem", mt: 0.25 }}>
+                              Atendido por: {cita.empleadaNombre || "Sin asignar"}
+                            </Typography>
+                            {cita.notas && (
+                              <Typography
+                                sx={{
+                                  color: P.secondary,
+                                  fontSize: "0.75rem",
+                                  fontStyle: "italic",
+                                  mt: 0.5
+                                }}
+                              >
+                                Nota: {cita.notas}
+                              </Typography>
+                            )}
+                          </Grid>
+                          <Grid item xs={12} sm={3} sx={{ textAlign: { sm: "right" } }}>
+                            {getEstadoChip(cita.estado)}
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              )}
+            </CardContent>
+          </GlassCard>
+        </Grid>
+
+        {/* Control Panel Column */}
+        <Grid item xs={12} md={4}>
+          <Stack spacing={3}>
+            {/* Quick Actions Card */}
+            <GlassCard elevation={0}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ color: P.primary, fontWeight: 800, mb: 2 }}>
+                  Acciones Administrativas
+                </Typography>
+                <Stack spacing={1.5}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => navigate("/admin/citas")}
+                    sx={{
+                      bgcolor: P.navy,
+                      color: "#FFFFFF",
+                      fontWeight: 700,
+                      justifyContent: "space-between",
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2.5,
+                      "&:hover": { bgcolor: "#122947" }
+                    }}
+                    endIcon={<ChevronRightRounded />}
+                  >
+                    Agendar Nueva Cita
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => navigate("/admin/barberos")}
+                    sx={{
+                      borderColor: P.border,
+                      color: P.primary,
+                      fontWeight: 700,
+                      justifyContent: "space-between",
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2.5,
+                      "&:hover": { borderColor: P.primary, bgcolor: alpha(P.primary, 0.04) }
+                    }}
+                    endIcon={<ChevronRightRounded />}
+                  >
+                    Administrar Personal
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => navigate("/admin/inventario")}
+                    sx={{
+                      borderColor: P.border,
+                      color: P.primary,
+                      fontWeight: 700,
+                      justifyContent: "space-between",
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2.5,
+                      "&:hover": { borderColor: P.primary, bgcolor: alpha(P.primary, 0.04) }
+                    }}
+                    endIcon={<ChevronRightRounded />}
+                  >
+                    Control de Inventario
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={() => navigate("/admin/servicios")}
+                    sx={{
+                      borderColor: P.border,
+                      color: P.primary,
+                      fontWeight: 700,
+                      justifyContent: "space-between",
+                      px: 2,
+                      py: 1.25,
+                      borderRadius: 2.5,
+                      "&:hover": { borderColor: P.primary, bgcolor: alpha(P.primary, 0.04) }
+                    }}
+                    endIcon={<ChevronRightRounded />}
+                  >
+                    Ver Catálogo de Servicios
+                  </Button>
+                </Stack>
+              </CardContent>
+            </GlassCard>
+
+            {/* Alexa Integration Card */}
+            <ConectarAlexa />
+          </Stack>
+        </Grid>
+      </Grid>
+    </AdminPageShell>
   );
 };
 
