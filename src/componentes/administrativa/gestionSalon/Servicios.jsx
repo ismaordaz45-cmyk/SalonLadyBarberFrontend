@@ -603,7 +603,7 @@ function Servicios() {
                       }}
                     >
                       <TableCell>
-                        {servicio.imagenUrl ? (
+                        {resolveServicioImagenUrl(servicio.imagenUrl, api.defaults.baseURL) ? (
                           <Box
                             component="img"
                             src={resolveServicioImagenUrl(servicio.imagenUrl, api.defaults.baseURL)}

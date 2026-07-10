@@ -19,7 +19,7 @@ function looksLikeRawBase64(s) {
 export function resolveServicioImagenUrl(imagenUrl, apiBaseUrl) {
   if (imagenUrl == null) return null;
   const t = String(imagenUrl).trim();
-  if (!t) return null;
+  if (!t || t === "null" || t === "undefined" || t === '""' || t === "''") return null;
 
   if (t.startsWith("data:")) return t;
   if (t.startsWith("http://") || t.startsWith("https://")) return t;
