@@ -268,14 +268,7 @@ function fmtRangoSemana(inicioYmd, finYmd) {
   return `${d1} ${meses[m1 - 1]} – ${d2} ${meses[m2 - 1]} ${y1}`;
 }
 
-function addDaysYmd(ymd, days) {
-  const d = new Date(`${String(ymd).slice(0, 10)}T12:00:00`);
-  d.setDate(d.getDate() + days);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+
 
 const MONTHS_LONG = [
   "Enero",
