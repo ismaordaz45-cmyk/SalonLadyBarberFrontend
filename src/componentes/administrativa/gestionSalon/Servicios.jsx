@@ -67,12 +67,7 @@ const fileToBase64 = (file) =>
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      const result = reader.result;
-      const base64 =
-        typeof result === "string" && result.includes(",")
-          ? result.split(",")[1]
-          : result;
-      resolve(base64);
+      resolve(reader.result);
     };
     reader.onerror = reject;
   });
