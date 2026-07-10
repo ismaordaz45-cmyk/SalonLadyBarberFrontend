@@ -544,6 +544,9 @@ function Servicios() {
             <Table size="medium" sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: PALETA.fondoIcono(0.08) }}>
+                  <TableCell sx={{ width: 60, fontWeight: 700, color: PALETA.oscuro }}>
+                    Imagen
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 700, color: PALETA.oscuro }}>
                     Nombre
                   </TableCell>
@@ -576,7 +579,7 @@ function Servicios() {
               <TableBody>
                 {serviciosFiltrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} sx={{ py: 6, textAlign: "center" }}>
+                    <TableCell colSpan={8} sx={{ py: 6, textAlign: "center" }}>
                       <StorefrontRoundedIcon
                         sx={{
                           fontSize: 48,
@@ -599,6 +602,37 @@ function Servicios() {
                         opacity: servicio.estaActivo === 0 ? 0.7 : 1
                       }}
                     >
+                      <TableCell>
+                        {servicio.imagenUrl ? (
+                          <Box
+                            component="img"
+                            src={resolveServicioImagenUrl(servicio.imagenUrl, api.defaults.baseURL)}
+                            alt={servicio.nombre}
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 1,
+                              objectFit: "cover",
+                              bgcolor: PALETA.fondoIcono(0.05),
+                              display: "block"
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 1,
+                              bgcolor: PALETA.fondoIcono(0.05),
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            <ImageOutlinedIcon sx={{ color: PALETA.borde(0.5) }} />
+                          </Box>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
                           {servicio.nombre}

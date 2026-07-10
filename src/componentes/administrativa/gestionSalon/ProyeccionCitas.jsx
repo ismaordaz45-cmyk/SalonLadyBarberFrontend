@@ -268,6 +268,14 @@ function fmtRangoSemana(inicioYmd, finYmd) {
   return `${d1} ${meses[m1 - 1]} – ${d2} ${meses[m2 - 1]} ${y1}`;
 }
 
+function addDaysYmd(ymd, days) {
+  const d = new Date(`${String(ymd).slice(0, 10)}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 const MONTHS_LONG = [
   "Enero",
@@ -299,6 +307,12 @@ function fmtMonthLong(month1to12) {
   return MONTHS_LONG[month1to12 - 1] || "—";
 }
 
+function monthKeyFromYmd(ymd) {
+  const s = String(ymd || "").slice(0, 10);
+  const [yy, mm] = s.split("-").map(Number);
+  if (!yy || !mm) return null;
+  return { year: yy, month: mm };
+}
 
 function monthKeyToId(mk) {
   return `${mk.year}-${String(mk.month).padStart(2, "0")}`;
@@ -393,6 +407,92 @@ function construirSerieMensualEneroJulio({ historicoReal, year = 2026 }) {
   return { labels, real, pred, cp: crecimiento };
 }
 
+function buildChartSeries(historico, prediccion) {
+  const n = historico.length;
+  const fut = prediccion.length;
+  if (n === 0 && fut === 0) {
+    return { labels: [], real: [], pronostico: [] };
+  }
+  if (n === 0) {
+    const labels = prediccion.map((p) => fmtRangoSemana(p.semanaInicio, p.semanaFin));
+    return {
+      labels,
+      real: prediccion.map(() => null),
+      pronostico: prediccion.map((p) => p.demandaPronosticada)
+    };
+  }
+
+  const labels = [
+    ...historico.map((h) => fmtRangoSemana(h.semanaInicio, addDaysYmd(h.semanaInicio, 6))),
+    ...prediccion.map((p) => fmtRangoSemana(p.semanaInicio, p.semanaFin))
+  ];
+
+  const real = [...historico.map((h) => h.total), ...Array(fut).fill(null)];
+  const last = historico[n - 1].total;
+  const pronostico = [
+    ...Array(Math.max(0, n - 1)).fill(null),
+    last,
+    ...prediccion.map((p) => p.demandaPronosticada)
+  ];
+
+  while (pronostico.length < labels.length) pronostico.push(null);
+  while (real.length < labels.length) real.push(null);
+
+  return { labels, real, pronostico };
+}
+
+function parseMonthKey(ymd) {
+  if (!ymd) return null;
+  const s = String(ymd).slice(0, 10);
+  const [yy, mm] = s.split("-").map(Number);
+  if (!yy || !mm) return null;
+  return { year: yy, month: mm };
+}
+
+function monthKeyToString({ year, month }) {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function buildMonthlySeries(historicoDiario, prediccionDiaria, monthsToShow = 7) {
+  const hist = Array.isArray(historicoDiario) ? historicoDiario : [];
+  const pred = Array.isArray(prediccionDiaria) ? prediccionDiaria : [];
+
+  const histAgg = new Map();
+  for (const row of hist) {
+    const key = parseMonthKey(row?.dia);
+    if (!key) continue;
+    const k = monthKeyToString(key);
+    histAgg.set(k, (histAgg.get(k) || 0) + Number(row?.totalCitas || 0));
+  }
+
+  const predAgg = new Map();
+  for (const row of pred) {
+    const key = parseMonthKey(row?.dia);
+    if (!key) continue;
+    const k = monthKeyToString(key);
+    predAgg.set(k, (predAgg.get(k) || 0) + Number(row?.totalCitas || 0));
+  }
+
+  const allKeys = [...new Set([...histAgg.keys(), ...predAgg.keys()])].sort();
+  if (allKeys.length === 0) return { labels: [], real: [], pronostico: [] };
+
+  const windowKeys = allKeys.slice(-Math.max(1, monthsToShow));
+  const labels = windowKeys.map((k) => {
+    const [, mm] = k.split("-");
+    const m = Number(mm);
+    return MONTHS_LONG[m - 1] || k;
+  });
+
+  const real = windowKeys.map((k) => (histAgg.has(k) ? histAgg.get(k) : null));
+
+  const pronostico = windowKeys.map((k) => {
+    if (!predAgg.has(k)) return null;
+    // Si hay real también en el mismo mes, dejamos que el pronóstico conviva (línea punteada).
+    return predAgg.get(k);
+  });
+
+  return { labels, real, pronostico };
+}
 
 // ─────────────────────────────────────────────────────────────
 // COMPONENTES DE ANIMACIÓN
@@ -456,7 +556,14 @@ function ProyeccionCitas() {
     () => (Array.isArray(payload?.historicoSemanal) ? payload.historicoSemanal : []),
     [payload?.historicoSemanal]
   );
-  const serviciosTop = useMemo(() => payload?.serviciosTop || [], [payload?.serviciosTop]);
+  const prediccion = useMemo(
+    () => (Array.isArray(payload?.prediccionSemanas) ? payload.prediccionSemanas : []),
+    [payload?.prediccionSemanas]
+  );
+  const serviciosTop = payload?.serviciosTop || [];
+  const historicoDiario = payload?.historicoDiario || [];
+  const prediccionDiaria = payload?.prediccionDiaria || [];
+  const g = payload?.parametros?.crecimientoSemanalPromedio ?? 0;
   const dataDesde = payload?.parametros?.dataDesde || "2026-01-01";
   const hoy = useMemo(() => {
     const raw = payload?.parametros?.hoy;
@@ -820,8 +927,7 @@ function ProyeccionCitas() {
           {/* ═══════════════════════════════════════════════════════════════════
               HEADER PRINCIPAL
               ═══════════════════════════════════════════════════════════════════ */}
-          <MotionBox variants={itemVariants}>
-            <GlassCard
+        <MotionBox variants={itemVariants}>       <GlassCard
               elevation={0}
               sx={{
                 mb: 3,
