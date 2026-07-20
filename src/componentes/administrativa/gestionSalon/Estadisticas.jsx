@@ -253,12 +253,12 @@ function Estadisticas() {
       // Usar el último día registrado o customParams para la predicción
       let payload = customParams;
       if (!payload && histData.length > 0) {
-        const ult = histData[histData.length - 1];
+        const hoyStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         payload = {
           dia_semana: ult.diaSemana || "Monday",
           n_citas: ult.nCitas || 10,
           ingreso_actual: ult.ingreso || 2000,
-          fecha: new Date().toISOString().split("T")[0],
+          fecha: hoyStr,
           nServicios: ult.nServicios || 12,
           clientesDistintos: ult.clientesDistintos || 8
         };
@@ -311,38 +311,28 @@ function Estadisticas() {
     return Math.round(diff);
   }, [mlResult, promedioMes]);
 
-  // Formato de fecha del pronóstico en tiempo real (ej. "Lunes 27 de julio, 2026")
+  // Formato de fecha del pronóstico en tiempo real (ej. hoy Lunes 20 jul -> Próximo Lunes 27 de julio, 2026)
   const fechaPronosticoFormateada = useMemo(() => {
     const DIAS_INDEX = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
     const targetDow = DIAS_INDEX[predForm.dia_semana] ?? 1;
 
-    // Usar fecha actual de hoy como ancla real
+    // Fecha base ancla: HOY en tiempo real (20 de julio, 2026)
     const hoy = new Date();
     hoy.setHours(12, 0, 0, 0);
 
-    let baseDate = hoy;
-    if (predForm.fecha) {
-      const [y, m, d] = predForm.fecha.split("-").map(Number);
-      const parsedDate = new Date(y, m - 1, d, 12, 0, 0);
-      // Si la fecha elegida es válida y cercana o futura a hoy, la tomamos como base
-      if (!isNaN(parsedDate.getTime()) && parsedDate >= new Date(hoy.getFullYear(), hoy.getMonth(), 1)) {
-        baseDate = parsedDate;
-      }
-    }
-
-    const currentDow = baseDate.getDay();
+    const currentDow = hoy.getDay();
     let diffDays = targetDow - currentDow;
     if (diffDays <= 0) {
-      diffDays += 7; // Próxima semana para ese mismo día
+      diffDays += 7; // Ir al siguiente día objetivo de la próxima semana
     }
 
-    const targetDate = new Date(baseDate);
-    targetDate.setDate(baseDate.getDate() + diffDays);
+    const targetDate = new Date(hoy);
+    targetDate.setDate(hoy.getDate() + diffDays);
 
     const diaNom = DIAS_ES[predForm.dia_semana] || "Día";
     const mesNom = MONTHS[targetDate.getMonth()].toLowerCase();
     return `${diaNom} ${targetDate.getDate()} de ${mesNom}, ${targetDate.getFullYear()}`;
-  }, [predForm]);
+  }, [predForm.dia_semana]);
 
   // Configuración de la gráfica comparativa ML (Histórico vs Pronóstico)
   const chartDataML = useMemo(() => {
