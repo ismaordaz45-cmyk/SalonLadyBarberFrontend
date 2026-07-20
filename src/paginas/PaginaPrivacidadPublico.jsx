@@ -155,7 +155,7 @@ function PaginaPrivacidadPublico() {
                 <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75 }}>
                   Puedes solicitar la corrección o eliminación de tu información personal contactándonos a través de{" "}
                   <Typography component="span" sx={{ fontWeight: 600, color: PALETTE.text }}>
-                    contacto@salonladybarber.com
+                    salonladybarberitza@gmail.com
                   </Typography>.
                 </Typography>
               </Box>
@@ -170,7 +170,7 @@ function PaginaPrivacidadPublico() {
                 <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75 }}>
                   Si tienes preguntas sobre esta política de privacidad, contáctanos en:{" "}
                   <Typography component="span" sx={{ fontWeight: 600, color: PALETTE.text }}>
-                    contacto@salonladybarber.com
+                    salonladybarberitza@gmail.com
                   </Typography>
                 </Typography>
               </Box>
