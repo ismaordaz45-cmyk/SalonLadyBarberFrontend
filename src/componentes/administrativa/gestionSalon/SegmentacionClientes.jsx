@@ -32,7 +32,16 @@ import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import { motion, AnimatePresence } from "framer-motion";
 import { Doughnut } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend
+} from "chart.js";
 import api from "../../../api";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
+
 
 // ─────────────────────────────────────────────────────────────
 // PALETA DE COLORES ELEGANTE (Matching Lady Barber Theme)
