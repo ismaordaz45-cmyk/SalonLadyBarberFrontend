@@ -248,7 +248,7 @@ const PieDePaginaPublico = () => {
           <div className="footer-seccion">
             <h3>Datos de la empresa</h3>
 
-            <Link to="/politicaspca" className={linkClass}><Lock sx={iconGold} /> Política de Privacidad</Link>
+            <Link to="/privacidad" className={linkClass}><Lock sx={iconGold} /> Política de Privacidad</Link>
             <Link to="/terminospca" className={linkClass}><Description sx={iconGold} /> Términos y condiciones</Link>
             <Link to="/misionpca" className={linkClass}><RocketLaunch sx={iconGold} /> Misión</Link>
             <Link to="/visionpca" className={linkClass}><Visibility sx={iconGold} /> Visión</Link>

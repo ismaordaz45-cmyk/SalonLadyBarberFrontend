@@ -16,6 +16,7 @@ import PaginaPrincipalPublico from "./paginas/PaginaPrincipalPublico";
 import PaginaCatalogoPublico from "./paginas/PaginaCatalogoPublico";
 import PaginaNosotrosPublico from "./paginas/PaginaNosotrosPublico";
 import PaginaNovedadesPublico from "./paginas/PaginaNovedadesPublico";
+import PaginaPrivacidadPublico from "./paginas/PaginaPrivacidadPublico";
 import PaginaPrincipalAdministrativa from "./paginas/PaginaPrincipalAdminitrativo";
 import PaginaAdminRespaldo from "./paginas/PaginaAdminRespaldo";
 import PaginaAdminImportExport from "./paginas/PaginaAdminImportExport";
@@ -150,6 +151,24 @@ const App = () => {
           element={
             <LayoutPublico>
               <PaginaNovedadesPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/privacidad"
+          element={
+            <LayoutPublico>
+              <PaginaPrivacidadPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/politicaspca"
+          element={
+            <LayoutPublico>
+              <PaginaPrivacidadPublico />
             </LayoutPublico>
           }
         />
