@@ -274,7 +274,7 @@ function Estadisticas() {
         n_citas: Number(payload.n_citas),
         ingreso_actual: Number(payload.ingreso_actual),
         fecha: payload.fecha
-      }, { timeout: 20000 });
+      }, { timeout: 60000 });
 
       setMlResult({
         ...predResp.data,
