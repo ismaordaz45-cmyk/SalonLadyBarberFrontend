@@ -253,6 +253,7 @@ function Estadisticas() {
       // Usar el último día registrado o customParams para la predicción
       let payload = customParams;
       if (!payload && histData.length > 0) {
+        const ult = histData[histData.length - 1] || {};
         const hoyStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         payload = {
           dia_semana: ult.diaSemana || "Monday",
