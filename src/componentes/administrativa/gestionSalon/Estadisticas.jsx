@@ -258,7 +258,7 @@ function Estadisticas() {
           dia_semana: ult.diaSemana || "Monday",
           n_citas: ult.nCitas || 10,
           ingreso_actual: ult.ingreso || 2000,
-          fecha: ult.fecha || new Date().toISOString().split("T")[0],
+          fecha: new Date().toISOString().split("T")[0],
           nServicios: ult.nServicios || 12,
           clientesDistintos: ult.clientesDistintos || 8
         };
@@ -311,16 +311,37 @@ function Estadisticas() {
     return Math.round(diff);
   }, [mlResult, promedioMes]);
 
-  // Formato de fecha del pronóstico (ej. "Miércoles 22 de enero, 2026")
+  // Formato de fecha del pronóstico en tiempo real (ej. "Lunes 27 de julio, 2026")
   const fechaPronosticoFormateada = useMemo(() => {
-    if (!predForm.fecha) return "Próximo día";
-    const [y, m, d] = predForm.fecha.split("-").map(Number);
-    const dateObj = new Date(y, m - 1, d);
-    // Sumar 7 días (semana siguiente)
-    dateObj.setDate(dateObj.getDate() + 7);
+    const DIAS_INDEX = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+    const targetDow = DIAS_INDEX[predForm.dia_semana] ?? 1;
+
+    // Usar fecha actual de hoy como ancla real
+    const hoy = new Date();
+    hoy.setHours(12, 0, 0, 0);
+
+    let baseDate = hoy;
+    if (predForm.fecha) {
+      const [y, m, d] = predForm.fecha.split("-").map(Number);
+      const parsedDate = new Date(y, m - 1, d, 12, 0, 0);
+      // Si la fecha elegida es válida y cercana o futura a hoy, la tomamos como base
+      if (!isNaN(parsedDate.getTime()) && parsedDate >= new Date(hoy.getFullYear(), hoy.getMonth(), 1)) {
+        baseDate = parsedDate;
+      }
+    }
+
+    const currentDow = baseDate.getDay();
+    let diffDays = targetDow - currentDow;
+    if (diffDays <= 0) {
+      diffDays += 7; // Próxima semana para ese mismo día
+    }
+
+    const targetDate = new Date(baseDate);
+    targetDate.setDate(baseDate.getDate() + diffDays);
+
     const diaNom = DIAS_ES[predForm.dia_semana] || "Día";
-    const mesNom = MONTHS[dateObj.getMonth()].toLowerCase();
-    return `${diaNom} ${dateObj.getDate()} de ${mesNom}, ${dateObj.getFullYear()}`;
+    const mesNom = MONTHS[targetDate.getMonth()].toLowerCase();
+    return `${diaNom} ${targetDate.getDate()} de ${mesNom}, ${targetDate.getFullYear()}`;
   }, [predForm]);
 
   // Configuración de la gráfica comparativa ML (Histórico vs Pronóstico)
