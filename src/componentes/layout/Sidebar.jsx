@@ -53,7 +53,13 @@ const menuPrincipal = [
     path: "/admin/proyeccion-citas",
     icon: <AutoGraphRounded />
   },
+  {
+    label: "Segmentación de clientes",
+    path: "/admin/segmentacion-clientes",
+    icon: <GroupRounded />
+  },
   { label: "Usuarios", path: "/admin/clientes", icon: <GroupRounded /> },
+
   {
     label: "Gestión de citas",
     path: "/admin/citas",

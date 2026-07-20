@@ -49,6 +49,8 @@ import Inventario from "./componentes/administrativa/gestionSalon/Inventario";
 import Promociones from "./componentes/administrativa/gestionSalon/Promociones";
 import Estadisticas from "./componentes/administrativa/gestionSalon/Estadisticas";
 import ProyeccionCitas from "./componentes/administrativa/gestionSalon/ProyeccionCitas";
+import SegmentacionClientes from "./componentes/administrativa/gestionSalon/SegmentacionClientes";
+
 
 
 // ============================================
@@ -305,6 +307,17 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/segmentacion-clientes"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
+              <AdminLayout>
+                <SegmentacionClientes />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/admin/reportes"
           element={
