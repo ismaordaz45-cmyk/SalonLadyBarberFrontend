@@ -107,8 +107,8 @@ function EncabezadoCliente() {
     if (path === "/cliente") setActive("inicio");
     else if (path.includes("/cliente/servicios")) setActive("servicios");
     else if (path.includes("/cliente/citas")) setActive("citas");
-    else if (path.includes("/nosotros")) setActive("nosotros");
-    else if (path.includes("/novedades")) setActive("novedades");
+    else if (path.includes("/cliente/nosotros")) setActive("nosotros");
+    else if (path.includes("/cliente/novedades")) setActive("novedades");
     else setActive("");
   }, [location.pathname]);
 
@@ -176,8 +176,8 @@ function EncabezadoCliente() {
     { key: "inicio", label: "Inicio", path: "/cliente", icon: <HomeRounded /> },
     { key: "servicios", label: "Servicios", path: "/cliente/servicios", icon: <StorefrontRounded /> },
     { key: "citas", label: "Mis citas", path: "/cliente/citas", icon: <FormatListBulletedRounded /> },
-    { key: "nosotros", label: "Nosotros", path: "/nosotros", icon: <InfoRounded /> },
-    { key: "novedades", label: "Novedades", path: "/novedades", icon: <AnnouncementRounded /> }
+    { key: "nosotros", label: "Nosotros", path: "/cliente/nosotros", icon: <InfoRounded /> },
+    { key: "novedades", label: "Novedades", path: "/cliente/novedades", icon: <AnnouncementRounded /> }
   ];
 
   return (
@@ -475,6 +475,24 @@ function EncabezadoCliente() {
             <PersonRounded sx={{ fontSize: 18, color: COLORS.textSecondary }} />
           </ListItemIcon>
           Mi Perfil
+        </MenuItem>
+
+        <MenuItem
+          component={Link}
+          to="/cliente/perfil"
+          sx={{
+            py: 1.2,
+            px: 2.2,
+            fontWeight: 700,
+            fontSize: "0.88rem",
+            color: COLORS.textPrimary,
+            "&:hover": { bgcolor: "rgba(30, 58, 90, 0.04)" }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: "30px !important" }}>
+            <ShoppingBagRounded sx={{ fontSize: 18, color: COLORS.textSecondary }} />
+          </ListItemIcon>
+          Mis Compras
         </MenuItem>
 
         <Divider sx={{ my: 1, borderColor: COLORS.border }} />

@@ -1,243 +1,376 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { motion } from "framer-motion";
 import {
-  Grid,
-  CardContent,
-  Typography,
-  Button,
   Box,
-  Skeleton
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Container,
+  Grid,
+  Stack,
+  Typography
 } from "@mui/material";
-import {
-  CalendarMonthRounded,
-  FormatListBulletedRounded,
-  PersonRounded,
-  AccessTimeRounded,
-  CheckCircleRounded
-} from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AdminPageShell from "../ui/admin/AdminPageShell";
-import AdminHeader from "../ui/admin/AdminHeader";
-import { GlassCard, IconWrapper } from "../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 import VistaPreviaServiciosCliente from "../componentes/cliente/VistaPreviaServiciosCliente";
 import VistaPreviaProductosInventarioCliente from "../componentes/cliente/VistaPreviaProductosInventarioCliente";
-import ConectarAlexa from "../componentes/autenticacion/ConectarAlexa";
 
-const API_URL = "https://salonladybarberbackend.onrender.com";
+const MotionBox = motion.create(Box);
 
-// --------------------------------------------------
-// Página principal cliente
-// --------------------------------------------------
+const PASOS = [
+  {
+    n: 1,
+    titulo: "Selecciona tu servicio",
+    texto: "Elige el servicio que deseas dentro del catálogo disponible."
+  },
+  {
+    n: 2,
+    titulo: "Elige fecha y hora",
+    texto: "Selecciona el día y horario que mejor se adapte a tu disponibilidad."
+  },
+  {
+    n: 3,
+    titulo: "Confirma tu cita",
+    texto: "Ingresa tus datos y confirma la reservación para asegurar tu lugar."
+  }
+];
+
+const EVENTOS = [
+  {
+    key: "bodas",
+    titulo: "Bodas",
+    subtitulo: "Peinados y maquillaje para el día más especial.",
+    imagen: "/images/evento-bodas.svg"
+  },
+  {
+    key: "xv",
+    titulo: "XV Años",
+    subtitulo: "Looks memorables para celebrar tu transición con estilo.",
+    imagen: "/images/evento-xv-anos.svg"
+  },
+  {
+    key: "grad",
+    titulo: "Graduaciones",
+    subtitulo: "Estilos impecables para tu logro académico.",
+    imagen: "/images/evento-graduaciones.svg"
+  },
+  {
+    key: "pres",
+    titulo: "Presentaciones",
+    subtitulo: "Imagen cuidada para eventos formales y profesionales.",
+    imagen: "/images/evento-presentaciones.svg"
+  }
+];
+
 function PaginaPrincipalCliente() {
   const navigate = useNavigate();
-
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
-  const [data, setData] = useState(null);
-
-  const token = useMemo(() => {
-    return (
-      localStorage.getItem("token") ||
-      sessionStorage.getItem("token") ||
-      ""
-    );
-  }, []);
-
-  const storedUserName = useMemo(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (!raw) return "Cliente";
-      const u = JSON.parse(raw);
-      return u?.nombre || u?.correo || "Cliente";
-    } catch {
-      return "Cliente";
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancel = false;
-    const load = async () => {
-      try {
-        setCargando(true);
-        setError("");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await axios.get(`${API_URL}/api/cliente/resumen`, {
-          headers
-        });
-        if (!cancel) setData(res.data);
-      } catch (e) {
-        const msg =
-          e?.response?.data?.error ||
-          e?.message ||
-          "No se pudo cargar el resumen del cliente.";
-        if (!cancel) setError(msg);
-      } finally {
-        if (!cancel) setCargando(false);
-      }
-    };
-    load();
-    return () => {
-      cancel = true;
-    };
-  }, [token]);
-
-  const nombreMostrar =
-    data?.user?.nombreCompleto ||
-    data?.user?.nombre ||
-    storedUserName ||
-    "Cliente";
-
-  const stats = data?.stats || { total: 0, pendientes: 0, completadas: 0 };
-
-  const nextCitaLabel = useMemo(() => {
-    if (!data?.nextCita) return "Sin citas próximas";
-    const c = data.nextCita;
-    const fecha = c.fecha ? String(c.fecha).slice(0, 10) : "—";
-    const hora = c.horaInicio ? String(c.horaInicio).slice(0, 5) : "—";
-    return `${fecha} · ${hora}`;
-  }, [data?.nextCita]);
+  const [imgReady, setImgReady] = useState({
+    bodas: false,
+    xv: false,
+    grad: false,
+    pres: false
+  });
 
   return (
-    <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
-      <AdminHeader
-        eyebrow="Área cliente"
-        title={cargando ? <Skeleton width={300} /> : `Bienvenid@, ${nombreMostrar}`}
-        subtitle="Administra tus citas, revisa tu perfil y reserva tu próxima visita de forma rápida."
-        icon={<PersonRounded sx={{ color: alpha(P.accent, 0.95), fontSize: 28 }} />}
-        showBarberiaChip={true}
-        right={
-          <Button variant="contained" color="primary" onClick={() => navigate("/cliente/servicios")}>
-            Reservar cita
-          </Button>
-        }
-      />
-
-        {/* Stats */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <GlassCard elevation={0}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
-                      Próxima cita
-                    </Typography>
-                    <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1.15rem", mt: 0.5 }}>
-                      {cargando ? <Skeleton width={180} /> : nextCitaLabel}
-                    </Typography>
-                  </Box>
-                  <IconWrapper bgcolor={P.navy}>
-                    <AccessTimeRounded sx={{ color: P.navy }} />
-                  </IconWrapper>
-                </Box>
-                <Button
-                  onClick={() => navigate("/cliente/citas")}
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    mt: 2,
-                    fontWeight: 700,
-                    borderColor: P.navy,
-                    color: P.navy,
-                    "&:hover": { borderColor: P.navy, bgcolor: alpha(P.navy, 0.06) }
-                  }}
-                >
-                  Ver mis citas
-                </Button>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <GlassCard elevation={0}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
-                      Citas pendientes
-                    </Typography>
-                    <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "2rem", mt: 0.5 }}>
-                      {cargando ? <Skeleton width={60} /> : stats.pendientes}
-                    </Typography>
-                  </Box>
-                  <IconWrapper bgcolor={P.accent}>
-                    <FormatListBulletedRounded sx={{ color: P.accent }} />
-                  </IconWrapper>
-                </Box>
-                <Button
-                  onClick={() => navigate("/cliente/servicios")}
-                  variant="contained"
-                  fullWidth
-                  startIcon={<CalendarMonthRounded />}
-                  sx={{
-                    mt: 2,
-                    fontWeight: 800,
-                    bgcolor: P.navy,
-                    "&:hover": { bgcolor: "#122947" }
-                  }}
-                >
-                  Reservar cita
-                </Button>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <GlassCard elevation={0}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <Box>
-                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.85rem" }}>
-                      Completadas
-                    </Typography>
-                    <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "2rem", mt: 0.5 }}>
-                      {cargando ? <Skeleton width={60} /> : stats.completadas}
-                    </Typography>
-                  </Box>
-                  <IconWrapper bgcolor={P.green}>
-                    <CheckCircleRounded sx={{ color: P.green }} />
-                  </IconWrapper>
-                </Box>
-                <Button
-                  onClick={() => navigate("/cliente/perfil")}
-                  variant="text"
-                  fullWidth
-                  startIcon={<PersonRounded />}
-                  sx={{
-                    mt: 2,
-                    fontWeight: 800,
-                    color: P.primary,
-                    "&:hover": { bgcolor: alpha(P.primary, 0.06) }
-                  }}
-                >
-                  Ir a mi perfil
-                </Button>
-              </CardContent>
-            </GlassCard>
-          </Grid>
-        </Grid>
-
-        {error && (
-          <GlassCard elevation={0} sx={{ mt: 2 }}>
-            <CardContent>
-            <Typography sx={{ color: "#B91C1C", fontWeight: 800 }}>
-              No se pudo cargar información real.
-            </Typography>
-            <Typography sx={{ color: P.secondary, mt: 0.5 }}>
-              {error}
-            </Typography>
-            </CardContent>
-          </GlassCard>
-        )}
-
-        <VistaPreviaServiciosCliente maxItems={3} />
-        <VistaPreviaProductosInventarioCliente maxItems={3} />
-
-        <Box sx={{ mt: 4 }}>
-          <ConectarAlexa />
+    <AdminPageShell maxWidth="lg">
+      <Stack spacing={4}>
+        {/* 1. SERVICIOS DESTACADOS */}
+        <Box>
+          <VistaPreviaServiciosCliente maxItems={3} />
         </Box>
+
+        {/* 2. PRODUCTOS DEL INVENTARIO (TIENDA) */}
+        <Box>
+          <VistaPreviaProductosInventarioCliente maxItems={6} />
+        </Box>
+
+        {/* 3. HAZNOS PARTE DE TI (3 Pasos interactivos) */}
+        <Box
+          sx={{
+            py: { xs: 5, md: 7 },
+            bgcolor: "#FFFFFF",
+            borderRadius: 4,
+            border: `1px solid ${P.border}`,
+            position: "relative",
+            overflow: "hidden",
+            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.02)",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(900px 280px at 20% 10%, rgba(212, 175, 55, 0.08) 0%, rgba(212,175,55,0) 60%), radial-gradient(760px 320px at 80% 60%, rgba(30, 58, 90, 0.04) 0%, rgba(30,58,90,0) 65%)",
+              pointerEvents: "none"
+            }
+          }}
+        >
+          <Container maxWidth="lg">
+            <Box sx={{ textAlign: "center", mb: 5 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: P.navy,
+                  fontWeight: 900,
+                  fontFamily: '"Cinzel", ui-serif, Georgia, serif',
+                  fontSize: { xs: "1.8rem", md: "2.3rem" },
+                  letterSpacing: "-0.01em",
+                  mb: 1.5,
+                  position: "relative",
+                  display: "inline-block",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: -8,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "50px",
+                    height: "3.5px",
+                    borderRadius: "2px",
+                    background: `linear-gradient(90deg, ${P.navy} 0%, ${P.accent} 100%)`
+                  }
+                }}
+              >
+                Haznos parte de ti
+              </Typography>
+              <Typography
+                sx={{
+                  color: P.secondary,
+                  mt: 3,
+                  fontSize: { xs: "0.9rem", md: "1rem" },
+                  fontWeight: 700
+                }}
+              >
+                Tu cita lista en 3 sencillos pasos.
+              </Typography>
+            </Box>
+
+            <Grid container spacing={3} justifyContent="center">
+              {PASOS.map((p) => (
+                <Grid item xs={12} sm={6} md={4} key={p.n}>
+                  <MotionBox
+                    whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(30, 58, 90, 0.08)" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 15,
+                      delay: p.n * 0.1
+                    }}
+                    sx={{
+                      textAlign: "center",
+                      p: 3.5,
+                      borderRadius: 4,
+                      bgcolor: "rgba(255, 255, 255, 0.7)",
+                      border: `1px solid ${P.border}`,
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.01)",
+                      backdropFilter: "blur(8px)",
+                      transition: "all 0.3s ease"
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: "50%",
+                        bgcolor: P.navy,
+                        color: "#FFFFFF",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 900,
+                        fontSize: "1.2rem",
+                        mx: "auto",
+                        mb: 2.5,
+                        boxShadow: `0 6px 15px ${alpha(P.navy, 0.2)}`,
+                        border: "2px solid #FFFFFF",
+                        transition: "transform 0.3s ease",
+                        "&:hover": {
+                          transform: "scale(1.08) rotate(5deg)"
+                        }
+                      }}
+                    >
+                      {p.n}
+                    </Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 900,
+                        color: P.navy,
+                        fontFamily: '"Cinzel", ui-serif, Georgia, serif',
+                        fontSize: "1.1rem",
+                        mb: 1
+                      }}
+                    >
+                      {p.titulo}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: P.secondary,
+                        fontSize: "0.85rem",
+                        lineHeight: 1.5,
+                        maxWidth: "250px",
+                        mx: "auto",
+                        fontWeight: 650
+                      }}
+                    >
+                      {p.texto}
+                    </Typography>
+                  </MotionBox>
+                </Grid>
+              ))}
+            </Grid>
+          </Container>
+        </Box>
+
+        {/* 4. HAZNOS PARTE DE TUS EVENTOS ESPECIALES */}
+        <Box
+          sx={{
+            py: { xs: 5, md: 7 },
+            bgcolor: P.navy,
+            borderRadius: 4,
+            position: "relative",
+            overflow: "hidden",
+            boxShadow: `0 10px 40px ${alpha(P.navy, 0.15)}`,
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              background:
+                "radial-gradient(1200px 520px at 50% 0%, rgba(212, 175, 55, 0.12) 0%, rgba(212,175,55,0) 60%), radial-gradient(900px 520px at 0% 100%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 55%)",
+              pointerEvents: "none"
+            }
+          }}
+        >
+          <Container maxWidth="lg">
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#FFFFFF",
+                fontWeight: 900,
+                textAlign: "center",
+                letterSpacing: "-0.01em",
+                fontFamily: '"Cinzel", ui-serif, Georgia, serif',
+                fontSize: { xs: "1.8rem", md: "2.3rem" }
+              }}
+            >
+              Haznos parte de tus eventos especiales
+            </Typography>
+            <Typography
+              sx={{
+                color: "rgba(255,255,255,0.8)",
+                mt: 1.5,
+                mb: 4,
+                textAlign: "center",
+                maxWidth: 700,
+                mx: "auto",
+                lineHeight: 1.6,
+                fontSize: "0.92rem",
+                fontWeight: 700
+              }}
+            >
+              Transformamos tus momentos más importantes en recuerdos eternos con looks pensados para cada
+              ocasión especial.
+            </Typography>
+
+            <Grid container spacing={3.5}>
+              {EVENTOS.map((ev, index) => (
+                <Grid item xs={12} sm={6} md={3} key={ev.key}>
+                  <Card
+                    component={motion.div}
+                    whileHover={{ y: -8, borderColor: alpha(P.accent, 0.6) }}
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.05)",
+                      borderRadius: 4,
+                      overflow: "hidden",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
+                      transition: "all 0.3s ease"
+                    }}
+                  >
+                    <Box sx={{ position: "relative", height: 150, overflow: "hidden" }}>
+                      <CardMedia
+                        component="img"
+                        height="150"
+                        image={ev.imagen}
+                        alt={ev.titulo}
+                        onLoad={() => setImgReady((s) => ({ ...s, [ev.key]: true }))}
+                        sx={{
+                          objectFit: "cover",
+                          transform: imgReady[ev.key] ? "none" : "scale(1.04)",
+                          opacity: imgReady[ev.key] ? 1 : 0,
+                          transition: "transform 0.5s ease, opacity 0.5s ease",
+                          bgcolor: alpha("#000000", 0.08)
+                        }}
+                      />
+                      <Box
+                        aria-hidden
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%)"
+                        }}
+                      />
+                    </Box>
+                    <CardContent sx={{ p: 2.2 }}>
+                      <Typography sx={{ fontWeight: 900, color: "#FFFFFF", fontSize: "0.95rem", letterSpacing: "0.01em" }}>
+                        {ev.titulo}
+                      </Typography>
+                      <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.8rem", mt: 0.5, mb: 2, height: 38, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", fontWeight: 650 }}>
+                        {ev.subtitulo}
+                      </Typography>
+                      <Button
+                        onClick={() => navigate("/cliente/servicios")}
+                        fullWidth
+                        sx={{
+                          bgcolor: P.accent,
+                          color: "#1E3A5F",
+                          fontWeight: 900,
+                          textTransform: "none",
+                          borderRadius: "10px",
+                          boxShadow: `0 4px 10px ${alpha(P.accent, 0.25)}`,
+                          fontSize: "0.8rem",
+                          "&:hover": {
+                            bgcolor: "#e5bf4c"
+                          }
+                        }}
+                      >
+                        Reservar
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Button
+                onClick={() => navigate("/cliente/servicios")}
+                endIcon={<ArrowForwardIcon />}
+                sx={{
+                  bgcolor: P.accent,
+                  color: "#1E3A5F",
+                  fontWeight: 900,
+                  px: 4,
+                  py: 1.25,
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  fontSize: "0.9rem",
+                  boxShadow: `0 8px 24px ${alpha(P.accent, 0.3)}`,
+                  "&:hover": { bgcolor: "#e5bf4c" }
+                }}
+              >
+                Reservar mi evento soñado
+              </Button>
+            </Box>
+          </Container>
+        </Box>
+      </Stack>
     </AdminPageShell>
   );
 }

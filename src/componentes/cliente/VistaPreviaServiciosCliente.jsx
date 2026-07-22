@@ -69,9 +69,6 @@ export default function VistaPreviaServiciosCliente({ maxItems = 3 }) {
                 Servicios destacados
               </Typography>
             </Stack>
-            <Typography sx={{ color: P.secondary, mt: 0.4, fontSize: "0.9rem" }}>
-              Una vista rápida del catálogo para reservar más rápido.
-            </Typography>
           </Box>
           <Button
             onClick={() => navigate("/cliente/servicios")}

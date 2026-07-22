@@ -20,7 +20,8 @@ const LayoutConEncabezado = ({ children }) => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const isCliente = location.pathname.startsWith("/cliente");
-  const isPublico = !isAdmin && !isCliente;
+  const isRecepcion = location.pathname.startsWith("/recepcion");
+  const isPublico = !isAdmin && !isCliente && !isRecepcion;
 
   useEffect(() => {
     const cls = "publico-scroll-invisible";
@@ -42,22 +43,18 @@ const LayoutConEncabezado = ({ children }) => {
 
   // ============================================
   // SELECCIÓN DE LAYOUT SEGÚN RUTA
-  // (versión limpia – sin auth ni roles todavía)
   // ============================================
 
-  if (isAdmin) {
+  if (isAdmin || isRecepcion) {
     encabezado = null;
     pie = null;
   } else if (isCliente) {
     encabezado = null;
     pie = null;
-
   } else {
-
-    // RUTAS PÚBLICAS (por ahora todo lo demás)
+    // RUTAS PÚBLICAS
     encabezado = <EncabezadoPublico />;
     pie = <PieDePaginaPublico />;
-
   }
 
   // ============================================

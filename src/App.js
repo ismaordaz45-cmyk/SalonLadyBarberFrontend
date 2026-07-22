@@ -9,6 +9,7 @@ import MigasDePan from "./componentes/compartidos/MigasDePan";
 import LayoutConEncabezado from "./componentes/layout/LayoutConEncabezado";
 import AdminLayout from "./componentes/layout/AdminLayout";
 import ClienteLayout from "./componentes/layout/ClienteLayout";
+import RecepcionLayout from "./componentes/layout/RecepcionLayout";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 // ===== Páginas / vistas disponibles =====
@@ -27,6 +28,11 @@ import ProductosCliente from "./componentes/cliente/ProductosCliente";
 import MisCitasCliente from "./componentes/cliente/MisCitasCliente";
 import MiPerfilCliente from "./componentes/cliente/MiPerfilCliente";
 import PaginaPrincipalRecepcion from "./paginas/PaginaPrincipalRecepcion";
+import GestionCitasRecepcion from "./componentes/recepcion/GestionCitasRecepcion";
+import HorariosEstilistasRecepcion from "./componentes/recepcion/HorariosEstilistasRecepcion";
+import VentasProductosRecepcion from "./componentes/recepcion/VentasProductosRecepcion";
+import ClientesRecepcion from "./componentes/recepcion/ClientesRecepcion";
+import PerfilRecepcion from "./componentes/recepcion/PerfilRecepcion";
 import PaginaError404 from "./paginas/PaginaError404";
 import PaginaError501 from "./paginas/PaginaError501";
 import Login from "./componentes/autenticacion/Login";
@@ -426,6 +432,8 @@ const App = () => {
           <Route path="productos" element={<ProductosCliente />} />
           <Route path="citas" element={<MisCitasCliente />} />
           <Route path="perfil" element={<MiPerfilCliente />} />
+          <Route path="nosotros" element={<PaginaNosotrosPublico />} />
+          <Route path="novedades" element={<PaginaNovedadesPublico />} />
           <Route path="*" element={<Navigate to="/cliente" replace />} />
         </Route>
 
@@ -433,12 +441,18 @@ const App = () => {
           path="/recepcion"
           element={
             <ProtectedRoute allowedRoles={["EMPLEADA"]}>
-              <LayoutPublico>
-                <PaginaPrincipalRecepcion />
-              </LayoutPublico>
+              <RecepcionLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<PaginaPrincipalRecepcion />} />
+          <Route path="citas" element={<GestionCitasRecepcion />} />
+          <Route path="estilistas" element={<HorariosEstilistasRecepcion />} />
+          <Route path="ventas" element={<VentasProductosRecepcion />} />
+          <Route path="clientes" element={<ClientesRecepcion />} />
+          <Route path="perfil" element={<PerfilRecepcion />} />
+          <Route path="*" element={<Navigate to="/recepcion" replace />} />
+        </Route>
 
         <Route
           path="*"

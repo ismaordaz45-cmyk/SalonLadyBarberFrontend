@@ -13,11 +13,11 @@ import {
 import { alpha } from "@mui/material/styles";
 import Inventory2Rounded from "@mui/icons-material/Inventory2Rounded";
 import AddRounded from "@mui/icons-material/AddRounded";
-import ShoppingCartRounded from "@mui/icons-material/ShoppingCartRounded";
 import api from "../../api";
 import { resolveServicioImagenUrl } from "../../utils/resolveServicioImagenUrl";
 import { GlassCard } from "../../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../../ui/admin/adminTokens";
+import { useCart } from "../../context/CartContext";
 
 function moneyMXN(value) {
   if (value == null || value === "") return null;
@@ -26,8 +26,9 @@ function moneyMXN(value) {
   return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(n);
 }
 
-export default function VistaPreviaProductosInventarioCliente({ maxItems = 3 }) {
+export default function VistaPreviaProductosInventarioCliente({ maxItems = 6 }) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState([]);
 
@@ -77,20 +78,7 @@ export default function VistaPreviaProductosInventarioCliente({ maxItems = 3 }) 
               <Typography sx={{ fontWeight: 900, color: P.primary, fontSize: "1.05rem" }}>
                 Productos del inventario
               </Typography>
-              <Chip
-                label="Próximamente carrito"
-                size="small"
-                sx={{
-                  ml: 0.5,
-                  bgcolor: alpha(P.accent, 0.14),
-                  color: alpha(P.accent, 0.95),
-                  fontWeight: 900
-                }}
-              />
             </Stack>
-            <Typography sx={{ color: P.secondary, mt: 0.4, fontSize: "0.9rem" }}>
-              Explora productos del salón (botones de carrito aún en preparación).
-            </Typography>
           </Box>
           <Button
             onClick={goToCatalog}
@@ -204,36 +192,22 @@ export default function VistaPreviaProductosInventarioCliente({ maxItems = 3 }) 
                         {p.descripcion || "—"}
                       </Typography>
 
-                      <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                        <Button
-                          fullWidth
-                          disabled
-                          startIcon={<AddRounded />}
-                          variant="outlined"
-                          sx={{
-                            fontWeight: 900,
-                            borderColor: alpha(P.navy, 0.35),
-                            color: alpha(P.navy, 0.65)
-                          }}
-                          title="Próximamente"
-                        >
-                          Agregar
-                        </Button>
-                        <Button
-                          fullWidth
-                          disabled
-                          startIcon={<ShoppingCartRounded />}
-                          variant="contained"
-                          sx={{
-                            fontWeight: 900,
-                            bgcolor: alpha(P.navy, 0.35),
-                            color: alpha("#FFFFFF", 0.9)
-                          }}
-                          title="Próximamente"
-                        >
-                          Carrito
-                        </Button>
-                      </Stack>
+                      <Button
+                        fullWidth
+                        startIcon={<AddRounded />}
+                        variant="contained"
+                        onClick={() => addToCart(p)}
+                        disabled={stock <= 0}
+                        sx={{
+                          mt: 2,
+                          fontWeight: 900,
+                          bgcolor: P.navy,
+                          color: "#fff",
+                          "&:hover": { bgcolor: alpha(P.navy, 0.9) }
+                        }}
+                      >
+                        {stock <= 0 ? "Sin Stock" : "Agregar"}
+                      </Button>
 
                       <Button
                         onClick={goToCatalog}
