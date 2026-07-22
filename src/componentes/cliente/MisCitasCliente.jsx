@@ -834,11 +834,12 @@ function MisCitasCliente() {
 
       doc.save(`Comprobante_Cita_${citaId.slice(0, 8)}.pdf`);
     } catch (e) {
-      console.error(e);
+      console.error("Error generating PDF:", e);
+      const detail = e.response?.data?.error || e.message || e;
       Swal.fire({
         icon: "error",
         title: "Error de descarga",
-        text: "No pudimos generar el comprobante PDF. Por favor reintenta.",
+        text: `No pudimos generar el comprobante PDF. Detalle: ${detail}`,
         confirmButtonColor: COLORS.navy
       });
     }
