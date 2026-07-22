@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import api from "../../api";
 import {
   Box,
@@ -736,7 +736,7 @@ function MisCitasCliente() {
       doc.setFont("helvetica", "bold");
       doc.text("Fecha:", 15, y);
       doc.setFont("helvetica", "normal");
-      const f = new Date(cita.fecha).toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const f = new Date(cita.fecha ? cita.fecha.replace(/-/g, "/") : Date.now()).toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       doc.text(f, 50, y);
 
       y += 7;
@@ -761,7 +761,7 @@ function MisCitasCliente() {
         `$${(Number(s.precio) || 0).toFixed(2)} MXN`
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: tableHeaders,
         body: tableRows,

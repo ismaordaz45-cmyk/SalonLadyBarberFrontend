@@ -8,7 +8,7 @@ import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import { ADMIN_PALETTE as P } from "../ui/admin/adminTokens";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const PagoExitoCita = () => {
   const [searchParams] = useSearchParams();
@@ -58,7 +58,8 @@ const PagoExitoCita = () => {
   }, [citaId, paymentId, status]);
 
   const generatePDF = () => {
-    if (!cita) return;
+    try {
+      if (!cita) return;
 
     const doc = new jsPDF({
       orientation: "portrait",
@@ -151,7 +152,7 @@ const PagoExitoCita = () => {
       `$${(Number(s.precio) || 0).toFixed(2)} MXN`
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y,
       head: tableHeaders,
       body: tableRows,
@@ -225,6 +226,15 @@ const PagoExitoCita = () => {
 
     // Guardar
     doc.save(`Comprobante_Cita_${(citaId || cita.id || "reserva").slice(0, 8)}.pdf`);
+    } catch (e) {
+      console.error("Error generating PDF:", e);
+      Swal.fire({
+        icon: "error",
+        title: "Error de descarga",
+        text: `No pudimos generar el comprobante PDF. Detalle: ${e.message || e}`,
+        confirmButtonColor: P.navy
+      });
+    }
   };
 
   if (loading) {
