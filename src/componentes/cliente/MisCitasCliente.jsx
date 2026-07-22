@@ -806,7 +806,7 @@ function MisCitasCliente() {
       doc.setFillColor(254, 252, 242);
       doc.setDrawColor(...goldColor);
       doc.setLineWidth(0.5);
-      doc.rect(15, y, 186, 28, "FD");
+      doc.rect(15, y, 186, 33, "FD");
 
       doc.setTextColor(...navyColor);
       doc.setFont("helvetica", "bold");
@@ -818,14 +818,16 @@ function MisCitasCliente() {
       doc.setFontSize(9);
       
       const lines = [
-        "- El abono del 50% realizado como anticipo para asegurar tu lugar NO TIENE DEVOLUCIÓN.",
-        "- Se recomienda asistir 20 minutos antes de la hora programada a tu cita para evitar contratiempos.",
+        "- El abono del 50% como anticipo para asegurar tu lugar NO TIENE DEVOLUCIÓN.",
+        "- Debes presentar este comprobante (físico o digital) el día de tu cita para poder atenderte.",
+        "- Se recomienda asistir 20 minutos antes de la hora programada. Por seguridad, no compartas tu folio.",
         "¡Gracias por confiar en la barbería y permitirnos consentirte!"
       ];
 
       doc.text(lines[0], 20, y + 12);
       doc.text(lines[1], 20, y + 17);
       doc.text(lines[2], 20, y + 22);
+      doc.text(lines[3], 20, y + 27);
 
       // --- Footer ---
       doc.setFontSize(8);
@@ -1487,33 +1489,35 @@ function MisCitasCliente() {
                   .filter(Boolean);
 
                 return (
-                  <Grid item xs={12} sm={6} key={cita.id}>
+                  <Grid item xs={12} sm={6} md={4} key={cita.id}>
                     <Card
                       elevation={0}
                       sx={{
-                        borderRadius: "20px",
+                        borderRadius: "16px",
                         border: `1px solid ${COLORS.border}`,
+                        borderLeft: `5px solid ${badge.color}`,
                         bgcolor: "#FFFFFF",
-                        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.02)",
-                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.03)",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                         "&:hover": {
-                          boxShadow: "0 10px 25px rgba(30, 58, 90, 0.08)",
-                          transform: "translateY(-2px)"
+                          boxShadow: "0 12px 30px rgba(30, 58, 90, 0.12)",
+                          transform: "translateY(-4px)",
+                          borderColor: "rgba(30, 58, 90, 0.15)"
                         },
                         position: "relative"
                       }}
                     >
-                      <CardContent sx={{ p: 3 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                          <Typography sx={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.8rem", letterSpacing: "0.05em" }}>
+                      <CardContent sx={{ p: 2.2, "&:last-child": { pb: 2.2 } }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                          <Typography sx={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.72rem", letterSpacing: "0.05em" }}>
                             CITA #{idx + 1}
                           </Typography>
                           <Box
                             sx={{
-                              fontSize: "0.72rem",
+                              fontSize: "0.68rem",
                               fontWeight: 800,
-                              px: 1.5,
-                              py: 0.6,
+                              px: 1.2,
+                              py: 0.45,
                               borderRadius: "20px",
                               bgcolor: badge.bg,
                               color: badge.color,
@@ -1526,17 +1530,17 @@ function MisCitasCliente() {
                         </Stack>
 
                         {/* Fila de Imágenes de Servicios Adquiridos */}
-                        <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: "auto", py: 0.5 }}>
+                        <Stack direction="row" spacing={0.75} sx={{ mb: 1.5, overflowX: "auto", py: 0.5 }}>
                           {imagenesServicios.map((url, imgIdx) => (
                             <Avatar
                               key={imgIdx}
                               src={url}
                               variant="rounded"
                               sx={{
-                                width: 48,
-                                height: 48,
-                                border: `2px solid ${COLORS.navy}`,
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+                                width: 36,
+                                height: 36,
+                                border: `1.5px solid ${COLORS.navy}`,
+                                boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
                               }}
                             >
                               ✂️
@@ -1546,11 +1550,11 @@ function MisCitasCliente() {
                             <Avatar
                               variant="rounded"
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 36,
+                                height: 36,
                                 bgcolor: "rgba(30,58,90,0.05)",
                                 color: COLORS.navy,
-                                border: `1px dashed ${COLORS.border}`
+                                border: `1.2px dashed ${COLORS.border}`
                               }}
                             >
                               ✂️
@@ -1558,21 +1562,21 @@ function MisCitasCliente() {
                           )}
                         </Stack>
 
-                        <Typography sx={{ color: COLORS.muted, fontSize: "0.78rem", mb: 0.25, fontWeight: 700 }}>SERVICIOS:</Typography>
-                        <Typography sx={{ color: COLORS.black, fontWeight: 800, mb: 2, fontSize: "0.95rem" }}>
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.72rem", mb: 0.25, fontWeight: 700, letterSpacing: "0.02em" }}>SERVICIOS:</Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 800, mb: 1.5, fontSize: "0.85rem", lineHeight: 1.4 }}>
                           {cita.serviciosLabel || "—"}
                         </Typography>
 
-                        <Grid container spacing={1} sx={{ mb: 2 }}>
+                        <Grid container spacing={1} sx={{ mb: 1.5 }}>
                           <Grid item xs={6}>
-                            <Typography sx={{ color: COLORS.muted, fontSize: "0.75rem", fontWeight: 700 }}>FECHA:</Typography>
-                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.85rem" }}>
+                            <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>FECHA:</Typography>
+                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
                               {formatFechaCita(cita.horaInicio)}
                             </Typography>
                           </Grid>
                           <Grid item xs={6}>
-                            <Typography sx={{ color: COLORS.muted, fontSize: "0.75rem", fontWeight: 700 }}>HORARIO:</Typography>
-                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.85rem" }}>
+                            <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>HORARIO:</Typography>
+                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
                               {formatHoraCita(cita.horaInicio)}
                             </Typography>
                           </Grid>
@@ -1582,11 +1586,11 @@ function MisCitasCliente() {
                         {cita.estado === "APARTADA" && (
                           <Box
                             sx={{
-                              p: 1.5,
-                              mb: 2,
+                              p: 1.2,
+                              mb: 1.5,
                               bgcolor: "rgba(239, 68, 68, 0.04)",
                               border: "1px solid rgba(239, 68, 68, 0.15)",
-                              borderRadius: "10px"
+                              borderRadius: "8px"
                             }}
                           >
                             <CitaApartadaTimer creadoEn={cita.creadoEn} onExpire={() => cargarCitas(true)} />
@@ -1595,16 +1599,17 @@ function MisCitasCliente() {
 
                         {/* Botones de acción según estado */}
                         {cita.estado === "APARTADA" && (
-                          <Stack direction="row" spacing={1.5} sx={{ mt: 2.5 }}>
+                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
                             <Button
                               variant="outlined"
                               onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
                               disabled={cancelandoEsta || cancelandoId != null || guardando}
                               sx={{
                                 flex: 1,
-                                py: 1.1,
-                                borderRadius: "10px",
+                                py: 0.85,
+                                borderRadius: "8px",
                                 textTransform: "none",
+                                fontSize: "0.8rem",
                                 fontWeight: 800,
                                 borderColor: "#EF4444",
                                 color: "#EF4444",
@@ -1619,9 +1624,10 @@ function MisCitasCliente() {
                               disabled={cancelandoEsta || cancelandoId != null || guardando}
                               sx={{
                                 flex: 1.2,
-                                py: 1.1,
-                                borderRadius: "10px",
+                                py: 0.85,
+                                borderRadius: "8px",
                                 textTransform: "none",
+                                fontSize: "0.8rem",
                                 fontWeight: 800,
                                 bgcolor: COLORS.gold,
                                 color: "#FFFFFF",
@@ -1635,16 +1641,17 @@ function MisCitasCliente() {
                         )}
 
                         {cita.estado === "CONFIRMADA" && (
-                          <Stack direction="row" spacing={1.5} sx={{ mt: 2.5 }}>
+                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
                             <Button
                               fullWidth
                               variant="contained"
                               onClick={() => handleDescargarComprobante(cita.id)}
-                              startIcon={<DownloadRoundedIcon />}
+                              startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
                               sx={{
-                                py: 1.1,
-                                borderRadius: "10px",
+                                py: 0.85,
+                                borderRadius: "8px",
                                 textTransform: "none",
+                                fontSize: "0.8rem",
                                 fontWeight: 800,
                                 bgcolor: COLORS.navy,
                                 color: "#FFFFFF",
@@ -1659,10 +1666,11 @@ function MisCitasCliente() {
                               onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
                               disabled={cancelandoEsta || cancelandoId != null}
                               sx={{
-                                py: 1.1,
-                                px: 2,
-                                borderRadius: "10px",
+                                py: 0.85,
+                                px: 1.5,
+                                borderRadius: "8px",
                                 textTransform: "none",
+                                fontSize: "0.8rem",
                                 fontWeight: 800,
                                 borderColor: "#EF4444",
                                 color: "#EF4444",
@@ -1675,31 +1683,32 @@ function MisCitasCliente() {
                         )}
 
                         {cita.estado === "COMPLETADA" && (
-                          <Stack direction="row" spacing={2} sx={{ mt: 2.5 }}>
+                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
                             <Button
                               fullWidth
                               variant="outlined"
                               onClick={() => handleDescargarComprobante(cita.id)}
-                              startIcon={<DownloadRoundedIcon />}
+                              startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
                               sx={{
-                                py: 1.1,
-                                borderRadius: "10px",
+                                py: 0.85,
+                                borderRadius: "8px",
                                 textTransform: "none",
+                                fontSize: "0.8rem",
                                 fontWeight: 800,
                                 borderColor: COLORS.navy,
                                 color: COLORS.navy,
                                 "&:hover": { bgcolor: "rgba(30, 58, 90, 0.04)" }
                               }}
                             >
-                              Descargar Comprobante
+                              Comprobante
                             </Button>
                           </Stack>
                         )}
 
                         {["CANCELADA", "NO_ASISTIO"].includes(cita.estado) && (
-                          <Box sx={{ mt: 2.5, p: 1.5, bgcolor: "#F8FAFC", borderRadius: "10px", textAlign: "center", border: "1px dashed rgba(229, 231, 235, 1)" }}>
-                            <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700 }}>
-                              Esta cita fue finalizada con estado: {cita.estado}
+                          <Box sx={{ mt: 1.8, p: 1, bgcolor: "#F8FAFC", borderRadius: "8px", textAlign: "center", border: "1px dashed rgba(229, 231, 235, 1)" }}>
+                            <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700, fontSize: "0.75rem" }}>
+                              Cita {cita.estado.toLowerCase()}
                             </Typography>
                           </Box>
                         )}

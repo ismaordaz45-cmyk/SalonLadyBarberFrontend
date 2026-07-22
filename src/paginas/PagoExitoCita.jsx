@@ -198,7 +198,7 @@ const PagoExitoCita = () => {
     doc.setFillColor(254, 252, 242); // crema suave
     doc.setDrawColor(...goldColor);
     doc.setLineWidth(0.5);
-    doc.rect(15, y, 186, 28, "FD");
+    doc.rect(15, y, 186, 33, "FD");
 
     doc.setTextColor(...navyColor);
     doc.setFont("helvetica", "bold");
@@ -210,14 +210,16 @@ const PagoExitoCita = () => {
     doc.setFontSize(9);
     
     const lines = [
-      "- El abono del 50% realizado como anticipo para asegurar tu lugar NO TIENE DEVOLUCIÓN.",
-      "- Se recomienda asistir 20 minutos antes de la hora programada a tu cita para evitar contratiempos.",
+      "- El abono del 50% como anticipo para asegurar tu lugar NO TIENE DEVOLUCIÓN.",
+      "- Debes presentar este comprobante (físico o digital) el día de tu cita para poder atenderte.",
+      "- Se recomienda asistir 20 minutos antes de la hora programada. Por seguridad, no compartas tu folio.",
       "¡Gracias por confiar en la barbería y permitirnos consentirte!"
     ];
 
     doc.text(lines[0], 20, y + 12);
     doc.text(lines[1], 20, y + 17);
     doc.text(lines[2], 20, y + 22);
+    doc.text(lines[3], 20, y + 27);
 
     // --- Footer ---
     doc.setFontSize(8);
@@ -368,9 +370,10 @@ const PagoExitoCita = () => {
             Políticas e indicaciones importantes:
           </Typography>
           <Typography variant="caption" component="div" sx={{ color: "text.secondary", lineHeight: 1.6 }}>
-            • El abono del 50% ($ {anticipo.toFixed(2)} MXN) realizado no tiene devolución bajo ninguna circunstancia.<br />
-            • Por favor, asiste <strong>20 minutos antes</strong> de la hora acordada a tu cita para garantizar la calidad del servicio.<br />
-            • Descarga tu comprobante PDF y preséntalo el día del servicio.<br />
+            • El abono del 50% ($ {anticipo.toFixed(2)} MXN) realizado como anticipo no tiene devolución bajo ninguna circunstancia.<br />
+            • Debes presentar este comprobante (físico o digital) el día de tu cita para poder atenderte.<br />
+            • Por favor, asiste <strong>20 minutos antes</strong> de la hora acordada a tu cita.<br />
+            • Por seguridad, no compartas tu comprobante de reserva.<br />
             <strong>¡Muchas gracias por confiar en la barbería!</strong>
           </Typography>
         </Paper>
