@@ -126,7 +126,7 @@ const PagoExitoCita = () => {
     doc.setFont("helvetica", "bold");
     doc.text("Fecha:", 15, y);
     doc.setFont("helvetica", "normal");
-    const f = new Date(cita.fecha).toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const f = new Date(cita.fecha ? cita.fecha.replace(/-/g, "/") : Date.now()).toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     doc.text(f, 50, y);
 
     y += 7;
@@ -224,7 +224,7 @@ const PagoExitoCita = () => {
     doc.text("Salón Lady Barber - Generado digitalmente de forma segura", 108, 265, { align: "center" });
 
     // Guardar
-    doc.save(`Comprobante_Cita_${citaId.slice(0, 8)}.pdf`);
+    doc.save(`Comprobante_Cita_${(citaId || cita.id || "reserva").slice(0, 8)}.pdf`);
   };
 
   if (loading) {
@@ -300,7 +300,7 @@ const PagoExitoCita = () => {
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography sx={{ color: "text.secondary", fontSize: "0.9rem" }}>Servicios:</Typography>
               <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", textAlign: "right" }}>
-                {cita.serviciosLabel || "—"}
+                {(cita.servicios || []).map(s => s.nombre).join(", ") || "—"}
               </Typography>
             </Box>
 
@@ -312,7 +312,7 @@ const PagoExitoCita = () => {
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
               <Typography sx={{ color: "text.secondary", fontSize: "0.9rem" }}>Fecha:</Typography>
               <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
-                {new Date(cita.fecha).toLocaleDateString("es-MX", { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date(cita.fecha ? cita.fecha.replace(/-/g, "/") : Date.now()).toLocaleDateString("es-MX", { weekday: 'long', day: 'numeric', month: 'long' })}
               </Typography>
             </Box>
 

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import api from "../../api";
 import {
   Box,
   Button,
@@ -38,8 +38,6 @@ import AccessTimeRounded from "@mui/icons-material/AccessTimeRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import BarberPole from "../compartidos/BarberPole";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
-
-const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const COLORS = {
   navy: "#1E3A5A",
@@ -110,15 +108,6 @@ const cardSx = {
   border: `1px solid ${COLORS.border}`,
   boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)"
 };
-
-function getToken() {
-  return localStorage.getItem("token") || sessionStorage.getItem("token") || "";
-}
-
-function authHeaders() {
-  const t = getToken();
-  return t ? { Authorization: `Bearer ${t}` } : {};
-}
 
 function getMinFechaReserva() {
   const base = new Date();
@@ -229,21 +218,16 @@ function MisCitasCliente() {
 
   // --- Cargar Citas del Cliente ---
   const cargarCitas = useCallback(async (silent = false) => {
-    if (!getToken()) {
-      setCitasApi([]);
-      setCargandoCitas(false);
-      return;
-    }
     try {
       if (!silent) setCargandoCitas(true);
-      const reqCfg = { headers: authHeaders() };
+      const reqCfg = {};
       if (!silent) {
         reqCfg.barberHeadline = "Mis citas";
         reqCfg.barberMessage = "Cargando tus citas…";
       } else {
         reqCfg.barberOverlay = false;
       }
-      const { data } = await axios.get(`${API_URL}/api/cliente/citas`, reqCfg);
+      const { data } = await api.get("/api/cliente/citas", reqCfg);
       setCitasApi(Array.isArray(data) ? data : []);
     } catch {
       setCitasApi([]);
@@ -259,12 +243,12 @@ function MisCitasCliente() {
       try {
         setCargandoCatalogo(true);
         const [srvRes, horRes] = await Promise.all([
-          axios.get(`${API_URL}/api/servicios`, {
+          api.get("/api/servicios", {
             barberHeadline: "Catálogo",
             barberMessage: "Cargando servicios…"
           }),
-          axios
-            .get(`${API_URL}/api/horario-negocio`, {
+          api
+            .get("/api/horario-negocio", {
               barberHeadline: "Horario",
               barberMessage: "Cargando horario del salón…"
             })
@@ -316,7 +300,7 @@ function MisCitasCliente() {
         setCargandoEstilistas(true);
         const results = await Promise.all(
           serviciosSel.map((sid) =>
-            axios.get(`${API_URL}/api/empleadas/por-servicio/${Number(sid)}`)
+            api.get(`/api/empleadas/por-servicio/${Number(sid)}`)
           )
         );
         if (cancel) return;
@@ -358,9 +342,8 @@ function MisCitasCliente() {
     }
     try {
       setCargandoOcupacion(true);
-      const { data } = await axios.get(
-        `${API_URL}/api/citas/ocupacion?fecha=${fecha}&empleadaId=${empleadaId}`,
-        { headers: authHeaders() }
+      const { data } = await api.get(
+        `/api/citas/ocupacion?fecha=${fecha}&empleadaId=${empleadaId}`
       );
       setOcupacionApi(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -512,8 +495,8 @@ function MisCitasCliente() {
     try {
       setGuardando(true);
       // Crear la cita en estado 'APARTADA' para bloquear el horario en el servidor
-      const { data } = await axios.post(
-        `${API_URL}/api/citas`,
+      const { data } = await api.post(
+        "/api/citas",
         {
           empleadaId: Number(empleadaId),
           fecha,
@@ -521,7 +504,6 @@ function MisCitasCliente() {
           servicios: serviciosSel.map(Number)
         },
         {
-          headers: { ...authHeaders(), "Content-Type": "application/json" },
           barberHeadline: "Apartando horario",
           barberMessage: "Bloqueando tu horario reservado en el sistema…"
         }
@@ -558,7 +540,7 @@ function MisCitasCliente() {
       }).then((result) => {
         if (result.isConfirmed) {
           // Cancelar borrador/apartado en backend
-          axios.delete(`${API_URL}/api/citas/${citaCreadaId}`, { headers: authHeaders() }).catch(() => {});
+          api.delete(`/api/citas/${citaCreadaId}`).catch(() => {});
           setCitaCreadaId("");
           setCitaCreadaTimestamp(null);
           setActiveStep(1);
@@ -583,11 +565,10 @@ function MisCitasCliente() {
 
     try {
       setGuardando(true);
-      const { data } = await axios.post(
-        `${API_URL}/api/mercado-pago/crear-preferencia-cita`,
+      const { data } = await api.post(
+        "/api/mercado-pago/crear-preferencia-cita",
         { citaId: citaCreadaId },
         {
-          headers: authHeaders(),
           barberHeadline: "Conectando con Mercado Pago",
           barberMessage: "Generando link de cobro seguro..."
         }
@@ -650,11 +631,10 @@ function MisCitasCliente() {
   const handlePagarReservaLista = async (citaId) => {
     try {
       setGuardando(true);
-      const { data } = await axios.post(
-        `${API_URL}/api/mercado-pago/crear-preferencia-cita`,
+      const { data } = await api.post(
+        "/api/mercado-pago/crear-preferencia-cita",
         { citaId },
         {
-          headers: authHeaders(),
           barberHeadline: "Conectando con Mercado Pago",
           barberMessage: "Generando link de cobro seguro..."
         }
@@ -682,10 +662,9 @@ function MisCitasCliente() {
   const handleDescargarComprobante = async (citaId) => {
     try {
       // 1. Obtener detalles de la cita con servicios
-      const { data: cita } = await axios.get(
-        `${API_URL}/api/citas/${citaId}`,
+      const { data: cita } = await api.get(
+        `/api/citas/${citaId}`,
         {
-          headers: authHeaders(),
           barberHeadline: "Comprobante",
           barberMessage: "Generando tu comprobante de pago..."
         }
@@ -881,15 +860,7 @@ function MisCitasCliente() {
 
     try {
       setCancelandoId(citaId);
-      await axios.patch(
-        `${API_URL}/api/cliente/citas/${citaId}/cancelar`,
-        {},
-        {
-          headers: authHeaders(),
-          barberHeadline: "Cancelando",
-          barberMessage: "Procesando la cancelación en el servidor..."
-        }
-      );
+      await api.patch(`/api/cliente/citas/${citaId}/cancelar`);
       await runWithOverlay(
         () => new Promise((resolve) => setTimeout(resolve, 300)),
         "Tu cita ha sido cancelada y el horario liberado.",
