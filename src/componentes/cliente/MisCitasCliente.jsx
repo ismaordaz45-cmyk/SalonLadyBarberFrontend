@@ -419,6 +419,53 @@ function MisCitasCliente() {
     });
   }, [fecha, diasHorarioNegocio, ocupacionApi, duracionYPrecioTotal.duracion]);
 
+  // --- Agrupar citas por periodo (Esta semana, Este mes, Otras) ---
+  const groupedCitas = useMemo(() => {
+    const estaSemana = [];
+    const esteMes = [];
+    const otras = [];
+
+    const now = new Date();
+    
+    // Calcular inicio y fin de esta semana (Lunes a Domingo)
+    const currentDay = now.getDay(); // 0 = Domingo, 1 = Lunes...
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() + distanceToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // Mes actual
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    citasApi.forEach((cita) => {
+      if (!cita.horaInicio) {
+        otras.push(cita);
+        return;
+      }
+      const d = new Date(cita.horaInicio.replace(/-/g, "/"));
+      if (Number.isNaN(d.getTime())) {
+        otras.push(cita);
+        return;
+      }
+
+      if (d >= startOfWeek && d <= endOfWeek) {
+        estaSemana.push(cita);
+      } else if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+        esteMes.push(cita);
+      } else {
+        otras.push(cita);
+      }
+    });
+
+    return { estaSemana, esteMes, otras };
+  }, [citasApi]);
+
   // --- Temporizador del Apartado ---
   useEffect(() => {
     if (activeStep !== 2 || !citaCreadaTimestamp) return;
@@ -901,6 +948,281 @@ function MisCitasCliente() {
     [e.nombre, e.apellidoPaterno, e.apellidoMaterno].filter(Boolean).join(" ").trim() ||
     `Estilista #${e.id}`;
 
+  const renderCitasGrid = (listaDeCitas, tituloSeccion) => {
+    if (listaDeCitas.length === 0) return null;
+    return (
+      <Box sx={{ mb: 4.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mb: 2.5 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 900,
+              color: COLORS.navy,
+              letterSpacing: "0.05em",
+              fontSize: "0.85rem",
+              textTransform: "uppercase",
+              display: "flex",
+              alignItems: "center",
+              gap: 1
+            }}
+          >
+            {tituloSeccion}
+          </Typography>
+          <Box
+            sx={{
+              fontSize: "0.75rem",
+              fontWeight: 800,
+              bgcolor: "rgba(30, 58, 90, 0.06)",
+              color: COLORS.navy,
+              px: 1.2,
+              py: 0.3,
+              borderRadius: "12px"
+            }}
+          >
+            {listaDeCitas.length} {listaDeCitas.length === 1 ? "cita" : "citas"}
+          </Box>
+        </Box>
+        <Grid container spacing={2.5}>
+          {listaDeCitas.map((cita) => {
+            const idx = citasApi.findIndex((c) => c.id === cita.id);
+            const cancelandoEsta = cancelandoId != null && String(cancelandoId) === String(cita.id);
+            const badge = getStatusBadgeStyles(cita.estado);
+            const imagenesServicios = (cita.serviciosImagenes || "").split(",").filter(Boolean);
+
+            return (
+              <Grid item xs={12} sm={6} md={4} key={cita.id}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    borderRadius: "16px",
+                    border: `1px solid ${COLORS.border}`,
+                    borderLeft: `5px solid ${badge.color}`,
+                    bgcolor: "#FFFFFF",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.03)",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    "&:hover": {
+                      boxShadow: "0 12px 30px rgba(30, 58, 90, 0.12)",
+                      transform: "translateY(-4px)",
+                      borderColor: "rgba(30, 58, 90, 0.15)"
+                    },
+                    position: "relative"
+                  }}
+                >
+                  <CardContent sx={{ p: 2.2, "&:last-child": { pb: 2.2 } }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                      <Typography sx={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.72rem", letterSpacing: "0.05em" }}>
+                        CITA #{idx + 1}
+                      </Typography>
+                      <Box
+                        sx={{
+                          fontSize: "0.68rem",
+                          fontWeight: 800,
+                          px: 1.2,
+                          py: 0.45,
+                          borderRadius: "20px",
+                          bgcolor: badge.bg,
+                          color: badge.color,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.02em"
+                        }}
+                      >
+                        {badge.label}
+                      </Box>
+                    </Stack>
+
+                    {/* Fila de Imágenes de Servicios Adquiridos */}
+                    <Stack direction="row" spacing={0.75} sx={{ mb: 1.5, overflowX: "auto", py: 0.5 }}>
+                      {imagenesServicios.map((url, imgIdx) => (
+                        <Avatar
+                          key={imgIdx}
+                          src={url}
+                          variant="rounded"
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            border: `1.5px solid ${COLORS.navy}`,
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+                          }}
+                        >
+                          ✂️
+                        </Avatar>
+                      ))}
+                      {imagenesServicios.length === 0 && (
+                        <Avatar
+                          variant="rounded"
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            bgcolor: "rgba(30,58,90,0.05)",
+                            color: COLORS.navy,
+                            border: `1.2px dashed ${COLORS.border}`
+                          }}
+                        >
+                          ✂️
+                        </Avatar>
+                      )}
+                    </Stack>
+
+                    <Typography sx={{ color: COLORS.muted, fontSize: "0.72rem", mb: 0.25, fontWeight: 700, letterSpacing: "0.02em" }}>SERVICIOS:</Typography>
+                    <Typography sx={{ color: COLORS.black, fontWeight: 800, mb: 1.5, fontSize: "0.85rem", lineHeight: 1.4 }}>
+                      {cita.serviciosLabel || "—"}
+                    </Typography>
+
+                    <Grid container spacing={1} sx={{ mb: 1.5 }}>
+                      <Grid item xs={6}>
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>FECHA:</Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
+                          {formatFechaCita(cita.horaInicio)}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>HORARIO:</Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
+                          {formatHoraCita(cita.horaInicio)}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+
+                    {/* Mostrar temporizador si el estado es APARTADA */}
+                    {cita.estado === "APARTADA" && (
+                      <Box
+                        sx={{
+                          p: 1.2,
+                          mb: 1.5,
+                          bgcolor: "rgba(239, 68, 68, 0.04)",
+                          border: "1px solid rgba(239, 68, 68, 0.15)",
+                          borderRadius: "8px"
+                        }}
+                      >
+                        <CitaApartadaTimer creadoEn={cita.creadoEn} onExpire={() => cargarCitas(true)} />
+                      </Box>
+                    )}
+
+                    {/* Botones de acción según estado */}
+                    {cita.estado === "APARTADA" && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
+                          disabled={cancelandoEsta || cancelandoId != null || guardando}
+                          sx={{
+                            flex: 1,
+                            py: 0.85,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 800,
+                            borderColor: "#EF4444",
+                            color: "#EF4444",
+                            "&:hover": { borderColor: "#DC2626", bgcolor: "rgba(239, 68, 68, 0.04)" }
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={() => handlePagarReservaLista(cita.id)}
+                          disabled={cancelandoEsta || cancelandoId != null || guardando}
+                          sx={{
+                            flex: 1.2,
+                            py: 0.85,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 800,
+                            bgcolor: COLORS.gold,
+                            color: "#FFFFFF",
+                            boxShadow: "none",
+                            "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" }
+                          }}
+                        >
+                          Pagar Cita
+                        </Button>
+                      </Stack>
+                    )}
+
+                    {cita.estado === "CONFIRMADA" && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={() => handleDescargarComprobante(cita.id)}
+                          startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
+                          sx={{
+                            py: 0.85,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 800,
+                            bgcolor: COLORS.navy,
+                            color: "#FFFFFF",
+                            boxShadow: "none",
+                            "&:hover": { bgcolor: "#152a41", boxShadow: "none" }
+                          }}
+                        >
+                          Comprobante
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
+                          disabled={cancelandoEsta || cancelandoId != null}
+                          sx={{
+                            py: 0.85,
+                            px: 1.5,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 800,
+                            borderColor: "#EF4444",
+                            color: "#EF4444",
+                            "&:hover": { borderColor: "#DC2626", bgcolor: "rgba(239, 68, 68, 0.04)" }
+                          }}
+                        >
+                          {cancelandoEsta ? "…" : "Cancelar"}
+                        </Button>
+                      </Stack>
+                    )}
+
+                    {cita.estado === "COMPLETADA" && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          onClick={() => handleDescargarComprobante(cita.id)}
+                          startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
+                          sx={{
+                            py: 0.85,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 800,
+                            borderColor: COLORS.navy,
+                            color: COLORS.navy,
+                            "&:hover": { bgcolor: "rgba(30, 58, 90, 0.04)" }
+                          }}
+                        >
+                          Comprobante
+                        </Button>
+                      </Stack>
+                    )}
+
+                    {["CANCELADA", "NO_ASISTIO"].includes(cita.estado) && (
+                      <Box sx={{ mt: 1.8, p: 1, bgcolor: "#F8FAFC", borderRadius: "8px", textAlign: "center", border: "1px dashed rgba(229, 231, 235, 1)" }}>
+                        <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700, fontSize: "0.75rem" }}>
+                          Cita {cita.estado.toLowerCase()}
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ bgcolor: "transparent", minHeight: "100%", pb: 4 }}>
       {/* Título */}
@@ -937,7 +1259,7 @@ function MisCitasCliente() {
           }}
         >
           <Tab label="Agendar Nueva Cita" />
-          <Tab label={`Tus Reservas (${citasApi.length})`} />
+          <Tab label={`Mis citas (${citasApi.length})`} />
         </Tabs>
       </Box>
 
@@ -1478,246 +1800,11 @@ function MisCitasCliente() {
               </Typography>
             </Box>
           ) : (
-            <Grid container spacing={2.5}>
-              {citasApi.map((cita, idx) => {
-                const cancelandoEsta = cancelandoId != null && String(cancelandoId) === String(cita.id);
-                const badge = getStatusBadgeStyles(cita.estado);
-
-                // Obtener urls de imagenes de servicios adquiridos
-                const imagenesServicios = (cita.serviciosImagenes || "")
-                  .split(",")
-                  .filter(Boolean);
-
-                return (
-                  <Grid item xs={12} sm={6} md={4} key={cita.id}>
-                    <Card
-                      elevation={0}
-                      sx={{
-                        borderRadius: "16px",
-                        border: `1px solid ${COLORS.border}`,
-                        borderLeft: `5px solid ${badge.color}`,
-                        bgcolor: "#FFFFFF",
-                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.03)",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        "&:hover": {
-                          boxShadow: "0 12px 30px rgba(30, 58, 90, 0.12)",
-                          transform: "translateY(-4px)",
-                          borderColor: "rgba(30, 58, 90, 0.15)"
-                        },
-                        position: "relative"
-                      }}
-                    >
-                      <CardContent sx={{ p: 2.2, "&:last-child": { pb: 2.2 } }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-                          <Typography sx={{ color: COLORS.navy, fontWeight: 900, fontSize: "0.72rem", letterSpacing: "0.05em" }}>
-                            CITA #{idx + 1}
-                          </Typography>
-                          <Box
-                            sx={{
-                              fontSize: "0.68rem",
-                              fontWeight: 800,
-                              px: 1.2,
-                              py: 0.45,
-                              borderRadius: "20px",
-                              bgcolor: badge.bg,
-                              color: badge.color,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.02em"
-                            }}
-                          >
-                            {badge.label}
-                          </Box>
-                        </Stack>
-
-                        {/* Fila de Imágenes de Servicios Adquiridos */}
-                        <Stack direction="row" spacing={0.75} sx={{ mb: 1.5, overflowX: "auto", py: 0.5 }}>
-                          {imagenesServicios.map((url, imgIdx) => (
-                            <Avatar
-                              key={imgIdx}
-                              src={url}
-                              variant="rounded"
-                              sx={{
-                                width: 36,
-                                height: 36,
-                                border: `1.5px solid ${COLORS.navy}`,
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
-                              }}
-                            >
-                              ✂️
-                            </Avatar>
-                          ))}
-                          {imagenesServicios.length === 0 && (
-                            <Avatar
-                              variant="rounded"
-                              sx={{
-                                width: 36,
-                                height: 36,
-                                bgcolor: "rgba(30,58,90,0.05)",
-                                color: COLORS.navy,
-                                border: `1.2px dashed ${COLORS.border}`
-                              }}
-                            >
-                              ✂️
-                            </Avatar>
-                          )}
-                        </Stack>
-
-                        <Typography sx={{ color: COLORS.muted, fontSize: "0.72rem", mb: 0.25, fontWeight: 700, letterSpacing: "0.02em" }}>SERVICIOS:</Typography>
-                        <Typography sx={{ color: COLORS.black, fontWeight: 800, mb: 1.5, fontSize: "0.85rem", lineHeight: 1.4 }}>
-                          {cita.serviciosLabel || "—"}
-                        </Typography>
-
-                        <Grid container spacing={1} sx={{ mb: 1.5 }}>
-                          <Grid item xs={6}>
-                            <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>FECHA:</Typography>
-                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
-                              {formatFechaCita(cita.horaInicio)}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography sx={{ color: COLORS.muted, fontSize: "0.7rem", fontWeight: 750 }}>HORARIO:</Typography>
-                            <Typography sx={{ color: COLORS.black, fontWeight: 800, fontSize: "0.78rem" }}>
-                              {formatHoraCita(cita.horaInicio)}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-
-                        {/* Mostrar temporizador si el estado es APARTADA */}
-                        {cita.estado === "APARTADA" && (
-                          <Box
-                            sx={{
-                              p: 1.2,
-                              mb: 1.5,
-                              bgcolor: "rgba(239, 68, 68, 0.04)",
-                              border: "1px solid rgba(239, 68, 68, 0.15)",
-                              borderRadius: "8px"
-                            }}
-                          >
-                            <CitaApartadaTimer creadoEn={cita.creadoEn} onExpire={() => cargarCitas(true)} />
-                          </Box>
-                        )}
-
-                        {/* Botones de acción según estado */}
-                        {cita.estado === "APARTADA" && (
-                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
-                            <Button
-                              variant="outlined"
-                              onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
-                              disabled={cancelandoEsta || cancelandoId != null || guardando}
-                              sx={{
-                                flex: 1,
-                                py: 0.85,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                borderColor: "#EF4444",
-                                color: "#EF4444",
-                                "&:hover": { borderColor: "#DC2626", bgcolor: "rgba(239, 68, 68, 0.04)" }
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button
-                              variant="contained"
-                              onClick={() => handlePagarReservaLista(cita.id)}
-                              disabled={cancelandoEsta || cancelandoId != null || guardando}
-                              sx={{
-                                flex: 1.2,
-                                py: 0.85,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                bgcolor: COLORS.gold,
-                                color: "#FFFFFF",
-                                boxShadow: "none",
-                                "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" }
-                              }}
-                            >
-                              Pagar Cita
-                            </Button>
-                          </Stack>
-                        )}
-
-                        {cita.estado === "CONFIRMADA" && (
-                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
-                            <Button
-                              fullWidth
-                              variant="contained"
-                              onClick={() => handleDescargarComprobante(cita.id)}
-                              startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
-                              sx={{
-                                py: 0.85,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                bgcolor: COLORS.navy,
-                                color: "#FFFFFF",
-                                boxShadow: "none",
-                                "&:hover": { bgcolor: "#152a41", boxShadow: "none" }
-                              }}
-                            >
-                              Comprobante
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
-                              disabled={cancelandoEsta || cancelandoId != null}
-                              sx={{
-                                py: 0.85,
-                                px: 1.5,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                borderColor: "#EF4444",
-                                color: "#EF4444",
-                                "&:hover": { borderColor: "#DC2626", bgcolor: "rgba(239, 68, 68, 0.04)" }
-                              }}
-                            >
-                              {cancelandoEsta ? "…" : "Cancelar"}
-                            </Button>
-                          </Stack>
-                        )}
-
-                        {cita.estado === "COMPLETADA" && (
-                          <Stack direction="row" spacing={1} sx={{ mt: 1.8 }}>
-                            <Button
-                              fullWidth
-                              variant="outlined"
-                              onClick={() => handleDescargarComprobante(cita.id)}
-                              startIcon={<DownloadRoundedIcon sx={{ fontSize: 16 }} />}
-                              sx={{
-                                py: 0.85,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                fontSize: "0.8rem",
-                                fontWeight: 800,
-                                borderColor: COLORS.navy,
-                                color: COLORS.navy,
-                                "&:hover": { bgcolor: "rgba(30, 58, 90, 0.04)" }
-                              }}
-                            >
-                              Comprobante
-                            </Button>
-                          </Stack>
-                        )}
-
-                        {["CANCELADA", "NO_ASISTIO"].includes(cita.estado) && (
-                          <Box sx={{ mt: 1.8, p: 1, bgcolor: "#F8FAFC", borderRadius: "8px", textAlign: "center", border: "1px dashed rgba(229, 231, 235, 1)" }}>
-                            <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700, fontSize: "0.75rem" }}>
-                              Cita {cita.estado.toLowerCase()}
-                            </Typography>
-                          </Box>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
+            <Box>
+              {renderCitasGrid(groupedCitas.estaSemana, "Esta Semana")}
+              {renderCitasGrid(groupedCitas.esteMes, "Este Mes")}
+              {renderCitasGrid(groupedCitas.otras, "Otras Citas e Historial")}
+            </Box>
           )}
         </Paper>
       )}
