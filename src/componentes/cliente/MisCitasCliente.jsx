@@ -775,7 +775,7 @@ function MisCitasCliente() {
         }
       });
 
-      y = doc.previousAutoTable.finalY + 12;
+      y = doc.lastAutoTable.finalY + 12;
 
       // --- Desglose de Pago ---
       doc.setDrawColor(229, 231, 235);
