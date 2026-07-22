@@ -34,6 +34,7 @@ import Registro from "./componentes/autenticacion/Registro";
 import RecuperarContraseña from "./componentes/autenticacion/RecuperarContraseña";
 import RestablecerContraseña from "./componentes/autenticacion/RestablecerContraseña";
 import PagoExito from "./paginas/PagoExito";
+import PagoExitoCita from "./paginas/PagoExitoCita";
 
 // ===== Componentes administrativa (PROPIETARIA) =====
 import Perfil from "./componentes/administrativa/datosEmpresa/Perfil";
@@ -453,6 +454,15 @@ const App = () => {
           element={
             <ProtectedRoute allowedRoles={["CLIENTE"]}>
               <PagoExito />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pago-exito-cita"
+          element={
+            <ProtectedRoute allowedRoles={["CLIENTE"]}>
+              <PagoExitoCita />
             </ProtectedRoute>
           }
         />

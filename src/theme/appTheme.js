@@ -15,22 +15,22 @@ let theme = createTheme({
   },
   typography: {
     fontFamily: FONT_BODY,
-    h1: { fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "2.6rem", lineHeight: 1.08, letterSpacing: "0.02em" },
-    h2: { fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "2.15rem", lineHeight: 1.12, letterSpacing: "0.02em" },
-    h3: { fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.85rem", lineHeight: 1.16, letterSpacing: "0.02em" },
-    h4: { fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.55rem", lineHeight: 1.18, letterSpacing: "0.02em" },
-    h5: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "1.25rem", lineHeight: 1.22 },
-    h6: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "1.08rem", lineHeight: 1.25 },
+    h1: { fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "2.2rem", lineHeight: 1.08, letterSpacing: "0.02em" },
+    h2: { fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "1.8rem", lineHeight: 1.12, letterSpacing: "0.02em" },
+    h3: { fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.5rem", lineHeight: 1.16, letterSpacing: "0.02em" },
+    h4: { fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.3rem", lineHeight: 1.18, letterSpacing: "0.02em" },
+    h5: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "1.1rem", lineHeight: 1.22 },
+    h6: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "0.95rem", lineHeight: 1.25 },
 
-    subtitle1: { fontFamily: FONT_BODY, fontWeight: 600, fontSize: "0.98rem", lineHeight: 1.45 },
-    subtitle2: { fontFamily: FONT_BODY, fontWeight: 600, fontSize: "0.88rem", lineHeight: 1.45 },
+    subtitle1: { fontFamily: FONT_BODY, fontWeight: 600, fontSize: "0.88rem", lineHeight: 1.45 },
+    subtitle2: { fontFamily: FONT_BODY, fontWeight: 600, fontSize: "0.78rem", lineHeight: 1.45 },
 
-    body1: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.98rem", lineHeight: 1.65 },
-    body2: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.88rem", lineHeight: 1.6 },
+    body1: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.88rem", lineHeight: 1.65 },
+    body2: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.78rem", lineHeight: 1.6 },
 
-    button: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "0.9rem", textTransform: "none" },
-    caption: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.78rem", lineHeight: 1.45 },
-    overline: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.14em", textTransform: "uppercase" }
+    button: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "0.8rem", textTransform: "none" },
+    caption: { fontFamily: FONT_BODY, fontWeight: 500, fontSize: "0.7rem", lineHeight: 1.45 },
+    overline: { fontFamily: FONT_BODY, fontWeight: 700, fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase" }
   },
   components: {
     MuiButton: {

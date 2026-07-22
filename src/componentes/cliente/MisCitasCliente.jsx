@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
@@ -17,9 +18,20 @@ import {
   OutlinedInput,
   Select,
   TextField,
-  Typography
+  Typography,
+  Tabs,
+  Tab,
+  Stepper,
+  Step,
+  StepLabel,
+  Paper,
+  Divider,
+  Checkbox,
+  FormControlLabel
 } from "@mui/material";
 import CalendarTodayOutlined from "@mui/icons-material/CalendarTodayOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
+import AccessTimeRounded from "@mui/icons-material/AccessTimeRounded";
 import BarberPole from "../compartidos/BarberPole";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 
@@ -31,10 +43,12 @@ const COLORS = {
   gold: "#D4AF37",
   cardBg: "#FFFFFF",
   border: "#E5E7EB",
-  muted: "#64748B"
+  muted: "#64748B",
+  blue: "#2563EB",
+  grey: "#94A3B8",
+  goldConfirm: "#D4AF37"
 };
 
-/** Índice = getDay() JS: 0 domingo … 6 sábado (coincide con backend horario_negocio). */
 const DIA_SEMANA_POR_GET_DAY = [
   "DOMINGO",
   "LUNES",
@@ -71,9 +85,6 @@ function minutosAHHmmEnPunto(totalMin) {
   return `${String(h).padStart(2, "0")}:00`;
 }
 
-/**
- * Horas en punto desde la primera hora completa ≥ apertura hasta cierre inclusive (ej. cierra 18:00 → último slot 18:00).
- */
 function construirSlotsCadaHora(horaApertura, horaCierre) {
   const openMin = tiempoAperturaCierreAMinutos(horaApertura);
   const closeMin = tiempoAperturaCierreAMinutos(horaCierre);
@@ -88,12 +99,6 @@ function construirSlotsCadaHora(horaApertura, horaCierre) {
   }
   return slots;
 }
-
-const PROMOCIONES = [
-  { titulo: "20% OFF", subtitulo: "Tratamientos capilares" },
-  { titulo: "2x1", subtitulo: "Peinados fin de semana" },
-  { titulo: "Combo especial", subtitulo: "Corte + Peinado" }
-];
 
 const cardSx = {
   borderRadius: "16px",
@@ -111,19 +116,20 @@ function authHeaders() {
   return t ? { Authorization: `Bearer ${t}` } : {};
 }
 
-const CANCELABLE = new Set(["APARTADA", "CONFIRMADA"]);
-
-/** Citas futuras en estado cancelable, ordenadas por hora de inicio (la más próxima primero). */
-function listarCitasProximas(citas) {
-  if (!Array.isArray(citas) || citas.length === 0) return [];
-  const now = Date.now();
-  const candidatas = citas.filter((c) => {
-    if (!CANCELABLE.has(c.estado)) return false;
-    const t = new Date(c.horaInicio).getTime();
-    return !Number.isNaN(t) && t >= now;
-  });
-  candidatas.sort((a, b) => new Date(a.horaInicio) - new Date(b.horaInicio));
-  return candidatas;
+function getMinFechaReserva() {
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  let habiles = 0;
+  const cursor = new Date(base);
+  while (habiles < 2) {
+    cursor.setDate(cursor.getDate() + 1);
+    const wd = cursor.getDay();
+    if (wd !== 0 && wd !== 6) habiles += 1;
+  }
+  const y = cursor.getFullYear();
+  const m = String(cursor.getMonth() + 1).padStart(2, "0");
+  const d = String(cursor.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function formatFechaCita(isoOrMysql) {
@@ -140,54 +146,83 @@ function formatHoraCita(isoOrMysql) {
   return d.toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+// Subcomponente temporizador para citas apartadas en la lista de reservas
+const CitaApartadaTimer = ({ creadoEn, onExpire }) => {
+  const getRemainingSeconds = useCallback(() => {
+    const elapsed = Math.floor((Date.now() - new Date(creadoEn).getTime()) / 1000);
+    return Math.max(0, 1800 - elapsed); // 30 minutos = 1800s
+  }, [creadoEn]);
+
+  const [secLeft, setSecLeft] = useState(getRemainingSeconds());
+
+  useEffect(() => {
+    setSecLeft(getRemainingSeconds());
+    const interval = setInterval(() => {
+      const rem = getRemainingSeconds();
+      setSecLeft(rem);
+      if (rem <= 0) {
+        clearInterval(interval);
+        if (onExpire) onExpire();
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [creadoEn, getRemainingSeconds, onExpire]);
+
+  if (secLeft <= 0) {
+    return (
+      <Typography color="error" variant="caption" sx={{ fontWeight: 800, display: "flex", alignItems: "center", gap: 0.5 }}>
+        <AccessTimeRounded sx={{ fontSize: 14 }} /> Expirado
+      </Typography>
+    );
+  }
+
+  const minutes = Math.floor(secLeft / 60);
+  const seconds = secLeft % 60;
+  return (
+    <Typography color="error" variant="caption" sx={{ fontWeight: 800, display: "flex", alignItems: "center", gap: 0.5 }}>
+      <AccessTimeRounded sx={{ fontSize: 14 }} /> Pagar en: {minutes}:{String(seconds).padStart(2, "0")}
+    </Typography>
+  );
+};
 
 function MisCitasCliente() {
+  const [searchParams] = useSearchParams();
   const { runWithOverlay } = useBarberActionOverlay();
+
+  // Estados Generales
+  const [tabIndex, setTabIndex] = useState(0); // 0 = Agendar Cita, 1 = Mis Reservas Activas
+  const [activeStep, setActiveStep] = useState(0); // Stepper: 0, 1, 2
+
+  // Catálogos e Informacion de la BD
   const [serviciosApi, setServiciosApi] = useState([]);
   const [diasHorarioNegocio, setDiasHorarioNegocio] = useState([]);
   const [empleadasApi, setEmpleadasApi] = useState([]);
   const [citasApi, setCitasApi] = useState([]);
+  const [ocupacionApi, setOcupacionApi] = useState([]);
+
   const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
   const [cargandoEstilistas, setCargandoEstilistas] = useState(false);
   const [cargandoCitas, setCargandoCitas] = useState(true);
+  const [cargandoOcupacion, setCargandoOcupacion] = useState(false);
 
-  const [empleadaId, setEmpleadaId] = useState("");
+  // Selecciones del cliente (Wizard)
   const [serviciosSel, setServiciosSel] = useState([]);
+  const [empleadaId, setEmpleadaId] = useState("");
   const [fecha, setFecha] = useState("");
   const [horario, setHorario] = useState("");
+  const [citaCreadaId, setCitaCreadaId] = useState("");
+  const [citaCreadaTimestamp, setCitaCreadaTimestamp] = useState(null);
+  const [terminosAceptados, setTerminosAceptados] = useState(false);
+
+  // Temporizador y Estados Auxiliares
+  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutos de apartado
   const [guardando, setGuardando] = useState(false);
   const [cancelandoId, setCancelandoId] = useState(null);
 
-  const citasProximas = useMemo(() => listarCitasProximas(citasApi), [citasApi]);
+  // Parámetro preseleccionado de catálogo
+  const preselectedServiceId = searchParams.get("preselectedServiceId");
 
-  const horariosDisponibles = useMemo(() => {
-    if (!fecha || diasHorarioNegocio.length === 0) return [];
-    const clave = fechaYmdToDiaSemanaBackend(fecha);
-    if (!clave) return [];
-    const dia = diasHorarioNegocio.find((d) => d.diaSemana === clave);
-    if (!dia || dia.activo === false || !dia.horaApertura || !dia.horaCierre) {
-      return [];
-    }
-    return construirSlotsCadaHora(dia.horaApertura, dia.horaCierre);
-  }, [fecha, diasHorarioNegocio]);
-
-  useEffect(() => {
-    if (horariosDisponibles.length === 0) {
-      setHorario("");
-      return;
-    }
-    setHorario((prev) =>
-      horariosDisponibles.includes(prev) ? prev : horariosDisponibles[0]
-    );
-  }, [horariosDisponibles]);
-
+  // --- Cargar Citas del Cliente ---
   const cargarCitas = useCallback(async (silent = false) => {
     if (!getToken()) {
       setCitasApi([]);
@@ -212,6 +247,7 @@ function MisCitasCliente() {
     }
   }, []);
 
+  // --- Cargar Catálogos Iniciales ---
   useEffect(() => {
     let cancel = false;
     const load = async () => {
@@ -233,6 +269,12 @@ function MisCitasCliente() {
           setServiciosApi(Array.isArray(srvRes.data) ? srvRes.data : []);
           const dias = horRes?.data?.dias;
           setDiasHorarioNegocio(Array.isArray(dias) ? dias : []);
+
+          // Manejar servicio pre-seleccionado
+          if (preselectedServiceId) {
+            setServiciosSel([Number(preselectedServiceId)]);
+            setActiveStep(0);
+          }
         }
       } catch {
         if (!cancel) {
@@ -247,11 +289,11 @@ function MisCitasCliente() {
     return () => {
       cancel = true;
     };
-  }, []);
+  }, [preselectedServiceId]);
 
+  // --- Filtrar Estilistas por Servicios elegidos ---
   useEffect(() => {
     let cancel = false;
-
     const cargarEstilistasPorServicios = async () => {
       if (serviciosSel.length === 0) {
         setEmpleadasApi([]);
@@ -262,7 +304,6 @@ function MisCitasCliente() {
 
       try {
         setCargandoEstilistas(true);
-        setEmpleadasApi([]);
         const results = await Promise.all(
           serviciosSel.map((sid) =>
             axios.get(`${API_URL}/api/empleadas/por-servicio/${Number(sid)}`)
@@ -299,127 +340,168 @@ function MisCitasCliente() {
     };
   }, [serviciosSel]);
 
-  useEffect(() => {
-    cargarCitas();
-  }, [cargarCitas]);
-
-  const nombreEmpleada = (e) =>
-    [e.nombre, e.apellidoPaterno, e.apellidoMaterno].filter(Boolean).join(" ").trim() ||
-    `Empleada #${e.id}`;
-
-  const handleFechaChange = async (e) => {
-    const v = e.target.value;
-    setFecha(v);
-    if (!v || diasHorarioNegocio.length === 0) return;
-    const clave = fechaYmdToDiaSemanaBackend(v);
-    if (!clave) return;
-    const dia = diasHorarioNegocio.find((d) => d.diaSemana === clave);
-    const abierto =
-      dia &&
-      (dia.activo === true || dia.activo === 1) &&
-      dia.horaApertura &&
-      dia.horaCierre;
-    if (!abierto) {
-      setHorario("");
-      await Swal.fire({
-        icon: "info",
-        title: "Día no disponible",
-        text: "El salón no atiende ese día según su horario de atención. Elige otra fecha.",
-        confirmButtonColor: COLORS.navy
-      });
+  // --- Cargar Ocupación en tiempo real ---
+  const cargarOcupacion = useCallback(async () => {
+    if (!fecha || !empleadaId) {
+      setOcupacionApi([]);
+      return;
     }
+    try {
+      setCargandoOcupacion(true);
+      const { data } = await axios.get(
+        `${API_URL}/api/citas/ocupacion?fecha=${fecha}&empleadaId=${empleadaId}`,
+        { headers: authHeaders() }
+      );
+      setOcupacionApi(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setOcupacionApi([]);
+    } finally {
+      setCargandoOcupacion(false);
+    }
+  }, [fecha, empleadaId]);
+
+  useEffect(() => {
+    cargarOcupacion();
+  }, [cargarOcupacion]);
+
+  // --- Cálculos de Resumen ---
+  const duracionYPrecioTotal = useMemo(() => {
+    let duracion = 0;
+    let precio = 0;
+    serviciosSel.forEach((id) => {
+      const s = serviciosApi.find((srv) => srv.id === id);
+      if (s) {
+        duracion += Number(s.duracionMinutos) || 0;
+        precio += Number(s.precio) || 0;
+      }
+    });
+    return { duracion, precio };
+  }, [serviciosSel, serviciosApi]);
+
+  // --- Calcular slots y sus estados de color ---
+  const slotsConEstado = useMemo(() => {
+    if (!fecha || diasHorarioNegocio.length === 0) return [];
+    const clave = fechaYmdToDiaSemanaBackend(fecha);
+    if (!clave) return [];
+    const dia = diasHorarioNegocio.find((d) => d.diaSemana === clave);
+    if (!dia || dia.activo === false || !dia.horaApertura || !dia.horaCierre) {
+      return [];
+    }
+
+    const slots = construirSlotsCadaHora(dia.horaApertura, dia.horaCierre);
+    const durTotal = duracionYPrecioTotal.duracion;
+
+    return slots.map((hStr) => {
+      const parts = hStr.split(":");
+      const slotMin = Number(parts[0]) * 60 + Number(parts[1]);
+      const slotEndMin = slotMin + durTotal;
+
+      let estadoSlot = "disponible"; // disponible, apartado, confirmado
+      let citaIdConflicto = null;
+
+      for (const cita of ocupacionApi) {
+        const dInicio = new Date(cita.horaInicio);
+        const dFin = new Date(cita.horaFin);
+        const cStartMin = dInicio.getHours() * 60 + dInicio.getMinutes();
+        const cEndMin = dFin.getHours() * 60 + dFin.getMinutes();
+
+        // Verificar traslape: StartA < EndB && EndA > StartB
+        if (slotMin < cEndMin && slotEndMin > cStartMin) {
+          citaIdConflicto = cita.id;
+          if (cita.estado === "APARTADA") {
+            estadoSlot = "apartado";
+          } else {
+            estadoSlot = "confirmado";
+          }
+          break;
+        }
+      }
+
+      return {
+        hora: hStr,
+        estado: estadoSlot,
+        citaId: citaIdConflicto
+      };
+    });
+  }, [fecha, diasHorarioNegocio, ocupacionApi, duracionYPrecioTotal.duracion]);
+
+  // --- Temporizador del Apartado ---
+  useEffect(() => {
+    if (activeStep !== 2 || !citaCreadaTimestamp) return;
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - citaCreadaTimestamp) / 1000);
+      const remaining = 1800 - elapsed; // 30 minutos = 1800s
+
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        clearInterval(interval);
+        Swal.fire({
+          icon: "warning",
+          title: "Apartado Expirado",
+          text: "El tiempo límite de 30 minutos para confirmar tu pago ha expirado. Por favor reserva nuevamente.",
+          confirmButtonColor: COLORS.navy
+        }).then(() => {
+          setActiveStep(1);
+          setHorario("");
+          setCitaCreadaId("");
+          setCitaCreadaTimestamp(null);
+        });
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeStep, citaCreadaTimestamp]);
+
+  const formatTimeLeft = () => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
   };
 
-  const handleReservar = async () => {
-    if (!getToken()) {
-      await Swal.fire({
-        icon: "warning",
-        title: "Sesión",
-        text: "Inicia sesión para reservar.",
+  // --- Acciones de Stepper ---
+  const handleNextStep1 = () => {
+    if (serviciosSel.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "Selecciona un servicio",
+        text: "Por favor elige al menos un servicio del catálogo para continuar.",
         confirmButtonColor: COLORS.navy
       });
       return;
     }
-    if (!serviciosSel.length) {
-      await Swal.fire({
+    setActiveStep(1);
+  };
+
+  const handleNextStep2 = async () => {
+    if (!fecha || !empleadaId || !horario) {
+      Swal.fire({
         icon: "info",
-        title: "Falta seleccionar",
-        text: "Elige al menos un servicio.",
-        confirmButtonColor: COLORS.navy
-      });
-      return;
-    }
-    if (!empleadaId) {
-      await Swal.fire({
-        icon: "info",
-        title: "Falta seleccionar",
-        text: "Elige una estilista disponible para esos servicios.",
-        confirmButtonColor: COLORS.navy
-      });
-      return;
-    }
-    if (!fecha) {
-      await Swal.fire({
-        icon: "info",
-        title: "Falta la fecha",
-        text: "Selecciona el día de tu cita.",
-        confirmButtonColor: COLORS.navy
-      });
-      return;
-    }
-    if (!horario) {
-      await Swal.fire({
-        icon: "info",
-        title: "Horario",
-        text: "Elige una hora disponible o cambia la fecha: ese día el salón puede estar cerrado.",
+        title: "Datos incompletos",
+        text: "Asegúrate de haber seleccionado una estilista, la fecha y un horario disponible (en azul).",
         confirmButtonColor: COLORS.navy
       });
       return;
     }
 
-    const emp = empleadasApi.find((e) => String(e.id) === String(empleadaId));
-    const nombreEstilista = emp ? nombreEmpleada(emp) : "—";
-    const nombresServicios = serviciosSel
-      .map((id) => serviciosApi.find((s) => s.id === id)?.nombre)
-      .filter(Boolean)
-      .join(", ");
-    const fechaLegible = (() => {
-      const d = new Date(`${fecha}T12:00:00`);
-      return Number.isNaN(d.getTime())
-        ? fecha
-        : d.toLocaleDateString("es-MX", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-          });
-    })();
-
-    const confirmar = await Swal.fire({
-      icon: "question",
-      title: "¿Confirmar reserva?",
-      html: `
-        <div style="text-align:left;font-size:0.95rem;line-height:1.55;color:#334155;">
-          <p style="margin:0 0 10px;"><strong>Estilista:</strong> ${escapeHtml(nombreEstilista)}</p>
-          <p style="margin:0 0 10px;"><strong>Servicios:</strong> ${escapeHtml(nombresServicios)}</p>
-          <p style="margin:0 0 10px;"><strong>Fecha:</strong> ${escapeHtml(fechaLegible)}</p>
-          <p style="margin:0;"><strong>Hora:</strong> ${escapeHtml(horario)}</p>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: "Sí, reservar",
-      cancelButtonText: "Volver",
-      confirmButtonColor: COLORS.navy,
-      cancelButtonColor: COLORS.muted,
-      focusCancel: false
-    });
-
-    if (!confirmar.isConfirmed) {
+    // Comprobar si el horario seleccionado está libre
+    const slot = slotsConEstado.find((s) => s.hora === horario);
+    if (!slot || slot.estado !== "disponible") {
+      Swal.fire({
+        icon: "error",
+        title: "Horario no disponible",
+        text: "El horario elegido ya se encuentra apartado o confirmado. Elige otro.",
+        confirmButtonColor: COLORS.navy
+      });
       return;
     }
 
     try {
       setGuardando(true);
+      // Crear la cita en estado 'APARTADA' para bloquear el horario en el servidor
       const { data } = await axios.post(
         `${API_URL}/api/citas`,
         {
@@ -430,25 +512,20 @@ function MisCitasCliente() {
         },
         {
           headers: { ...authHeaders(), "Content-Type": "application/json" },
-          barberHeadline: "Apartando servicio",
-          barberMessage: "Reservando tu cita en el sistema…"
+          barberHeadline: "Apartando horario",
+          barberMessage: "Bloqueando tu horario reservado en el sistema…"
         }
       );
-      const okMsg = data?.message || "Cita creada correctamente.";
-      await runWithOverlay(
-        () => new Promise((resolve) => setTimeout(resolve, 420)),
-        okMsg,
-        { headline: "¡Listo!", minMs: 720 }
-      );
-      await cargarCitas(true);
+
+      setCitaCreadaId(data.citaId);
+      setCitaCreadaTimestamp(Date.now());
+      setTimeLeft(1800);
+      setActiveStep(2);
     } catch (e) {
-      const msg =
-        e?.response?.data?.error ||
-        e?.message ||
-        "No se pudo crear la cita.";
-      await Swal.fire({
+      const msg = e?.response?.data?.error || e?.message || "No se pudo apartar el horario.";
+      Swal.fire({
         icon: "error",
-        title: "No se pudo reservar",
+        title: "Conflicto de reservación",
         text: msg,
         confirmButtonColor: COLORS.navy
       });
@@ -457,15 +534,146 @@ function MisCitasCliente() {
     }
   };
 
-  const handleCancelar = async (citaId) => {
-    if (!citaId) return;
-    const cita = citasProximas.find((c) => String(c.id) === String(citaId));
-    const resumen = cita?.serviciosLabel || "esta cita";
+  const handleBack = () => {
+    if (activeStep === 2) {
+      Swal.fire({
+        icon: "warning",
+        title: "¿Volver al paso anterior?",
+        text: "Si regresas, perderás tu apartado actual sobre este horario.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, regresar",
+        cancelButtonText: "Mantener apartado",
+        confirmButtonColor: COLORS.navy,
+        cancelButtonColor: COLORS.muted
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Cancelar borrador/apartado en backend
+          axios.delete(`${API_URL}/api/citas/${citaCreadaId}`, { headers: authHeaders() }).catch(() => {});
+          setCitaCreadaId("");
+          setCitaCreadaTimestamp(null);
+          setActiveStep(1);
+        }
+      });
+    } else {
+      setActiveStep((prev) => prev - 1);
+    }
+  };
 
+  // --- Proceder al Pago del 50% ---
+  const handlePagarAnticipo = async () => {
+    if (!terminosAceptados) {
+      Swal.fire({
+        icon: "info",
+        title: "Políticas requeridas",
+        text: "Debes aceptar las políticas de reservación y abono para continuar.",
+        confirmButtonColor: COLORS.navy
+      });
+      return;
+    }
+
+    try {
+      setGuardando(true);
+      const { data } = await axios.post(
+        `${API_URL}/api/mercado-pago/crear-preferencia-cita`,
+        { citaId: citaCreadaId },
+        {
+          headers: authHeaders(),
+          barberHeadline: "Conectando con Mercado Pago",
+          barberMessage: "Generando link de cobro seguro..."
+        }
+      );
+
+      // Redirigir al Checkout de Mercado Pago
+      if (data?.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("No se pudo obtener el punto de inicio de pago.");
+      }
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: "error",
+        title: "Error de Checkout",
+        text: e?.response?.data?.error || "Ocurrió un problema al procesar el enlace de cobro.",
+        confirmButtonColor: COLORS.navy
+      });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // --- Apartar y pagar más tarde ---
+  const handleApartarMasTarde = () => {
+    if (!terminosAceptados) {
+      Swal.fire({
+        icon: "info",
+        title: "Políticas requeridas",
+        text: "Debes aceptar las políticas de reservación y abono para continuar.",
+        confirmButtonColor: COLORS.navy
+      });
+      return;
+    }
+
+    Swal.fire({
+      icon: "success",
+      title: "¡Horario Apartado!",
+      text: "Tu cita se guardó en la sección 'Tus Reservas'. Recuerda liquidar el 50% antes de 30 minutos para evitar que se libere.",
+      confirmButtonColor: COLORS.navy
+    }).then(() => {
+      // Limpiar wizard
+      setActiveStep(0);
+      setServiciosSel([]);
+      setEmpleadaId("");
+      setFecha("");
+      setHorario("");
+      setCitaCreadaId("");
+      setCitaCreadaTimestamp(null);
+      setTerminosAceptados(false);
+      
+      // Mover a la pestaña de reservas
+      setTabIndex(1);
+      cargarCitas(true);
+    });
+  };
+
+  // --- Pagar desde la lista de reservas ---
+  const handlePagarReservaLista = async (citaId) => {
+    try {
+      setGuardando(true);
+      const { data } = await axios.post(
+        `${API_URL}/api/mercado-pago/crear-preferencia-cita`,
+        { citaId },
+        {
+          headers: authHeaders(),
+          barberHeadline: "Conectando con Mercado Pago",
+          barberMessage: "Generando link de cobro seguro..."
+        }
+      );
+
+      if (data?.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("No se pudo obtener el punto de inicio de pago.");
+      }
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: "error",
+        title: "Error de Checkout",
+        text: e?.response?.data?.error || "Ocurrió un problema al procesar el enlace de cobro.",
+        confirmButtonColor: COLORS.navy
+      });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // --- Cancelar Citas en la lista de reservas (Frees the slot immediately) ---
+  const handleCancelarCitaLista = async (citaId, label) => {
     const ok = await Swal.fire({
       icon: "question",
-      title: "¿Cancelar esta cita?",
-      text: `Se cancelará: ${resumen}`,
+      title: "¿Cancelar reservación?",
+      text: `¿Seguro que deseas cancelar tu cita para: ${label || "esta cita"}? Al cancelar, el horario quedará inmediatamente disponible para otros clientes.`,
       showCancelButton: true,
       confirmButtonText: "Sí, cancelar",
       cancelButtonText: "No",
@@ -482,24 +690,20 @@ function MisCitasCliente() {
         {
           headers: authHeaders(),
           barberHeadline: "Cancelando",
-          barberMessage: "Actualizando el estado de tu cita…"
+          barberMessage: "Procesando la cancelación en el servidor..."
         }
       );
       await runWithOverlay(
-        () => new Promise((resolve) => setTimeout(resolve, 380)),
-        "Tu agenda se ha actualizado.",
-        { headline: "Cita cancelada", minMs: 700 }
+        () => new Promise((resolve) => setTimeout(resolve, 300)),
+        "Tu cita ha sido cancelada y el horario liberado.",
+        { headline: "Cancelado", minMs: 500 }
       );
       await cargarCitas(true);
     } catch (e) {
-      const msg =
-        e?.response?.data?.error ||
-        e?.message ||
-        "No se pudo cancelar.";
-      await Swal.fire({
+      Swal.fire({
         icon: "error",
         title: "Error",
-        text: msg,
+        text: e?.response?.data?.error || "No se pudo cancelar.",
         confirmButtonColor: COLORS.navy
       });
     } finally {
@@ -507,425 +711,717 @@ function MisCitasCliente() {
     }
   };
 
+  const nombreEstilista = (e) =>
+    [e.nombre, e.apellidoPaterno, e.apellidoMaterno].filter(Boolean).join(" ").trim() ||
+    `Estilista #${e.id}`;
+
   return (
-    <Box sx={{ bgcolor: "transparent", minHeight: "100%" }}>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, mb: 1.5 }}>
+    <Box sx={{ bgcolor: "transparent", minHeight: "100%", pb: 4 }}>
+      {/* Título */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, mb: 3 }}>
         <Typography
           component="h1"
           sx={{
             color: COLORS.black,
-            fontWeight: 700,
-            fontSize: { xs: "1.85rem", sm: "2.125rem" },
+            fontWeight: 900,
+            fontSize: { xs: "1.85rem", sm: "2.25rem" },
             letterSpacing: "-0.02em",
             m: 0
           }}
         >
-          Mis Citas
+          Mis Citas y Reservas
         </Typography>
         <BarberPole size={42} width={11} sx={{ display: { xs: "none", sm: "flex" } }} />
       </Box>
-      <Grid container spacing={3} alignItems="stretch">
-        <Grid item xs={12} md={7} sx={{ display: "flex" }}>
-          <Card elevation={0} sx={{ ...cardSx, width: "100%" }}>
-            <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-              <Typography
-                sx={{
-                  color: COLORS.navy,
-                  fontWeight: 700,
-                  fontSize: "1.15rem",
-                  mb: 2.5
-                }}
-              >
-                Reservar servicio
-              </Typography>
 
-              {cargandoCatalogo ? (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                  <CircularProgress sx={{ color: COLORS.navy }} />
-                </Box>
-              ) : (
-                <>
-                  <FormControl fullWidth size="small" sx={{ mb: 2.5 }}>
-                    <InputLabel id="mis-citas-servicios-label">Servicios</InputLabel>
-                    <Select
-                      labelId="mis-citas-servicios-label"
-                      multiple
-                      value={serviciosSel}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setServiciosSel(
-                          typeof v === "string" ? v.split(",").map(Number) : v.map(Number)
-                        );
-                      }}
-                      input={<OutlinedInput label="Servicios" sx={{ borderRadius: "12px" }} />}
-                      renderValue={(selected) =>
-                        selected
-                          .map((id) => serviciosApi.find((s) => s.id === id)?.nombre || id)
-                          .join(", ")
-                      }
-                      sx={{
-                        borderRadius: "12px",
-                        "& .MuiOutlinedInput-notchedOutline": { borderColor: COLORS.border }
-                      }}
-                    >
-                      {serviciosApi.map((s) => (
-                        <MenuItem key={s.id} value={s.id}>
-                          {s.nombre}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    <FormHelperText sx={{ mx: 0 }}>
-                      Elige primero los servicios; solo verás estilistas que los ofrecen.
-                    </FormHelperText>
-                  </FormControl>
-
-                  <FormControl
-                    fullWidth
-                    size="small"
-                    sx={{ mb: 2.5 }}
-                    disabled={serviciosSel.length === 0}
-                  >
-                    <InputLabel id="mis-citas-empleada-label">Estilista</InputLabel>
-                    <Select
-                      labelId="mis-citas-empleada-label"
-                      value={empleadaId}
-                      label="Estilista"
-                      disabled={
-                        serviciosSel.length === 0 ||
-                        cargandoEstilistas ||
-                        (empleadasApi.length === 0 && !cargandoEstilistas)
-                      }
-                      onChange={(e) => setEmpleadaId(e.target.value)}
-                      sx={{
-                        borderRadius: "12px",
-                        "& .MuiOutlinedInput-notchedOutline": { borderColor: COLORS.border }
-                      }}
-                    >
-                      <MenuItem value="">
-                        <em>Selecciona…</em>
-                      </MenuItem>
-                      {empleadasApi.map((e) => (
-                        <MenuItem key={e.id} value={String(e.id)}>
-                          {nombreEmpleada(e)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    <FormHelperText sx={{ mx: 0 }}>
-                      {serviciosSel.length === 0
-                        ? "Selecciona al menos un servicio."
-                        : cargandoEstilistas
-                          ? "Cargando estilistas…"
-                          : empleadasApi.length === 0
-                            ? "Ninguna estilista cubre todos los servicios elegidos."
-                            : "Solo estilistas asignadas a esos servicios en el salón."}
-                    </FormHelperText>
-                  </FormControl>
-
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Fecha"
-                    type="date"
-                    value={fecha}
-                    onChange={handleFechaChange}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      mb: 2.5,
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                        "& fieldset": { borderColor: COLORS.border }
-                      }
-                    }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <CalendarTodayOutlined sx={{ color: COLORS.muted, fontSize: 22 }} />
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-
-                  <Typography
-                    sx={{
-                      color: COLORS.black,
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                      mb: 1.5
-                    }}
-                  >
-                    Horario disponible
-                  </Typography>
-                  {!fecha ? (
-                    <Typography sx={{ color: COLORS.muted, fontSize: "0.9rem", mb: 3 }}>
-                      Selecciona una fecha para ver las horas según el horario de atención del salón.
-                    </Typography>
-                  ) : diasHorarioNegocio.length === 0 ? (
-                    <Typography sx={{ color: COLORS.muted, fontSize: "0.9rem", mb: 3 }}>
-                      No se pudo cargar el horario del salón. Intenta de nuevo más tarde.
-                    </Typography>
-                  ) : horariosDisponibles.length === 0 ? (
-                    <Typography sx={{ color: COLORS.muted, fontSize: "0.9rem", mb: 3 }}>
-                      Este día el salón no tiene atención. Elige otra fecha.
-                    </Typography>
-                  ) : (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
-                      {horariosDisponibles.map((h) => {
-                        const selected = horario === h;
-                        return (
-                          <Button
-                            key={h}
-                            onClick={() => setHorario(h)}
-                            variant="outlined"
-                            sx={{
-                              minWidth: 72,
-                              py: 0.75,
-                              px: 1.5,
-                              borderRadius: "10px",
-                              textTransform: "none",
-                              fontWeight: 600,
-                              fontSize: "0.875rem",
-                              borderColor: selected ? COLORS.navy : COLORS.border,
-                              color: selected ? COLORS.navy : COLORS.black,
-                              bgcolor: selected ? "rgba(30, 58, 90, 0.08)" : "transparent",
-                              "&:hover": {
-                                borderColor: COLORS.navy,
-                                bgcolor: "rgba(30, 58, 90, 0.06)"
-                              }
-                            }}
-                          >
-                            {h}
-                          </Button>
-                        );
-                      })}
-                    </Box>
-                  )}
-                  {fecha &&
-                    diasHorarioNegocio.length > 0 &&
-                    horariosDisponibles.length > 0 && (
-                      <Typography
-                        sx={{
-                          color: COLORS.muted,
-                          fontSize: "0.8rem",
-                          mb: 3,
-                          display: "block"
-                        }}
-                      >
-                        Horarios en punto según el perfil del salón (incluye la hora de cierre como último
-                        turno disponible).
-                      </Typography>
-                    )}
-
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    disabled={guardando}
-                    onClick={handleReservar}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 700,
-                      py: 1.35,
-                      borderRadius: "12px",
-                      bgcolor: COLORS.navy,
-                      boxShadow: "none",
-                      "&:hover": { bgcolor: "#172f4a", boxShadow: "none" }
-                    }}
-                  >
-                    {guardando ? "Reservando…" : "Reservar cita"}
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid
-          item
-          xs={12}
-          md={5}
+      {/* Tabs Principales */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
+        <Tabs
+          value={tabIndex}
+          onChange={(e, v) => setTabIndex(v)}
           sx={{
-            display: "flex",
-            alignSelf: { md: "flex-start" }
+            "& .MuiTab-root": {
+              fontWeight: 800,
+              textTransform: "none",
+              fontSize: "0.95rem",
+              color: COLORS.muted
+            },
+            "& .Mui-selected": { color: `${COLORS.navy} !important` },
+            "& .MuiTabs-indicator": { bgcolor: COLORS.navy }
           }}
         >
-          <Card
-            elevation={0}
-            sx={{
-              ...cardSx,
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "visible"
-            }}
-          >
-            <CardContent
-              sx={{
-                p: { xs: 2.5, sm: 3 },
-                pb: { xs: 3, sm: 3.5 },
-                display: "flex",
-                flexDirection: "column",
-                flexGrow: 1,
-                minHeight: 0,
-                overflow: "visible",
-                "&:last-child": { pb: { xs: 3, sm: 3.5 } }
-              }}
-            >
-              <Typography
+          <Tab label="Agendar Nueva Cita" />
+          <Tab label={`Tus Reservas (${citasApi.length})`} />
+        </Tabs>
+      </Box>
+
+      {/* ==============================================================
+          TAB 1: WIZARD DE RESERVACIÓN EN 3 PASOS
+          ============================================================== */}
+      {tabIndex === 0 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            {/* Stepper Premium */}
+            <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: "18px", border: `1px solid ${COLORS.border}` }}>
+              <Stepper
+                activeStep={activeStep}
+                alternativeLabel
                 sx={{
-                  color: COLORS.black,
-                  fontWeight: 700,
-                  fontSize: "1.05rem",
-                  mb: 0.5,
-                  flexShrink: 0
+                  "& .MuiStepIcon-root.Mui-active": { color: COLORS.navy },
+                  "& .MuiStepIcon-root.Mui-completed": { color: COLORS.gold },
+                  "& .MuiStepLabel-label.Mui-active": { fontWeight: 800, color: COLORS.navy },
+                  "& .MuiStepLabel-label.Mui-completed": { fontWeight: 700, color: COLORS.gold }
                 }}
               >
-                Tus próximas citas
-              </Typography>
-              {!cargandoCitas && citasProximas.length > 0 && (
-                <Typography sx={{ color: COLORS.muted, fontSize: "0.8rem", mb: 2 }}>
-                  Tienes {citasProximas.length}{" "}
-                  {citasProximas.length === 1 ? "cita reservada" : "citas reservadas"}.
-                </Typography>
-              )}
+                <Step>
+                  <StepLabel>1. Selecciona tu servicio</StepLabel>
+                </Step>
+                <Step>
+                  <StepLabel>2. Elige fecha y hora</StepLabel>
+                </Step>
+                <Step>
+                  <StepLabel>3. Confirma tu cita</StepLabel>
+                </Step>
+              </Stepper>
+            </Paper>
+          </Grid>
 
-              {cargandoCitas ? (
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    py: 4,
-                    flex: "1 1 auto",
-                    minHeight: 120
-                  }}
-                >
-                  <CircularProgress size={32} sx={{ color: COLORS.navy }} />
-                </Box>
-              ) : citasProximas.length === 0 ? (
-                <Typography sx={{ color: COLORS.muted, lineHeight: 1.6, mb: 1 }}>
-                  No tienes citas próximas. Reserva desde el formulario.
-                </Typography>
-              ) : (
-                <Stack spacing={2} sx={{ width: "100%", mb: 1 }}>
-                  {citasProximas.map((cita, idx) => {
-                    const cancelandoEsta = cancelandoId != null && String(cancelandoId) === String(cita.id);
-                    return (
-                      <Card
-                        key={cita.id}
-                        elevation={0}
-                        sx={{
-                          borderRadius: "14px",
-                          border: `1px solid ${COLORS.border}`,
-                          bgcolor: "#FAFBFC",
-                          overflow: "visible"
+          {/* Área de Pasos */}
+          <Grid item xs={12} md={8}>
+            {cargandoCatalogo ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                <CircularProgress sx={{ color: COLORS.navy }} />
+              </Box>
+            ) : (
+              <Box>
+                {/* --- PASO 1: SELECCIÓN DE SERVICIOS --- */}
+                {activeStep === 0 && (
+                  <Paper elevation={0} sx={{ p: 4, ...cardSx }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.navy, mb: 1.5 }}>
+                      Paso 1: Elige uno o más servicios
+                    </Typography>
+                    <Typography sx={{ color: COLORS.muted, mb: 3, fontSize: "0.9rem" }}>
+                      Puedes seleccionar múltiples servicios. El sistema recalculará la duración total y te mostrará los estilistas aptos para realizar todo tu combo.
+                    </Typography>
+
+                    <FormControl fullWidth size="small" sx={{ mb: 4 }}>
+                      <InputLabel id="reserva-servicios-label">Servicios</InputLabel>
+                      <Select
+                        labelId="reserva-servicios-label"
+                        multiple
+                        value={serviciosSel}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setServiciosSel(typeof v === "string" ? v.split(",").map(Number) : v.map(Number));
                         }}
+                        input={<OutlinedInput label="Servicios" sx={{ borderRadius: "12px" }} />}
+                        renderValue={(selected) =>
+                          selected.map((id) => serviciosApi.find((s) => s.id === id)?.nombre || id).join(", ")
+                        }
+                        sx={{ borderRadius: "12px" }}
                       >
-                        <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                          <Typography
-                            sx={{
-                              color: COLORS.navy,
-                              fontWeight: 700,
-                              fontSize: "0.75rem",
-                              textTransform: "uppercase",
-                              letterSpacing: "0.04em",
-                              mb: 1.25
-                            }}
-                          >
-                            Cita {idx + 1}
-                            {idx === 0 ? " · la más próxima" : ""}
-                          </Typography>
-                          <Typography sx={{ color: COLORS.muted, fontSize: "0.8rem", mb: 0.25 }}>
-                            Servicio
-                          </Typography>
-                          <Typography sx={{ color: COLORS.black, fontWeight: 600, mb: 1.5 }}>
-                            {cita.serviciosLabel || "—"}
-                          </Typography>
-                          <Typography sx={{ color: COLORS.muted, fontSize: "0.8rem", mb: 0.25 }}>
-                            Fecha y hora
-                          </Typography>
-                          <Typography sx={{ color: COLORS.black, fontWeight: 600, mb: 0.25 }}>
-                            {formatFechaCita(cita.horaInicio)}
-                          </Typography>
-                          <Typography sx={{ color: COLORS.black, fontWeight: 600, mb: 1.5 }}>
-                            {formatHoraCita(cita.horaInicio)}
-                          </Typography>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            disabled={cancelandoEsta || cancelandoId != null}
-                            onClick={() => handleCancelar(cita.id)}
-                            sx={{
-                              textTransform: "none",
-                              fontWeight: 700,
-                              py: 1,
-                              borderRadius: "10px",
-                              bgcolor: COLORS.gold,
-                              color: "#FFFFFF",
-                              boxShadow: "none",
-                              "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" },
-                              "&.Mui-disabled": {
-                                bgcolor: `${COLORS.border}`,
-                                color: COLORS.muted
-                              }
-                            }}
-                          >
-                            {cancelandoEsta ? "Cancelando…" : "Cancelar esta cita"}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </Stack>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                        {serviciosApi.map((s) => (
+                          <MenuItem key={s.id} value={s.id}>
+                            {s.nombre} — ${s.precio} ({s.duracionMinutos} min)
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>Haz clic sobre los servicios que deseas añadir a tu cita.</FormHelperText>
+                    </FormControl>
 
-        <Grid item xs={12}>
-          <Typography
-            sx={{
-              color: COLORS.black,
-              fontWeight: 700,
-              fontSize: "1.05rem",
-              mb: 2
-            }}
-          >
-            Promociones
-          </Typography>
-          <Grid container spacing={2}>
-            {PROMOCIONES.map((p) => (
-              <Grid item xs={12} sm={4} key={p.titulo}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: "16px",
-                    overflow: "hidden",
-                    bgcolor: COLORS.navy,
-                    boxShadow: "0 10px 28px rgba(30, 58, 90, 0.25)",
-                    border: "none"
-                  }}
-                >
-                  <Box sx={{ height: 4, bgcolor: COLORS.gold }} />
-                  <CardContent sx={{ py: 2.5, px: 2.5 }}>
-                    <Typography
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={handleNextStep1}
+                      disabled={serviciosSel.length === 0}
                       sx={{
-                        color: COLORS.gold,
+                        py: 1.5,
+                        borderRadius: "12px",
+                        bgcolor: COLORS.navy,
                         fontWeight: 800,
-                        fontSize: "1.25rem",
-                        mb: 0.75
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        boxShadow: "none",
+                        "&:hover": { bgcolor: "#152a41", boxShadow: "none" }
                       }}
                     >
-                      {p.titulo}
+                      Siguiente
+                    </Button>
+                  </Paper>
+                )}
+
+                {/* --- PASO 2: SELECCIÓN DE FECHA Y HORARIO --- */}
+                {activeStep === 1 && (
+                  <Paper elevation={0} sx={{ p: 4, ...cardSx }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.navy, mb: 1 }}>
+                      Paso 2: Elige fecha y hora
                     </Typography>
-                    <Typography sx={{ color: "#FFFFFF", fontSize: "0.95rem", fontWeight: 500 }}>
-                      {p.subtitulo}
+                    <Typography sx={{ color: COLORS.muted, mb: 3, fontSize: "0.9rem" }}>
+                      Se requiere un mínimo de 2 días hábiles de anticipación. Los horarios ocupados en tiempo real se mostrarán según el estado de bloqueo.
                     </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+
+                    {/* Selector de Estilista */}
+                    <FormControl fullWidth size="small" sx={{ mb: 2.5 }}>
+                      <InputLabel id="reserva-estilista-label">Estilista disponible</InputLabel>
+                      <Select
+                        labelId="reserva-estilista-label"
+                        value={empleadaId}
+                        label="Estilista disponible"
+                        onChange={(e) => setEmpleadaId(e.target.value)}
+                        sx={{ borderRadius: "12px" }}
+                        disabled={cargandoEstilistas || empleadasApi.length === 0}
+                      >
+                        <MenuItem value="">
+                          <em>Selecciona una estilista...</em>
+                        </MenuItem>
+                        {empleadasApi.map((e) => (
+                          <MenuItem key={e.id} value={String(e.id)}>
+                            {nombreEstilista(e)} ({e.especialidad || "Estilista"})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText sx={{ mx: 0 }}>
+                        {cargandoEstilistas
+                          ? "Cargando estilistas..."
+                          : empleadasApi.length === 0
+                          ? "No disponemos de estilistas registradas para este combo."
+                          : "Sólo se muestran las estilistas capacitadas para los servicios elegidos."}
+                      </FormHelperText>
+                    </FormControl>
+
+                    {/* Selector de Fecha */}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Fecha de la Cita"
+                      type="date"
+                      value={fecha}
+                      onChange={(e) => setFecha(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ min: getMinFechaReserva() }}
+                      sx={{
+                        mb: 3,
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "12px"
+                        }
+                      }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <CalendarTodayOutlined sx={{ color: COLORS.muted, fontSize: 20 }} />
+                          </InputAdornment>
+                        )
+                      }}
+                      disabled={!empleadaId}
+                    />
+
+                    {/* Selector de Horarios (Grid Color Coded) */}
+                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: COLORS.black, mb: 1.5 }}>
+                      Horarios Disponibles
+                    </Typography>
+
+                    {!empleadaId || !fecha ? (
+                      <Paper elevation={0} sx={{ p: 3, bgcolor: "#F8FAFC", borderRadius: "12px", border: "1px dashed rgba(229, 231, 235, 1)", textAlign: "center", mb: 3 }}>
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.85rem" }}>
+                          Elige una estilista y una fecha para desplegar los turnos del día.
+                        </Typography>
+                      </Paper>
+                    ) : cargandoOcupacion ? (
+                      <Box sx={{ display: "flex", justifyContent: "center", py: 3, mb: 3 }}>
+                        <CircularProgress size={24} sx={{ color: COLORS.navy }} />
+                      </Box>
+                    ) : slotsConEstado.length === 0 ? (
+                      <Typography sx={{ color: COLORS.muted, fontSize: "0.9rem", mb: 3, fontStyle: "italic" }}>
+                        El salón está cerrado en este día o no se definió horario. Elige otra fecha.
+                      </Typography>
+                    ) : (
+                      <Box sx={{ mb: 4 }}>
+                        <Grid container spacing={1.5}>
+                          {slotsConEstado.map((slot) => {
+                            const isSel = horario === slot.hora;
+                            
+                            // Configuración de colores
+                            let borderCol = COLORS.border;
+                            let textCol = COLORS.black;
+                            let bgCol = "transparent";
+                            let disabled = false;
+
+                            if (slot.estado === "confirmado") {
+                              borderCol = COLORS.goldConfirm;
+                              textCol = COLORS.goldConfirm;
+                              bgCol = "rgba(212, 175, 55, 0.08)";
+                              disabled = true;
+                            } else if (slot.estado === "apartado") {
+                              borderCol = COLORS.grey;
+                              textCol = COLORS.grey;
+                              bgCol = "rgba(148, 163, 184, 0.08)";
+                              disabled = true;
+                            } else {
+                              // Disponible (Azul)
+                              borderCol = isSel ? COLORS.navy : COLORS.blue;
+                              textCol = isSel ? COLORS.navy : COLORS.blue;
+                              bgCol = isSel ? "rgba(30, 58, 90, 0.08)" : "transparent";
+                            }
+
+                            return (
+                              <Grid item xs={6} sm={3} key={slot.hora}>
+                                <Button
+                                  fullWidth
+                                  onClick={() => setHorario(slot.hora)}
+                                  variant="outlined"
+                                  disabled={disabled}
+                                  sx={{
+                                    py: 1,
+                                    borderRadius: "10px",
+                                    fontWeight: 700,
+                                    fontSize: "0.85rem",
+                                    borderColor: borderCol,
+                                    color: textCol,
+                                    bgcolor: bgCol,
+                                    textTransform: "none",
+                                    borderWidth: isSel ? "2px" : "1px",
+                                    "&:hover": {
+                                      borderColor: borderCol,
+                                      bgcolor: isSel ? "rgba(30, 58, 90, 0.08)" : "rgba(37, 99, 235, 0.04)"
+                                    },
+                                    "&.Mui-disabled": {
+                                      borderColor: borderCol,
+                                      color: textCol,
+                                      bgcolor: bgCol
+                                    }
+                                  }}
+                                >
+                                  {slot.hora}
+                                </Button>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+
+                        {/* Leyenda de Colores */}
+                        <Stack direction="row" spacing={3} sx={{ mt: 3, justifyContent: "center" }}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: COLORS.blue }} />
+                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: COLORS.muted }}>Disponible</Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: COLORS.grey }} />
+                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: COLORS.muted }}>Apartado</Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: COLORS.goldConfirm }} />
+                            <Typography sx={{ fontSize: "0.75rem", fontWeight: 700, color: COLORS.muted }}>Confirmado</Typography>
+                          </Stack>
+                        </Stack>
+                      </Box>
+                    )}
+
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        variant="outlined"
+                        onClick={handleBack}
+                        sx={{
+                          flex: 1,
+                          py: 1.25,
+                          borderRadius: "12px",
+                          color: COLORS.navy,
+                          borderColor: COLORS.navy,
+                          fontWeight: 800,
+                          textTransform: "none"
+                        }}
+                      >
+                        Atrás
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={handleNextStep2}
+                        disabled={!horario || guardando}
+                        sx={{
+                          flex: 2,
+                          py: 1.25,
+                          borderRadius: "12px",
+                          bgcolor: COLORS.navy,
+                          fontWeight: 800,
+                          textTransform: "none",
+                          boxShadow: "none",
+                          "&:hover": { bgcolor: "#152a41", boxShadow: "none" }
+                        }}
+                      >
+                        Apartar Horario
+                      </Button>
+                    </Stack>
+                  </Paper>
+                )}
+
+                {/* --- PASO 3: CONFIRMACIÓN Y PAGO DEL 50% --- */}
+                {activeStep === 2 && (
+                  <Paper elevation={0} sx={{ p: 4, ...cardSx }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.navy, mb: 1 }}>
+                      Paso 3: Confirma tu reservación
+                    </Typography>
+                    <Typography sx={{ color: COLORS.muted, mb: 3, fontSize: "0.9rem" }}>
+                      Tu horario está apartado temporalmente. Por favor realiza el pago del anticipo de seguridad (50%) para confirmar definitivamente.
+                    </Typography>
+
+                    {/* Cuenta regresiva en pantalla */}
+                    <Box
+                      sx={{
+                        p: 2,
+                        mb: 3,
+                        bgcolor: "rgba(239, 68, 68, 0.05)",
+                        border: "1px solid rgba(239, 68, 68, 0.25)",
+                        borderRadius: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        color: "#B91C1C"
+                      }}
+                    >
+                      <AccessTimeRounded />
+                      <Typography sx={{ fontWeight: 800, fontSize: "0.95rem" }}>
+                        Tiempo restante para pagar y confirmar: {formatTimeLeft()}
+                      </Typography>
+                    </Box>
+
+                    {/* Desglose de Pago */}
+                    <Paper elevation={0} sx={{ p: 3, bgcolor: "#F8FAFC", borderRadius: "14px", border: `1px solid ${COLORS.border}`, mb: 3.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: COLORS.navy, mb: 2 }}>
+                        Resumen de Reservación
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.85rem", color: "text.secondary" }}>Combo Servicios:</Typography>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700, textAlign: "right" }}>
+                            {serviciosSel.map(id => serviciosApi.find(s => s.id === id)?.nombre).join(", ")}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.85rem", color: "text.secondary" }}>Duración Total:</Typography>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700 }}>{duracionYPrecioTotal.duracion} minutos</Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.85rem", color: "text.secondary" }}>Estilista:</Typography>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700 }}>
+                            {empleadasApi.find(e => String(e.id) === String(empleadaId))?.nombre || "Asignada"}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.85rem", color: "text.secondary" }}>Fecha y hora:</Typography>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700 }}>
+                            {fecha} a las {horario}
+                          </Typography>
+                        </Box>
+
+                        <Divider sx={{ my: 1 }} />
+
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.9rem", color: COLORS.black, fontWeight: 700 }}>Costo Total:</Typography>
+                          <Typography sx={{ fontSize: "0.9rem", fontWeight: 800 }}>${duracionYPrecioTotal.precio.toFixed(2)} MXN</Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.9rem", color: "#15803D", fontWeight: 700 }}>Anticipo a pagar hoy (50%):</Typography>
+                          <Typography sx={{ fontSize: "0.9rem", color: "#15803D", fontWeight: 900 }}>${(duracionYPrecioTotal.precio / 2).toFixed(2)} MXN</Typography>
+                        </Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography sx={{ fontSize: "0.85rem", color: "text.secondary" }}>Resto a pagar en el salón:</Typography>
+                          <Typography sx={{ fontSize: "0.85rem", fontWeight: 700 }}>${(duracionYPrecioTotal.precio / 2).toFixed(2)} MXN</Typography>
+                        </Box>
+                      </Stack>
+                    </Paper>
+
+                    {/* Checkbox Políticas */}
+                    <Box sx={{ mb: 4 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={terminosAceptados}
+                            onChange={(e) => setTerminosAceptados(e.target.checked)}
+                            sx={{ color: COLORS.navy, "&.Mui-checked": { color: COLORS.navy } }}
+                          />
+                        }
+                        label={
+                          <Typography sx={{ fontSize: "0.8rem", color: COLORS.muted, lineHeight: 1.5 }}>
+                            Entiendo y acepto que el anticipo del 50% <strong>no tiene devolución</strong> bajo ninguna circunstancia. Me comprometo a llegar <strong>20 minutos antes</strong> de la hora indicada.
+                          </Typography>
+                        }
+                      />
+                    </Box>
+
+                    {/* Botones Paso 3 */}
+                    <Stack spacing={2} sx={{ mt: 3 }}>
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          onClick={handleApartarMasTarde}
+                          disabled={!terminosAceptados || guardando}
+                          sx={{
+                            py: 1.25,
+                            borderRadius: "12px",
+                            color: COLORS.navy,
+                            borderColor: COLORS.navy,
+                            fontWeight: 800,
+                            textTransform: "none",
+                            "&.Mui-disabled": { borderColor: COLORS.border, color: COLORS.muted }
+                          }}
+                        >
+                          Apartar y pagar más tarde
+                        </Button>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={handlePagarAnticipo}
+                          disabled={!terminosAceptados || guardando}
+                          sx={{
+                            py: 1.25,
+                            borderRadius: "12px",
+                            bgcolor: COLORS.gold,
+                            color: "#FFFFFF",
+                            fontWeight: 800,
+                            textTransform: "none",
+                            boxShadow: "none",
+                            "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" },
+                            "&.Mui-disabled": { bgcolor: COLORS.border, color: COLORS.muted }
+                          }}
+                        >
+                          Pagar y confirmar cita
+                        </Button>
+                      </Stack>
+                      <Button
+                        fullWidth
+                        variant="text"
+                        onClick={handleBack}
+                        sx={{
+                          py: 1,
+                          color: COLORS.muted,
+                          fontWeight: 700,
+                          textTransform: "none"
+                        }}
+                      >
+                        Atrás / Cancelar apartado
+                      </Button>
+                    </Stack>
+                  </Paper>
+                )}
+              </Box>
+            )}
+          </Grid>
+
+          {/* Panel Lateral: Detalle de Selección Actual */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={0} sx={{ p: 3, ...cardSx, bgcolor: "#F8FAFC", position: "sticky", top: 24 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: COLORS.navy, mb: 2 }}>
+                Tu Selección Actual
+              </Typography>
+
+              {serviciosSel.length === 0 ? (
+                <Typography sx={{ color: COLORS.muted, fontSize: "0.85rem", fontStyle: "italic" }}>
+                  Aún no has seleccionado ningún servicio.
+                </Typography>
+              ) : (
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700 }}>SERVICIOS:</Typography>
+                    <Stack spacing={0.75} sx={{ mt: 0.5 }}>
+                      {serviciosSel.map((id) => {
+                        const s = serviciosApi.find((srv) => srv.id === id);
+                        return s ? (
+                          <Box key={id} sx={{ display: "flex", justifyContent: "space-between" }}>
+                            <Typography sx={{ fontSize: "0.8,rem", fontWeight: 700 }}>{s.nombre}</Typography>
+                            <Typography sx={{ fontSize: "0.8rem", color: COLORS.muted }}>${s.precio}</Typography>
+                          </Box>
+                        ) : null;
+                      })}
+                    </Stack>
+                  </Box>
+
+                  <Divider />
+
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography sx={{ fontSize: "0.8rem", color: COLORS.muted, fontWeight: 700 }}>DURACIÓN:</Typography>
+                    <Typography sx={{ fontSize: "0.8rem", fontWeight: 800 }}>{duracionYPrecioTotal.duracion} min (aprox.)</Typography>
+                  </Box>
+
+                  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Typography sx={{ fontSize: "0.8rem", color: COLORS.muted, fontWeight: 700 }}>SUBTOTAL:</Typography>
+                    <Typography sx={{ fontSize: "0.85rem", fontWeight: 900, color: COLORS.navy }}>
+                      ${duracionYPrecioTotal.precio.toFixed(2)} MXN
+                    </Typography>
+                  </Box>
+
+                  {fecha && (
+                    <>
+                      <Divider />
+                      <Box>
+                        <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 700 }}>DETALLES TURNOS:</Typography>
+                        <Typography sx={{ fontSize: "0.8rem", fontWeight: 700, mt: 0.5 }}>Fecha: {fecha}</Typography>
+                        {horario && (
+                          <Typography sx={{ fontSize: "0.8rem", fontWeight: 700 }}>Horario: {horario} (Seleccionado)</Typography>
+                        )}
+                      </Box>
+                    </>
+                  )}
+                </Stack>
+              )}
+            </Paper>
           </Grid>
         </Grid>
-      </Grid>
+      )}
+
+      {/* ==============================================================
+          TAB 2: LISTADO DE RESERVAS Y CITAS ACTIVAS
+          ============================================================== */}
+      {tabIndex === 1 && (
+        <Paper elevation={0} sx={{ p: { xs: 2.5, sm: 4 }, ...cardSx }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.navy, mb: 1 }}>
+            Tus próximas citas
+          </Typography>
+          <Typography sx={{ color: COLORS.muted, mb: 3.5, fontSize: "0.9rem" }}>
+            Aquí puedes ver el historial de reservas activas o confirmadas asociadas a tu cuenta. Liquidar reservas apartadas antes de expirar.
+          </Typography>
+
+          {cargandoCitas ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+              <CircularProgress size={36} sx={{ color: COLORS.navy }} />
+            </Box>
+          ) : citasApi.length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 6 }}>
+              <InfoOutlined sx={{ fontSize: 48, color: COLORS.muted, opacity: 0.5, mb: 2 }} />
+              <Typography sx={{ color: COLORS.muted, fontWeight: 700 }}>
+                No tienes citas registradas. ¡Agenda una nueva desde la primera pestaña!
+              </Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={2.5}>
+              {citasApi.map((cita, idx) => {
+                const cancelable = ["APARTADA", "CONFIRMADA"].includes(cita.estado);
+                const cancelandoEsta = cancelandoId != null && String(cancelandoId) === String(cita.id);
+
+                return (
+                  <Grid item xs={12} sm={6} key={cita.id}>
+                    <Card
+                      elevation={0}
+                      sx={{
+                        borderRadius: "16px",
+                        border: `1px solid ${COLORS.border}`,
+                        bgcolor: "#FAFBFC",
+                        position: "relative"
+                      }}
+                    >
+                      <CardContent sx={{ p: 3 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                          <Typography sx={{ color: COLORS.navy, fontWeight: 850, fontSize: "0.78rem", textTransform: "uppercase" }}>
+                            Cita #{idx + 1}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              fontWeight: 800,
+                              px: 1.5,
+                              py: 0.5,
+                              borderRadius: "6px",
+                              bgcolor: cita.estado === "CONFIRMADA" ? "rgba(212, 175, 55, 0.15)" : "rgba(148, 163, 184, 0.15)",
+                              color: cita.estado === "CONFIRMADA" ? COLORS.goldConfirm : COLORS.muted
+                            }}
+                          >
+                            {cita.estado}
+                          </Typography>
+                        </Stack>
+
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.78rem", mb: 0.25 }}>Servicios:</Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 700, mb: 1.5, fontSize: "0.925rem" }}>
+                          {cita.serviciosLabel || "—"}
+                        </Typography>
+
+                        <Typography sx={{ color: COLORS.muted, fontSize: "0.78rem", mb: 0.25 }}>Fecha y horario:</Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 700, mb: 0.25, fontSize: "0.9rem" }}>
+                          {formatFechaCita(cita.horaInicio)}
+                        </Typography>
+                        <Typography sx={{ color: COLORS.black, fontWeight: 700, mb: 1.5, fontSize: "0.9rem" }}>
+                          {formatHoraCita(cita.horaInicio)}
+                        </Typography>
+
+                        {/* Mostrar temporizador si el estado es APARTADA */}
+                        {cita.estado === "APARTADA" && (
+                          <Box sx={{ mb: 2 }}>
+                            <CitaApartadaTimer creadoEn={cita.creadoEn} onExpire={() => cargarCitas(true)} />
+                          </Box>
+                        )}
+
+                        {/* Botones de acción según estado */}
+                        {cita.estado === "APARTADA" ? (
+                          <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
+                            <Button
+                              variant="outlined"
+                              onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
+                              disabled={cancelandoEsta || cancelandoId != null || guardando}
+                              sx={{
+                                flex: 1,
+                                py: 1,
+                                borderRadius: "10px",
+                                textTransform: "none",
+                                fontWeight: 800,
+                                borderColor: COLORS.navy,
+                                color: COLORS.navy,
+                                "&:hover": { borderColor: COLORS.navy, bgcolor: "rgba(30, 58, 90, 0.04)" }
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              variant="contained"
+                              onClick={() => handlePagarReservaLista(cita.id)}
+                              disabled={cancelandoEsta || cancelandoId != null || guardando}
+                              sx={{
+                                flex: 1,
+                                py: 1,
+                                borderRadius: "10px",
+                                textTransform: "none",
+                                fontWeight: 800,
+                                bgcolor: COLORS.gold,
+                                color: "#FFFFFF",
+                                boxShadow: "none",
+                                "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" }
+                              }}
+                            >
+                              Pagar
+                            </Button>
+                          </Stack>
+                        ) : (
+                          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              disabled={!cancelable || cancelandoEsta || cancelandoId != null}
+                              onClick={() => handleCancelarCitaLista(cita.id, cita.serviciosLabel)}
+                              sx={{
+                                textTransform: "none",
+                                fontWeight: 800,
+                                py: 1.1,
+                                borderRadius: "10px",
+                                bgcolor: COLORS.gold,
+                                color: "#FFFFFF",
+                                boxShadow: "none",
+                                "&:hover": { bgcolor: "#c49a2e", boxShadow: "none" },
+                                "&.Mui-disabled": {
+                                  bgcolor: COLORS.border,
+                                  color: COLORS.muted
+                                }
+                              }}
+                            >
+                              {cancelandoEsta ? "Cancelando…" : "Cancelar esta cita"}
+                            </Button>
+                          </Stack>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        </Paper>
+      )}
     </Box>
   );
 }

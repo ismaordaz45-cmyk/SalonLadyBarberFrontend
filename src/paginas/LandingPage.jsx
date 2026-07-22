@@ -21,6 +21,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import BarberPole from "../componentes/compartidos/BarberPole";
 import axios from "axios";
 import { logoBase64ToDataUrl } from "../utils/logoDataUrl";
+import { motion } from "framer-motion";
 
 const IMG = `${process.env.PUBLIC_URL || ""}/images/landing`;
 
@@ -40,17 +41,17 @@ const PASOS = [
   {
     n: 1,
     titulo: "Selecciona tu servicio",
-    texto: "Explora nuestro catálogo y elige el servicio que mejor se adapta a ti."
+    texto: "Elige el servicio que deseas dentro del catálogo disponible."
   },
   {
     n: 2,
     titulo: "Elige fecha y hora",
-    texto: "Consulta disponibilidad y reserva el momento que te convenga."
+    texto: "Selecciona el día y horario que mejor se adapte a tu disponibilidad."
   },
   {
     n: 3,
     titulo: "Confirma tu cita",
-    texto: "Recibe la confirmación y solo preocúpate por lucir increíble."
+    texto: "Ingresa tus datos y confirma la reservación para asegurar tu lugar."
   }
 ];
 
@@ -175,7 +176,7 @@ function LandingPage() {
 
   const heroImage = perfil?.hero_image 
     ? logoBase64ToDataUrl(perfil.hero_image) 
-    : `${IMG}/hero-salon.svg`;
+    : `${IMG}/hero-salon.jpg`;
 
 
   return (
@@ -263,81 +264,101 @@ function LandingPage() {
             textAlign: { xs: "center", md: "left" }
           }}
         >
-          <Typography
-            variant="h2"
-            component="h1"
-            sx={{
-              color: PALETTE.white,
-              fontWeight: 700,
-              fontSize: { xs: "1.75rem", sm: "2.25rem", md: "3rem" },
-              lineHeight: 1.2,
-              maxWidth: { md: "48rem" },
-              mx: { xs: "auto", md: 0 }
-            }}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            Estilo de barbería, acabado de salón: cuidado y profesionalismo
-          </Typography>
-          <Typography
-            sx={{
-              mt: 2,
-              color: "rgba(255,255,255,0.92)",
-              fontSize: { xs: "1rem", md: "1.125rem" },
-              lineHeight: 1.65,
-              maxWidth: { md: "36rem" },
-              mx: { xs: "auto", md: 0 }
-            }}
-          >
-            Cortes, barba y detalle con mentalidad de barbería; color, peinado y eventos cuando lo
-            necesites. Todo en un solo lugar: Lady Barber.
-          </Typography>
-          <Box
-            sx={{
-              mt: 3,
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 2,
-              justifyContent: { xs: "center", md: "flex-start" },
-              alignItems: "center"
-            }}
-          >
-            <Button
-              component={Link}
-              to="/catalogo"
-              variant="contained"
+            <Typography
+              variant="h2"
+              component="h1"
               sx={{
-                bgcolor: PALETTE.white,
-                color: PALETTE.primary,
-                fontWeight: 600,
-                px: 3,
-                py: 1.25,
-                borderRadius: "12px",
-                textTransform: "none",
-                boxShadow: "none",
-                "&:hover": { bgcolor: PALETTE.hover, color: PALETTE.primary }
-              }}
-            >
-              Ver catálogo
-            </Button>
-            <Button
-              component={Link}
-              to="/login"
-              variant="contained"
-              sx={{
-                bgcolor: PALETTE.primary,
                 color: PALETTE.white,
-                fontWeight: 600,
-                px: 3,
-                py: 1.25,
-                borderRadius: "12px",
-                textTransform: "none",
-                border: `1px solid ${PALETTE.white}`,
-                boxShadow: "none",
-                "&:hover": { bgcolor: "#0F172A" }
+                fontWeight: 700,
+                fontSize: { xs: "1.75rem", sm: "2.25rem", md: "3rem" },
+                lineHeight: 1.2,
+                maxWidth: { md: "48rem" },
+                mx: { xs: "auto", md: 0 }
               }}
             >
-              Iniciar sesión
-            </Button>
-          </Box>
+              Estilo de barbería, acabado de salón: cuidado y profesionalismo
+            </Typography>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.25 }}
+          >
+            <Typography
+              sx={{
+                mt: 2,
+                color: "rgba(255,255,255,0.92)",
+                fontSize: { xs: "1rem", md: "1.125rem" },
+                lineHeight: 1.65,
+                maxWidth: { md: "36rem" },
+                mx: { xs: "auto", md: 0 }
+              }}
+            >
+              Cortes, barba y detalle con mentalidad de barbería; color, peinado y eventos cuando lo
+              necesites. Todo en un solo lugar: Lady Barber.
+            </Typography>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+          >
+            <Box
+              sx={{
+                mt: 3,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+                justifyContent: { xs: "center", md: "flex-start" },
+                alignItems: "center"
+              }}
+            >
+              <Button
+                component={Link}
+                to="/catalogo"
+                variant="contained"
+                sx={{
+                  bgcolor: PALETTE.white,
+                  color: PALETTE.primary,
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1.25,
+                  borderRadius: "12px",
+                  textTransform: "none",
+                  boxShadow: "none",
+                  "&:hover": { bgcolor: PALETTE.hover, color: PALETTE.primary }
+                }}
+              >
+                Ver catálogo
+              </Button>
+              <Button
+                component={Link}
+                to="/login"
+                variant="contained"
+                sx={{
+                  bgcolor: PALETTE.primary,
+                  color: PALETTE.white,
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1.25,
+                  borderRadius: "12px",
+                  textTransform: "none",
+                  border: `1px solid ${PALETTE.white}`,
+                  boxShadow: "none",
+                  "&:hover": { bgcolor: "#0F172A" }
+                }}
+              >
+                Iniciar sesión
+              </Button>
+            </Box>
+          </motion.div>
         </Container>
       </Box>
 
@@ -345,7 +366,7 @@ function LandingPage() {
       <Box
         ref={pasosView.ref}
         sx={{
-          py: { xs: 6, md: 8 },
+          py: { xs: 8, md: 10 },
           bgcolor: "#EEF2FF",
           position: "relative",
           overflow: "hidden",
@@ -360,54 +381,122 @@ function LandingPage() {
         }}
       >
         <Container maxWidth="lg">
-          <Typography variant="h4" component="h2" sx={{ color: PALETTE.text, fontWeight: 700 }}>
-            Haznos parte de ti
-          </Typography>
-          <Typography sx={{ color: PALETTE.textMuted, mt: 1, mb: 4 }}>
-            Tu cita lista en 3 sencillos pasos.
-          </Typography>
-          <Grid container spacing={3}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{
+                color: "#163050",
+                fontWeight: 800,
+                fontFamily: "'Playfair Display', 'Georgia', serif",
+                fontSize: { xs: "2.25rem", sm: "2.75rem", md: "3.25rem" },
+                letterSpacing: "-0.01em",
+                mb: 1.5,
+                position: "relative",
+                display: "inline-block",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -8,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "60px",
+                  height: "4px",
+                  borderRadius: "2px",
+                  background: `linear-gradient(90deg, #163050 0%, ${PALETTE.accentYellow} 100%)`
+                }
+              }}
+            >
+              Haznos parte de ti
+            </Typography>
+            <Typography
+              sx={{
+                color: PALETTE.textMuted,
+                mt: 3,
+                fontSize: { xs: "0.95rem", md: "1.1rem" },
+                fontWeight: 500,
+                fontFamily: "'Montserrat', sans-serif"
+              }}
+            >
+              Tu cita lista en 3 sencillos pasos.
+            </Typography>
+          </Box>
+          <Grid container spacing={4} justifyContent="center">
             {PASOS.map((p) => (
-              <Grid item xs={12} md={4} key={p.n}>
+              <Grid item xs={12} sm={6} md={4} key={p.n}>
                 <Box
+                  component={motion.div}
+                  whileHover={{ y: -8 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={pasosView.inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 15,
+                    delay: p.n * 0.15
+                  }}
                   sx={{
-                    textAlign: { xs: "center", md: "left" },
-                    borderRadius: 3,
-                    p: { xs: 3, md: 3.5 },
-                    bgcolor: "rgba(255,255,255,0.65)",
-                    border: "1px solid rgba(26, 59, 91, 0.14)",
-                    boxShadow: "0 14px 30px rgba(15, 23, 42, 0.10)",
-                    backdropFilter: "blur(6px)",
-                    transform: pasosView.inView ? "none" : "translateY(18px)",
-                    opacity: pasosView.inView ? 1 : 0,
-                    transition: `transform 700ms cubic-bezier(0.2,0.8,0.2,1) ${120 + p.n * 90}ms, opacity 700ms ease ${120 + p.n * 90}ms`,
+                    textAlign: "center",
+                    p: 4,
+                    borderRadius: 4,
+                    bgcolor: "rgba(255, 255, 255, 0.45)",
+                    border: "1px solid rgba(255, 255, 255, 0.6)",
+                    boxShadow: "0 10px 30px -10px rgba(30, 41, 59, 0.05)",
+                    backdropFilter: "blur(8px)",
+                    transition: "background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
                     "&:hover": {
-                      transform: pasosView.inView ? "translateY(-4px)" : "translateY(18px)",
-                      boxShadow: "0 18px 46px rgba(15, 23, 42, 0.16)"
+                      bgcolor: "rgba(255, 255, 255, 0.85)",
+                      borderColor: "rgba(26, 59, 91, 0.15)",
+                      boxShadow: "0 20px 40px -15px rgba(26, 59, 91, 0.12)"
                     }
                   }}
                 >
                   <Box
                     sx={{
-                      width: 48,
-                      height: 48,
+                      width: 56,
+                      height: 56,
                       borderRadius: "50%",
-                      bgcolor: "rgba(15, 23, 42, 0.96)",
+                      bgcolor: "#163050",
                       color: "#FFFFFF",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: "1.1rem",
-                      mx: { xs: "auto", md: 0 },
-                      mb: 2,
-                      boxShadow: "0 10px 22px rgba(15, 23, 42, 0.22)"
+                      fontWeight: 800,
+                      fontSize: "1.3rem",
+                      mx: "auto",
+                      mb: 3,
+                      boxShadow: "0 8px 20px rgba(22, 48, 80, 0.25)",
+                      border: "3px solid #FFFFFF",
+                      transition: "transform 0.3s ease",
+                      "&:hover": {
+                        transform: "scale(1.1) rotate(5deg)"
+                      }
                     }}
                   >
                     {p.n}
                   </Box>
-                  <Typography sx={{ fontWeight: 700, color: PALETTE.text, mb: 1 }}>{p.titulo}</Typography>
-                  <Typography sx={{ color: PALETTE.textMuted, fontSize: "0.95rem", lineHeight: 1.6 }}>
+                  <Typography
+                    variant="h5"
+                    component="h3"
+                    sx={{
+                      fontWeight: 700,
+                      color: "#163050",
+                      fontFamily: "'Playfair Display', 'Georgia', serif",
+                      fontSize: "1.35rem",
+                      mb: 1.5
+                    }}
+                  >
+                    {p.titulo}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: PALETTE.textMuted,
+                      fontSize: "0.95rem",
+                      lineHeight: 1.6,
+                      maxWidth: "280px",
+                      mx: "auto"
+                    }}
+                  >
                     {p.texto}
                   </Typography>
                 </Box>

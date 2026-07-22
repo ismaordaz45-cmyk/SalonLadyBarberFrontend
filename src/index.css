@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+html {
+  font-size: 14px;
+}
+
 /* SweetAlert2 por encima del overlay de barbería (z-index ~20000) */
 .swal2-container {
   z-index: 25050 !important;
