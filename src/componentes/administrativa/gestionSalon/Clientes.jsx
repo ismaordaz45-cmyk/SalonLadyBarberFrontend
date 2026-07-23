@@ -135,7 +135,6 @@ function Clientes() {
 
   // Estado para la Segmentación K-Means (.pkl)
   const [loadingSeg, setLoadingSeg] = useState(true);
-  const [_errorSeg, _setErrorSeg] = useState("");
   const [segmentosData, setSegmentosData] = useState([]);
 
   const getSimulatedSegment = (user) => {
@@ -184,23 +183,19 @@ function Clientes() {
       let badgeBg = `${PALETA.primary}1A`;
       let textSegmentColor = PALETA.primary;
       let recommendation = "";
-      let desc = "";
 
       const str = String(data.nombre_segmento || "").toLowerCase();
       if (str.includes("vip") || str.includes("frecuente")) {
         iconColor = PALETA.acento;
         badgeBg = `${PALETA.acento}22`;
         textSegmentColor = PALETA.oscuro;
-        desc = "Clientes altamente leales con frecuencia y gasto elevado.";
         recommendation = "Ofrecer beneficios exclusivos de lealtad, preventas y trato preferente.";
       } else if (str.includes("riesgo") || str.includes("inactivo") || str.includes("fuga")) {
         iconColor = PALETA.error;
         badgeBg = `${PALETA.error}15`;
         textSegmentColor = PALETA.error;
-        desc = "Clientes que no han registrado visitas en más de 45 días.";
         recommendation = "Enviar cupón de reactivación personalizado ('Te extrañamos') con descuento especial.";
       } else {
-        desc = "Clientes con visitas periódicas pero espaciadas y gasto moderado.";
         recommendation = "Enviar promociones cruzadas o descuentos aplicables en días de baja afluencia.";
       }
 
@@ -372,7 +367,6 @@ function Clientes() {
 
   const fetchSegmentacion = useCallback(async () => {
     setLoadingSeg(true);
-    _setErrorSeg("");
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -385,11 +379,7 @@ function Clientes() {
       const list = Array.isArray(data?.clientes) ? data.clientes : Array.isArray(data) ? data : [];
       setSegmentosData(list);
     } catch (e) {
-      _setErrorSeg(
-        e.response?.data?.error ||
-          e.message ||
-          "El modelo de clustering K-Means en Render está iniciando o no respondió a tiempo."
-      );
+      console.warn("El modelo de clustering K-Means en Render no respondió a tiempo:", e.message);
       setSegmentosData([]);
     } finally {
       setLoadingSeg(false);
