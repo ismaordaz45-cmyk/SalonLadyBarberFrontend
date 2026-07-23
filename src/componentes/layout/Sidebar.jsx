@@ -45,6 +45,7 @@ const menuPrincipal = [
   { label: "Catálogo", path: "/admin/servicios", icon: <CategoryRounded /> },
   { label: "Perfil de la empresa", path: "/admin/perfil", icon: <BusinessRounded /> },
   { label: "Inventario", path: "/admin/inventario", icon: <Inventory2Rounded /> },
+  { label: "Auditoría de Caja Hoy", path: "/admin/auditoria", icon: <AssessmentRounded /> },
   { label: "Pagos", path: "/admin/pagos", icon: <PaymentsRounded /> },
   { label: "Reportes", path: "/admin/reportes", icon: <AssessmentRounded /> },
   { label: "Estadísticas", path: "/admin/estadisticas", icon: <BarChartRounded /> },

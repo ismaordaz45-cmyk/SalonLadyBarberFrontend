@@ -21,7 +21,8 @@ import PaginaPrivacidadPublico from "./paginas/PaginaPrivacidadPublico";
 import PaginaPrincipalAdministrativa from "./paginas/PaginaPrincipalAdminitrativo";
 import PaginaAdminRespaldo from "./paginas/PaginaAdminRespaldo";
 import PaginaAdminImportExport from "./paginas/PaginaAdminImportExport";
-import PaginaAdminMonitoreo from "./paginas/PaginaAdminMonitoreo";
+import AuditoriaCajaHoy from './componentes/admin/AuditoriaCajaHoy';
+import VentaDetalleModal from './componentes/admin/VentaDetalleModal';
 import InicioCliente from "./componentes/cliente/InicioCliente";
 import ServiciosClienteReservar from "./componentes/cliente/ServiciosClienteReservar";
 import ProductosCliente from "./componentes/cliente/ProductosCliente";
@@ -306,6 +307,16 @@ const App = () => {
           }
         />
         <Route
+          path="/admin/auditoria"
+          element={
+            <ProtectedRoute allowedRoles={["PROPIETARIA", "EMPLEADA"]}>
+              <AdminLayout>
+                <AuditoriaCajaHoy />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/proyeccion-citas"
           element={
             <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
@@ -451,6 +462,7 @@ const App = () => {
           <Route path="citas" element={<GestionCitasRecepcion />} />
           <Route path="estilistas" element={<HorariosEstilistasRecepcion />} />
           <Route path="ventas" element={<VentasProductosRecepcion />} />
+          <Route path="auditoria" element={<AuditoriaCajaHoy />} />
           <Route path="clientes" element={<ClientesRecepcion />} />
           <Route path="perfil" element={<PerfilRecepcion />} />
           <Route path="*" element={<Navigate to="/recepcion" replace />} />

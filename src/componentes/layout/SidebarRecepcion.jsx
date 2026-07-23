@@ -17,7 +17,8 @@ import {
   ShoppingCartOutlined,
   PersonRounded,
   AccessTimeRounded,
-  LogoutRounded
+  LogoutRounded,
+  AssessmentRounded
 } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
@@ -38,6 +39,7 @@ const menuItems = [
   { label: "Gestión de Citas", path: "/recepcion/citas", icon: <EventAvailableRounded /> },
   { label: "Horario Estilistas", path: "/recepcion/estilistas", icon: <AccessTimeRounded /> },
   { label: "Venta Productos", path: "/recepcion/ventas", icon: <ShoppingCartOutlined /> },
+  { label: "Auditoría Caja Hoy", path: "/recepcion/auditoria", icon: <AssessmentRounded /> },
   { label: "Clientes", path: "/recepcion/clientes", icon: <PeopleRounded /> }
 ];
 
