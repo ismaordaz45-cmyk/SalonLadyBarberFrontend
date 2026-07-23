@@ -37,6 +37,44 @@ const PALETTE = {
   accentYellow: "#FACC15"
 };
 
+const FALLBACK_PRODUCTS = [
+  {
+    id: "f1",
+    nombre: "Cera Modeladora Premium",
+    descripcion: "Fijación fuerte y acabado mate natural. Moldeable durante todo el día.",
+    precioUnitario: 250.00,
+    imagen: "https://images.unsplash.com/photo-1590156546746-c237f4856ee1?w=500&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f2",
+    nombre: "Aceite para Barba Orgánico",
+    descripcion: "Suaviza el vello facial, hidrata la piel y aporta un brillo varonil sutil.",
+    precioUnitario: 320.00,
+    imagen: "https://images.unsplash.com/photo-1626015713026-d837d172406f?w=500&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f3",
+    nombre: "Shampoo Anticaída Refresh",
+    descripcion: "Limpia profundamente, fortalece la raíz y aporta frescura con mentol.",
+    precioUnitario: 280.00,
+    imagen: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f4",
+    nombre: "Loción After-Shave Calmant",
+    descripcion: "Reduce la irritación, cierra los poros y refresca la piel tras el afeitado.",
+    precioUnitario: 210.00,
+    imagen: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f5",
+    nombre: "Pomada Pompadour Brillo",
+    descripcion: "Fijación media con alto brillo para peinados clásicos y elegantes.",
+    precioUnitario: 240.00,
+    imagen: "https://images.unsplash.com/photo-1608248597481-496100c80836?w=500&auto=format&fit=crop&q=60"
+  }
+];
+
 const PASOS = [
   {
     n: 1,
@@ -55,32 +93,6 @@ const PASOS = [
   }
 ];
 
-const EVENTOS = [
-  {
-    key: "bodas",
-    titulo: "Bodas",
-    subtitulo: "Peinados y maquillaje para el día más especial.",
-    imagen: `${IMG}/evento-bodas.svg`
-  },
-  {
-    key: "xv",
-    titulo: "XV Años",
-    subtitulo: "Looks memorables para celebrar tu transición con estilo.",
-    imagen: `${IMG}/evento-xv-anos.svg`
-  },
-  {
-    key: "grad",
-    titulo: "Graduaciones",
-    subtitulo: "Estilos impecables para tu logro académico.",
-    imagen: `${IMG}/evento-graduaciones.svg`
-  },
-  {
-    key: "pres",
-    titulo: "Presentaciones",
-    subtitulo: "Imagen cuidada para eventos formales y profesionales.",
-    imagen: `${IMG}/evento-presentaciones.svg`
-  }
-];
 
 const TESTIMONIOS = [
   {
@@ -147,20 +159,17 @@ function LandingPage() {
   const heroPoleWidth = isMdUp ? 22 : isSmUp ? 16 : 11;
 
   const pasosView = useInViewOnce();
-  const eventosView = useInViewOnce();
   const testView = useInViewOnce();
   const tradicionView = useInViewOnce();
   const faqView = useInViewOnce();
 
   const [imgReady, setImgReady] = useState(() => ({
-    bodas: false,
-    xv: false,
-    grad: false,
-    pres: false,
     tradicion: false
   }));
 
   const [perfil, setPerfil] = useState(null);
+  const [productos, setProductos] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -174,9 +183,52 @@ function LandingPage() {
     fetchPerfil();
   }, []);
 
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const { data } = await axios.get("https://salonladybarberbackend.onrender.com/api/insumos");
+        const activos = Array.isArray(data) ? data.filter(p => p.estaActivo === 1 || p.estaActivo === true) : [];
+        if (activos.length > 0) {
+          setProductos(activos);
+        } else {
+          setProductos(FALLBACK_PRODUCTS);
+        }
+      } catch (err) {
+        console.error("Error al cargar productos en landing:", err);
+        setProductos(FALLBACK_PRODUCTS);
+      }
+    };
+    fetchProductos();
+  }, []);
+
   const heroImage = perfil?.hero_image 
     ? logoBase64ToDataUrl(perfil.hero_image) 
     : `${IMG}/hero-salon.jpg`;
+
+  const itemsPerView = isMdUp ? 3 : isSmUp ? 2 : 1;
+  const maxIndex = Math.max(0, productos.length - itemsPerView);
+
+  const handlePrev = () => setCurrentIndex((prev) => Math.max(0, prev - 1));
+  const handleNext = () => setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
+
+  useEffect(() => {
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(maxIndex);
+    }
+  }, [itemsPerView, maxIndex, currentIndex]);
+
+  useEffect(() => {
+    if (productos.length <= itemsPerView) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        if (prev >= maxIndex) {
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [productos.length, itemsPerView, maxIndex]);
 
 
   return (
@@ -506,11 +558,10 @@ function LandingPage() {
         </Container>
       </Box>
 
-      {/* 3. Eventos especiales */}
+      {/* 3. Carrusel de productos más vendidos */}
       <Box
-        ref={eventosView.ref}
         sx={{
-          py: { xs: 6, md: 8 },
+          py: { xs: 8, md: 10 },
           bgcolor: PALETTE.darkSection,
           position: "relative",
           overflow: "hidden",
@@ -519,130 +570,288 @@ function LandingPage() {
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(1200px 520px at 50% 0%, rgba(250, 204, 21, 0.20) 0%, rgba(250,204,21,0) 60%), radial-gradient(900px 520px at 0% 100%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 55%)",
+              "radial-gradient(1200px 520px at 50% 0%, rgba(250, 204, 21, 0.15) 0%, rgba(250,204,21,0) 60%), radial-gradient(900px 520px at 0% 100%, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 55%)",
             pointerEvents: "none"
           }
         }}
       >
-        <Container maxWidth="lg">
-          <Typography
-            variant="h4"
-            component="h2"
-            sx={{
-              color: PALETTE.white,
-              fontWeight: 800,
-              textAlign: "center",
-              letterSpacing: "0.02em",
-              opacity: eventosView.inView ? 1 : 0,
-              transform: eventosView.inView ? "none" : "translateY(14px)",
-              transition: "opacity 700ms ease, transform 700ms ease"
-            }}
-          >
-            Haznos parte de tus eventos especiales
-          </Typography>
-          <Typography
-            sx={{
-              color: "rgba(255,255,255,0.85)",
-              mt: 1.5,
-              mb: 4,
-              textAlign: "center",
-              maxWidth: 720,
-              mx: "auto",
-              lineHeight: 1.65,
-              opacity: eventosView.inView ? 1 : 0,
-              transform: eventosView.inView ? "none" : "translateY(14px)",
-              transition: "opacity 700ms ease 120ms, transform 700ms ease 120ms"
-            }}
-          >
-            Transformamos tus momentos más importantes en recuerdos eternos con looks pensados para cada
-            ocasión.
-          </Typography>
-          <Grid container spacing={2}>
-            {EVENTOS.map((ev) => (
-              <Grid item xs={12} sm={6} md={3} key={ev.key}>
-                <Card
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.06)",
-                    borderRadius: 3,
-                    overflow: "hidden",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                    boxShadow: "0 18px 46px rgba(0,0,0,0.22)",
-                    transform: eventosView.inView ? "none" : "translateY(16px)",
-                    opacity: eventosView.inView ? 1 : 0,
-                    transition: `transform 800ms cubic-bezier(0.2,0.8,0.2,1) ${120 + (ev.key === "bodas" ? 0 : ev.key === "xv" ? 1 : ev.key === "grad" ? 2 : 3) * 90}ms, opacity 800ms ease ${120 + (ev.key === "bodas" ? 0 : ev.key === "xv" ? 1 : ev.key === "grad" ? 2 : 3) * 90}ms, box-shadow 250ms ease, border-color 250ms ease`,
-                    "&:hover": {
-                      transform: eventosView.inView ? "translateY(-8px)" : "translateY(16px)",
-                      boxShadow: "0 26px 70px rgba(0,0,0,0.34)",
-                      borderColor: "rgba(250, 204, 21, 0.42)"
-                    }
-                  }}
-                >
-                  <Box sx={{ position: "relative", height: 160, overflow: "hidden" }}>
-                    <CardMedia
-                      component="img"
-                      height="160"
-                      image={ev.imagen}
-                      alt={ev.titulo}
-                      onLoad={() => setImgReady((s) => ({ ...s, [ev.key]: true }))}
+        <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2 }}>
+          <Box sx={{ textAlign: "center", mb: 6 }}>
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{
+                color: PALETTE.white,
+                fontWeight: 800,
+                fontFamily: "'Playfair Display', 'Georgia', serif",
+                fontSize: { xs: "2.25rem", sm: "2.75rem", md: "3.25rem" },
+                letterSpacing: "-0.01em",
+                mb: 1.5,
+                position: "relative",
+                display: "inline-block",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -8,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "60px",
+                  height: "4px",
+                  borderRadius: "2px",
+                  background: `linear-gradient(90deg, ${PALETTE.white} 0%, ${PALETTE.accentYellow} 100%)`
+                }
+              }}
+            >
+              Productos más vendidos
+            </Typography>
+            <Typography
+              sx={{
+                color: "rgba(255,255,255,0.85)",
+                mt: 3,
+                fontSize: { xs: "0.95rem", md: "1.1rem" },
+                fontWeight: 500,
+                maxWidth: 600,
+                mx: "auto"
+              }}
+            >
+              Lleva la experiencia del salón a tu casa con nuestra selección de productos premium para cuidado capilar y barba.
+            </Typography>
+          </Box>
+
+          {/* Carrusel */}
+          <Box sx={{ position: "relative", px: { xs: 4, sm: 6 } }}>
+            {/* Contenedor de las tarjetas */}
+            <Box sx={{ overflow: "hidden", mx: -1 }}>
+              <motion.div
+                animate={{ x: `-${currentIndex * (100 / itemsPerView)}%` }}
+                transition={{ type: "spring", stiffness: 180, damping: 25 }}
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  touchAction: "pan-y"
+                }}
+              >
+                {productos.map((prod) => (
+                  <Box
+                    key={prod.id}
+                    sx={{
+                      width: `${100 / itemsPerView}%`,
+                      flexShrink: 0,
+                      px: 1.5,
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <Card
+                      component={motion.div}
+                      whileHover={{ y: -8 }}
                       sx={{
-                        objectFit: "cover",
-                        transform: imgReady[ev.key] ? "none" : "scale(1.06)",
-                        opacity: imgReady[ev.key] ? 1 : 0,
-                        transition: "transform 700ms cubic-bezier(0.2,0.8,0.2,1), opacity 700ms ease",
-                        filter: "saturate(1.04) contrast(1.05)"
-                      }}
-                    />
-                    <Box
-                      aria-hidden
-                      sx={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.24) 65%, rgba(0,0,0,0.46) 100%)",
-                        opacity: 0.9
-                      }}
-                    />
-                  </Box>
-                  <CardContent>
-                    <Typography sx={{ fontWeight: 800, color: PALETTE.white, letterSpacing: "0.01em" }}>
-                      {ev.titulo}
-                    </Typography>
-                    <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", mt: 0.5, mb: 2 }}>
-                      {ev.subtitulo}
-                    </Typography>
-                    <Button
-                      component={Link}
-                      to="/login"
-                      fullWidth
-                      sx={{
-                        bgcolor: PALETTE.accentYellow,
-                        color: PALETTE.primary,
-                        fontWeight: 700,
-                        textTransform: "none",
-                        borderRadius: "12px",
-                        boxShadow: "0 14px 28px rgba(250, 204, 21, 0.18)",
-                        transition: "transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease",
+                        bgcolor: "rgba(255,255,255,0.06)",
+                        borderRadius: 4,
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        boxShadow: "0 18px 46px rgba(0,0,0,0.22)",
+                        backdropFilter: "blur(10px)",
+                        overflow: "hidden",
+                        transition: "border-color 0.3s ease, box-shadow 0.3s ease",
                         "&:hover": {
-                          bgcolor: "#EAB308",
-                          transform: "translateY(-2px)",
-                          boxShadow: "0 18px 36px rgba(250, 204, 21, 0.26)"
-                        },
-                        "&:active": {
-                          transform: "translateY(0px) scale(0.99)"
+                          borderColor: "rgba(250, 204, 21, 0.42)",
+                          boxShadow: "0 26px 70px rgba(0,0,0,0.35)"
                         }
                       }}
                     >
-                      Cotizar
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                      {/* Imagen */}
+                      <Box sx={{ position: "relative", height: 200, overflow: "hidden", bgcolor: "#1e293b" }}>
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={prod.imagen || "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&auto=format&fit=crop&q=60"}
+                          alt={prod.nombre}
+                          sx={{
+                            objectFit: "cover",
+                            transition: "transform 0.5s ease",
+                            "&:hover": {
+                              transform: "scale(1.05)"
+                            }
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 12,
+                            left: 12,
+                            bgcolor: PALETTE.accentYellow,
+                            color: PALETTE.primary,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: "20px",
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
+                          }}
+                        >
+                          Más Vendido
+                        </Box>
+                      </Box>
+
+                      {/* Contenido */}
+                      <CardContent sx={{ display: "flex", flexDirection: "column", flexGrow: 1, p: 3 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 800,
+                            color: PALETTE.white,
+                            fontSize: "1.1rem",
+                            mb: 1,
+                            lineHeight: 1.3,
+                            height: "2.6em",
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical"
+                          }}
+                        >
+                          {prod.nombre}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "rgba(255,255,255,0.72)",
+                            fontSize: "0.85rem",
+                            lineHeight: 1.5,
+                            mb: 2.5,
+                            height: "4.5em",
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical"
+                          }}
+                        >
+                          {prod.descripcion || "Producto exclusivo para el cuidado personal y estilizado profesional."}
+                        </Typography>
+                        <Box sx={{ mt: "auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <Typography sx={{ color: PALETTE.accentYellow, fontWeight: 900, fontSize: "1.2rem" }}>
+                            ${Number(prod.precioUnitario || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                          </Typography>
+                          <Button
+                            component={Link}
+                            to="/login"
+                            variant="contained"
+                            size="small"
+                            endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                            sx={{
+                              bgcolor: PALETTE.accentYellow,
+                              color: PALETTE.primary,
+                              fontWeight: 700,
+                              fontSize: "0.8rem",
+                              borderRadius: "10px",
+                              textTransform: "none",
+                              px: 2,
+                              py: 0.75,
+                              boxShadow: "none",
+                              "&:hover": {
+                                bgcolor: "#EAB308",
+                                boxShadow: "none"
+                              }
+                            }}
+                          >
+                            Comprar
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Box>
+                ))}
+              </motion.div>
+            </Box>
+
+            {/* Controles del carrusel */}
+            {productos.length > itemsPerView && (
+              <>
+                <Button
+                  onClick={handlePrev}
+                  disabled={currentIndex === 0}
+                  sx={{
+                    position: "absolute",
+                    left: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    minWidth: 44,
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    bgcolor: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: PALETTE.white,
+                    "&:hover": {
+                      bgcolor: "rgba(255,255,255,0.2)"
+                    },
+                    "&.Mui-disabled": {
+                      opacity: 0.3,
+                      color: "rgba(255,255,255,0.3)",
+                      border: "1px solid rgba(255,255,255,0.05)"
+                    }
+                  }}
+                >
+                  &#10094;
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={currentIndex >= maxIndex}
+                  sx={{
+                    position: "absolute",
+                    right: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    minWidth: 44,
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    bgcolor: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: PALETTE.white,
+                    "&:hover": {
+                      bgcolor: "rgba(255,255,255,0.2)"
+                    },
+                    "&.Mui-disabled": {
+                      opacity: 0.3,
+                      color: "rgba(255,255,255,0.3)",
+                      border: "1px solid rgba(255,255,255,0.05)"
+                    }
+                  }}
+                >
+                  &#10095;
+                </Button>
+              </>
+            )}
+          </Box>
+
+          {/* Indicadores de puntos */}
+          {productos.length > itemsPerView && (
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 4 }}>
+              {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
+                <Box
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  sx={{
+                    width: currentIndex === idx ? 24 : 8,
+                    height: 8,
+                    borderRadius: "4px",
+                    bgcolor: currentIndex === idx ? PALETTE.accentYellow : "rgba(255,255,255,0.3)",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease"
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+
+          {/* Botón ver todo el catálogo */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
             <Button
               component={Link}
-              to="/login"
+              to="/catalogo"
               endIcon={<ArrowForwardIcon />}
               sx={{
                 bgcolor: PALETTE.accentYellow,
@@ -659,7 +868,7 @@ function LandingPage() {
                 "&:active": { transform: "translateY(0px) scale(0.99)" }
               }}
             >
-              Cotizar mi evento soñado
+              Explorar catálogo completo
             </Button>
           </Box>
         </Container>

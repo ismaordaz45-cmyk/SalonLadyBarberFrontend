@@ -7,15 +7,12 @@ import {
   Grid,
   Chip,
   Stack,
-  Tabs,
-  Tab,
   Collapse
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
-import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import SparklesIcon from "@mui/icons-material/AutoFixHighRounded";
@@ -45,38 +42,34 @@ const NOVEDADES_ITEMS = [
   },
   {
     id: 2,
-    categoria: "Servicios Nuevos",
-    titulo: "Tratamientos Capilares de Hidratación Profunda",
-    subtitulo: "Recupera la vitalidad y brillo de tu cabello con productos orgánicos.",
-    fecha: "Nuevo Lanzamiento",
+    categoria: "Promociones",
+    titulo: "Descuento en Productos de Cuidado Capilar",
+    subtitulo: "Obtén precio especial en productos seleccionados al reservar tu cita.",
+    fecha: "Oferta Especial",
     icono: <AutoAwesomeRoundedIcon sx={{ color: "#0EA5E9" }} />,
-    tag: "NUEVO SERVICIO",
+    tag: "OFERTA EXCLUSIVA",
     destacado: false,
-    contenido: "Incorporamos productos de última generación sin sulfatos para el cuidado intensivo del cuero cabelludo. Pregunta a nuestros estilistas por el diagnóstico capilar gratuito."
+    contenido: "En la compra de cualquier cera o bálsamo profesional durante tu cita agendada en la plataforma, obtén un beneficio preferencial en tu compra."
   },
   {
     id: 3,
-    categoria: "Avisos",
-    titulo: "Agenda de Fin de Semana & Horarios de Atención",
-    subtitulo: "Reserva con anticipación para asegurar tu lugar en horarios estelares.",
-    fecha: "Aviso Permanente",
-    icono: <CampaignRoundedIcon sx={{ color: "#E11D48" }} />,
-    tag: "AVISO IMPORTANTE",
+    categoria: "Promociones",
+    titulo: "Experiencia VIP: Corte + Hidratación + Estilizado",
+    subtitulo: "Ritual completo de renovación de estilo con acabado profesional.",
+    fecha: "Edición Limitada",
+    icono: <LocalOfferRoundedIcon sx={{ color: PALETTE.gold }} />,
+    tag: "EDICIÓN ESPECIAL",
     destacado: false,
-    contenido: "Recuerda que puedes agendar tu cita 24/7 a través de nuestra plataforma online. Te sugerimos apartar con anticipación en días viernes y sábados por alta demanda."
+    contenido: "Disfruta de nuestra experiencia premium que incluye corte personalizado, lavado hidratante y peinado con fijación de larga duración."
   }
 ];
 
 export default function PaginaNovedadesPublico() {
   const location = useLocation();
   const isCliente = location.pathname.startsWith("/cliente");
-  const [tabFiltro, setTabFiltro] = useState("TODAS");
   const [expandidoId, setExpandidoId] = useState(null);
 
-  const filtrados = NOVEDADES_ITEMS.filter((item) => {
-    if (tabFiltro === "TODAS") return true;
-    return item.categoria.toUpperCase().includes(tabFiltro);
-  });
+  const filtrados = NOVEDADES_ITEMS;
 
   return (
     <Box
@@ -176,44 +169,8 @@ export default function PaginaNovedadesPublico() {
             fontWeight: 500
           }}
         >
-          Mantente informado de nuestros paquetes especiales, eventos de temporada y las mejores sugerencias de estilo en el salón.
+          Mantente al día con nuestros paquetes de temporada, descuentos exclusivos y sugerencias de estilo en el salón.
         </Typography>
-
-        {/* Selector de Filtros Interactivo */}
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 5 }}>
-          <Tabs
-            value={tabFiltro}
-            onChange={(_, val) => setTabFiltro(val)}
-            sx={{
-              bgcolor: alpha(PALETTE.navy, 0.04),
-              p: 0.75,
-              borderRadius: 3,
-              border: `1px solid ${alpha(PALETTE.navy, 0.1)}`,
-              "& .MuiTab-root": {
-                fontWeight: 800,
-                fontSize: "0.85rem",
-                textTransform: "none",
-                borderRadius: 2,
-                px: 2.5,
-                py: 0.75,
-                minHeight: 36,
-                color: PALETTE.muted,
-                transition: "all 0.25s ease"
-              },
-              "& .Mui-selected": {
-                bgcolor: PALETTE.navy,
-                color: "#FFFFFF !important",
-                boxShadow: `0 4px 12px ${alpha(PALETTE.navy, 0.25)}`
-              },
-              "& .MuiTabs-indicator": { display: "none" }
-            }}
-          >
-            <Tab label="Todas" value="TODAS" />
-            <Tab label="Promociones" value="PROMOCIONES" />
-            <Tab label="Servicios" value="SERVICIOS" />
-            <Tab label="Avisos" value="AVISOS" />
-          </Tabs>
-        </Box>
 
         {/* GRID DE NOVEDADES CON EFECTO PRO */}
         <Grid container spacing={3} sx={{ mb: 6 }}>

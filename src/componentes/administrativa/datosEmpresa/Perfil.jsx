@@ -99,7 +99,7 @@ function Perfil() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const base64 = await compressLogoImageFile(file);
-      setPerfil((prev) => ({ ...prev, logo: base64 }));
+      setPerfil((prev) => ({ ...prev, logo: `data:image/jpeg;base64,${base64}` }));
     } catch (err) {
       console.error("Error al procesar imagen:", err);
       await MySwal.fire({
@@ -122,7 +122,7 @@ function Perfil() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const base64 = await compressLogoImageFile(file);
-      setPerfil((prev) => ({ ...prev, hero_image: base64 }));
+      setPerfil((prev) => ({ ...prev, hero_image: `data:image/jpeg;base64,${base64}` }));
     } catch (err) {
       console.error("Error al procesar imagen de fondo:", err);
       await MySwal.fire({
@@ -145,7 +145,7 @@ function Perfil() {
     if (!file || !file.type.startsWith("image/")) return;
     try {
       const base64 = await compressLogoImageFile(file);
-      setPerfil((prev) => ({ ...prev, login_image: base64 }));
+      setPerfil((prev) => ({ ...prev, login_image: `data:image/jpeg;base64,${base64}` }));
     } catch (err) {
       console.error("Error al procesar imagen de login:", err);
       await MySwal.fire({

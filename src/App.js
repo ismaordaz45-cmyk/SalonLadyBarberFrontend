@@ -56,7 +56,6 @@ import Barberos from "./componentes/administrativa/gestionSalon/Barberos";
 import Clientes from "./componentes/administrativa/gestionSalon/Clientes";
 import Inventario from "./componentes/administrativa/gestionSalon/Inventario";
 import Promociones from "./componentes/administrativa/gestionSalon/Promociones";
-import Estadisticas from "./componentes/administrativa/gestionSalon/Estadisticas";
 import ProyeccionCitas from "./componentes/administrativa/gestionSalon/ProyeccionCitas";
 import SegmentacionClientes from "./componentes/administrativa/gestionSalon/SegmentacionClientes";
 
@@ -296,16 +295,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/estadisticas"
-          element={
-            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
-              <AdminLayout>
-                <Estadisticas />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/admin/auditoria"
           element={
@@ -337,32 +327,7 @@ const App = () => {
           }
         />
 
-        <Route
-          path="/admin/reportes"
-          element={
-            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
-              <AdminLayout>
-                <PaginaError501
-                  modulo="Reportes"
-                  descripcion="El módulo de reportes estará disponible próximamente."
-                />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/pagos"
-          element={
-            <ProtectedRoute allowedRoles={["PROPIETARIA"]}>
-              <AdminLayout>
-                <PaginaError501
-                  modulo="Pagos"
-                  descripcion="El módulo de pagos aún no ha sido desarrollado."
-                />
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/admin/configuracion"
           element={
