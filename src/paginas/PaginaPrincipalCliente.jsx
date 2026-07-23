@@ -4,9 +4,6 @@ import { motion } from "framer-motion";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  CardMedia,
   Container,
   Grid,
   Stack,
@@ -14,7 +11,6 @@ import {
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
 import BarberPole from "../componentes/compartidos/BarberPole";
@@ -47,45 +43,12 @@ const PASOS = [
   }
 ];
 
-const EVENTOS = [
-  {
-    key: "bodas",
-    titulo: "Bodas",
-    subtitulo: "Peinados y maquillaje para el día más especial.",
-    imagen: "/images/evento-bodas.svg"
-  },
-  {
-    key: "xv",
-    titulo: "XV Años",
-    subtitulo: "Looks memorables para celebrar tu transición con estilo.",
-    imagen: "/images/evento-xv-anos.svg"
-  },
-  {
-    key: "grad",
-    titulo: "Graduaciones",
-    subtitulo: "Estilos impecables para tu logro académico.",
-    imagen: "/images/evento-graduaciones.svg"
-  },
-  {
-    key: "pres",
-    titulo: "Presentaciones",
-    subtitulo: "Imagen cuidada para eventos formales y profesionales.",
-    imagen: "/images/evento-presentaciones.svg"
-  }
-];
-
 function PaginaPrincipalCliente() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
 
   const [perfil, setPerfil] = useState(null);
-  const [imgReady, setImgReady] = useState({
-    bodas: false,
-    xv: false,
-    grad: false,
-    pres: false
-  });
 
   useEffect(() => {
     let cancel = false;
@@ -111,7 +74,7 @@ function PaginaPrincipalCliente() {
 
   return (
     <Box sx={{ pb: 6 }}>
-      {/* 1. HERO BANNER DE LA VISTA PÚBLICA (Imagen de fondo del salón + Postes de Barbería) */}
+      {/* 1. HERO BANNER */}
       <Box
         sx={{
           position: "relative",
@@ -135,7 +98,7 @@ function PaginaPrincipalCliente() {
           }
         }}
       >
-        {/* Postes verticales de Barbería a los costados */}
+        {/* Postes verticales de Barbería */}
         <Box
           aria-hidden
           sx={{
@@ -148,26 +111,12 @@ function PaginaPrincipalCliente() {
           <BarberPole
             fullHeight
             width={heroPoleWidth}
-            sx={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              opacity: 0.9,
-              filter: "drop-shadow(4px 0 14px rgba(0,0,0,0.5))"
-            }}
+            sx={{ position: "absolute", left: 0, top: 0, bottom: 0, opacity: 0.9 }}
           />
           <BarberPole
             fullHeight
             width={heroPoleWidth}
-            sx={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              bottom: 0,
-              opacity: 0.9,
-              filter: "drop-shadow(-4px 0 14px rgba(0,0,0,0.5))"
-            }}
+            sx={{ position: "absolute", right: 0, top: 0, bottom: 0, opacity: 0.9 }}
           />
         </Box>
 
@@ -214,7 +163,6 @@ function PaginaPrincipalCliente() {
             Cortes, barba y detalle con mentalidad de barbería; color, peinado y eventos cuando lo necesites. Todo en un solo lugar: Lady Barber.
           </Typography>
 
-          {/* Botones de acción */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
@@ -233,12 +181,7 @@ function PaginaPrincipalCliente() {
                 py: 1.25,
                 borderRadius: "12px",
                 fontSize: "0.95rem",
-                textTransform: "none",
-                boxShadow: "0 6px 20px rgba(255,255,255,0.2)",
-                "&:hover": {
-                  bgcolor: "#F8FAFC",
-                  transform: "translateY(-2px)"
-                }
+                textTransform: "none"
               }}
             >
               Reservar Cita
@@ -256,13 +199,7 @@ function PaginaPrincipalCliente() {
                 borderRadius: "12px",
                 fontSize: "0.95rem",
                 textTransform: "none",
-                backdropFilter: "blur(4px)",
-                bgcolor: "rgba(255,255,255,0.1)",
-                "&:hover": {
-                  borderColor: "#FFFFFF",
-                  bgcolor: "rgba(255,255,255,0.25)",
-                  transform: "translateY(-2px)"
-                }
+                bgcolor: "rgba(255,255,255,0.1)"
               }}
             >
               Ver Tienda de Productos
@@ -273,12 +210,12 @@ function PaginaPrincipalCliente() {
 
       <AdminPageShell maxWidth="lg">
         <Stack spacing={4}>
-          {/* 2. CARRUSEL "TE PUEDE INTERESAR" (SERVICIOS Y PRODUCTOS) */}
+          {/* 2. CARRUSEL "TE PUEDE INTERESAR" */}
           <Box>
             <CarruselTePuedeInteresarCliente />
           </Box>
 
-          {/* 3. HAZNOS PARTE DE TI (3 Pasos interactivos) */}
+          {/* 3. HAZNOS PARTE DE TI (3 Pasos) */}
           <Box
             sx={{
               py: { xs: 5, md: 7 },
@@ -287,15 +224,7 @@ function PaginaPrincipalCliente() {
               border: `1px solid ${P.border}`,
               position: "relative",
               overflow: "hidden",
-              boxShadow: "0 4px 30px rgba(0, 0, 0, 0.02)",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(900px 280px at 20% 10%, rgba(212, 175, 55, 0.08) 0%, rgba(212,175,55,0) 60%), radial-gradient(760px 320px at 80% 60%, rgba(30, 58, 90, 0.04) 0%, rgba(30,58,90,0) 65%)",
-                pointerEvents: "none"
-              }
+              boxShadow: "0 4px 30px rgba(0, 0, 0, 0.02)"
             }}
           >
             <Container maxWidth="lg">
@@ -308,20 +237,7 @@ function PaginaPrincipalCliente() {
                     fontFamily: '"Cinzel", ui-serif, Georgia, serif',
                     fontSize: { xs: "1.8rem", md: "2.3rem" },
                     letterSpacing: "-0.01em",
-                    mb: 1.5,
-                    position: "relative",
-                    display: "inline-block",
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      bottom: -8,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: "50px",
-                      height: "3.5px",
-                      borderRadius: "2px",
-                      background: `linear-gradient(90deg, ${P.navy} 0%, ${P.accent} 100%)`
-                    }
+                    mb: 1.5
                   }}
                 >
                   Haznos parte de ti
@@ -345,21 +261,14 @@ function PaginaPrincipalCliente() {
                       whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(30, 58, 90, 0.08)" }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 100,
-                        damping: 15,
-                        delay: p.n * 0.1
-                      }}
+                      transition={{ type: "spring", stiffness: 100, damping: 15, delay: p.n * 0.1 }}
                       sx={{
                         textAlign: "center",
                         p: 3.5,
                         borderRadius: 4,
                         bgcolor: "rgba(255, 255, 255, 0.7)",
                         border: `1px solid ${P.border}`,
-                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.01)",
-                        backdropFilter: "blur(8px)",
-                        transition: "all 0.3s ease"
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.01)"
                       }}
                     >
                       <Box
@@ -375,13 +284,7 @@ function PaginaPrincipalCliente() {
                           fontWeight: 900,
                           fontSize: "1.2rem",
                           mx: "auto",
-                          mb: 2.5,
-                          boxShadow: `0 6px 15px ${alpha(P.navy, 0.2)}`,
-                          border: "2px solid #FFFFFF",
-                          transition: "transform 0.3s ease",
-                          "&:hover": {
-                            transform: "scale(1.08) rotate(5deg)"
-                          }
+                          mb: 2.5
                         }}
                       >
                         {p.n}
@@ -392,22 +295,12 @@ function PaginaPrincipalCliente() {
                           fontWeight: 900,
                           color: P.navy,
                           fontFamily: '"Cinzel", ui-serif, Georgia, serif',
-                          fontSize: "1.1rem",
                           mb: 1
                         }}
                       >
                         {p.titulo}
                       </Typography>
-                      <Typography
-                        sx={{
-                          color: P.secondary,
-                          fontSize: "0.85rem",
-                          lineHeight: 1.5,
-                          maxWidth: "250px",
-                          mx: "auto",
-                          fontWeight: 650
-                        }}
-                      >
+                      <Typography sx={{ color: P.secondary, fontSize: "0.85rem", lineHeight: 1.5 }}>
                         {p.texto}
                       </Typography>
                     </MotionBox>
@@ -415,9 +308,6 @@ function PaginaPrincipalCliente() {
                 ))}
               </Grid>
             </Container>
-          </Box>
-
-              </Container>
           </Box>
         </Stack>
       </AdminPageShell>
