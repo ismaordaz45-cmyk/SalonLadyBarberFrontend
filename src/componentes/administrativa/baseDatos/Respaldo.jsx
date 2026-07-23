@@ -112,7 +112,11 @@ function Respaldo({ embedded = false }) {
 
   const API_BASE = useMemo(() => {
     try {
-      // Vite projects
+      // CRA environment variable
+      if (process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+      }
+      // Vite environment variable
       if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_URL) {
         return import.meta.env.VITE_API_URL;
       }

@@ -25,7 +25,8 @@ function PaginaAdminBaseDatos() {
     setCargando(true);
     setMensaje("Generando respaldo...");
 
-    const res = await fetch("https://salonladybarberbackend.onrender.com/api/respaldo/generar", {
+    const API_URL = process.env.REACT_APP_API_URL || "https://salonladybarberbackend.onrender.com";
+    const res = await fetch(`${API_URL}/api/respaldo/generar`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -45,6 +45,13 @@ const PagoExito = () => {
           // Cargar detalles de la compra para el ticket interactivo
           const { data } = await api.get(`/api/cliente/compras/${pedidoId}`);
           setPedido(data);
+          
+          // Descargar automáticamente el comprobante PDF para el cliente
+          try {
+            descargarTicketInsumosPDF(data);
+          } catch (pdfErr) {
+            console.error("Error al descargar ticket automático:", pdfErr);
+          }
         }
       } catch (error) {
         console.error("Error confirmando pago:", error);

@@ -692,8 +692,6 @@ function MiPerfilCliente() {
                     {compras.map((compra) => {
                       const dateStr = compra.fecha ? new Date(compra.fecha).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : "—";
                       const timeStr = compra.fecha ? new Date(compra.fecha).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
-                      const firstItem = compra.items?.[0];
-
                       return (
                         <Box
                           key={compra.id}
@@ -738,41 +736,51 @@ function MiPerfilCliente() {
                           {/* ML Body: Products Preview & Actions */}
                           <Box sx={{ p: 2.5 }}>
                             <Grid container spacing={3} alignItems="center">
-                              {/* Left: Product Thumbnail */}
-                              <Grid item xs={12} sm={2} sx={{ display: "flex", justifyContent: { xs: "center", sm: "flex-start" } }}>
-                                <Box
-                                  component="img"
-                                  src={resolveServicioImagenUrl(firstItem?.imagen, api.defaults.baseURL)}
-                                  alt={firstItem?.nombre || "Producto"}
-                                  sx={{
-                                    width: 72,
-                                    height: 72,
-                                    objectFit: "contain",
-                                    borderRadius: 2,
-                                    bgcolor: "#F8FAFC",
-                                    border: `1px solid ${alpha(P.border, 0.8)}`,
-                                    p: 0.5
-                                  }}
-                                />
-                              </Grid>
-
-                              {/* Middle: Details */}
-                              <Grid item xs={12} sm={6}>
-                                <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "0.95rem", mb: 0.5 }}>
-                                  {firstItem?.nombre || "Producto"}
-                                  {compra.items.length > 1 && ` y ${compra.items.length - 1} producto(s) más`}
-                                </Typography>
-                                <Typography sx={{ color: P.secondary, fontSize: "0.8rem", fontWeight: 700, mb: 1.5 }}>
-                                  {compra.items.map((it) => `${it.cantidad} u.`).join(" + ")}
-                                </Typography>
-                                <Typography sx={{ color: P.primary, fontWeight: 800, fontSize: "1rem" }}>
-                                  Total: {moneyMXN(compra.total)}
-                                </Typography>
+                              {/* Left & Middle: List of all products in this order */}
+                              <Grid item xs={12} sm={8}>
+                                <Stack spacing={2} divider={<Divider flexItem sx={{ borderStyle: "dashed", opacity: 0.6 }} />}>
+                                  {(compra.items || []).map((item, idx) => (
+                                    <Stack key={item.insumo_id || idx} direction="row" spacing={2.5} alignItems="center">
+                                      <Box
+                                        component="img"
+                                        src={resolveServicioImagenUrl(item.imagen, api.defaults.baseURL)}
+                                        alt={item.nombre || "Producto"}
+                                        sx={{
+                                          width: 64,
+                                          height: 64,
+                                          objectFit: "contain",
+                                          borderRadius: 2,
+                                          bgcolor: "#F8FAFC",
+                                          border: `1px solid ${alpha(P.border, 0.8)}`,
+                                          p: 0.5,
+                                          flexShrink: 0
+                                        }}
+                                      />
+                                      <Box sx={{ flexGrow: 1 }}>
+                                        <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "0.92rem", mb: 0.25 }}>
+                                          {item.nombre || "Producto"}
+                                        </Typography>
+                                        <Typography sx={{ color: P.secondary, fontSize: "0.78rem", fontWeight: 750 }}>
+                                          Cantidad: {item.cantidad} u. • Precio unitario: {moneyMXN(item.precio_unitario)}
+                                        </Typography>
+                                      </Box>
+                                    </Stack>
+                                  ))}
+                                </Stack>
+                                
+                                <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${alpha(P.border, 0.4)}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <Typography sx={{ color: P.secondary, fontSize: "0.78rem", fontWeight: 700 }}>
+                                    ID Pedido: #{compra.id}
+                                  </Typography>
+                                  <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1rem" }}>
+                                    Total: <Box component="span" sx={{ color: "#15803D", fontWeight: 900 }}>{moneyMXN(compra.total)}</Box>
+                                  </Typography>
+                                </Box>
                               </Grid>
 
                               {/* Right: Actions */}
                               <Grid item xs={12} sm={4}>
-                                <Stack spacing={1}>
+                                <Stack spacing={1.2} sx={{ borderLeft: { sm: `1px solid ${alpha(P.border, 0.4)}` }, pl: { sm: 3 } }}>
                                   <Button
                                     fullWidth
                                     variant="contained"
