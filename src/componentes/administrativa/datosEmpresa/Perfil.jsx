@@ -574,7 +574,7 @@ function Perfil() {
                     component="img"
                     src={logoPreview}
                     alt="Logo"
-                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    sx={{ width: "100%", height: "100%", objectFit: "contain" }}
                   />
                 ) : (
                   <Box sx={{ textAlign: "center", px: 2 }}>
