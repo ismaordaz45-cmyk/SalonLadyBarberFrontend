@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, Divider, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import api from "../../../api";
+import api from "../../api";
 import { ADMIN_PALETTE as P } from "../../ui/admin/adminTokens";
 
 export default function VentaDetalleModal({ ventaId, onClose }) {
