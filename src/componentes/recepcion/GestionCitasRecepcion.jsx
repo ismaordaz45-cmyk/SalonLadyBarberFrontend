@@ -503,9 +503,11 @@ export default function GestionCitasRecepcion() {
       setFormServicios([]);
       setRefreshCount((prev) => prev + 1);
     } catch (e) {
+      const errorMsg = e?.response?.data?.error || e?.message || "El estilista seleccionado no está disponible en ese horario.";
+      const isConflict = e?.response?.status === 409 || errorMsg.toLowerCase().includes("conflicto");
       Swal.fire({
-        title: "Conflicto de Horario",
-        text: e?.response?.data?.error || e?.message || "El estilista seleccionado no está disponible en ese horario.",
+        title: isConflict ? "Conflicto de Horario" : "No se pudo registrar la cita",
+        text: errorMsg,
         icon: "error"
       });
     } finally {
