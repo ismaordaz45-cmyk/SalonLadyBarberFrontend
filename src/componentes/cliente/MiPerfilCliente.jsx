@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Avatar,
@@ -26,19 +26,11 @@ import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import SaveRounded from "@mui/icons-material/SaveRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import PersonRounded from "@mui/icons-material/PersonRounded";
-import ShoppingBagRounded from "@mui/icons-material/ShoppingBagRounded";
-import RefreshRounded from "@mui/icons-material/RefreshRounded";
 import AdminPageShell from "../../ui/admin/AdminPageShell";
 import AdminHeader from "../../ui/admin/AdminHeader";
 import { GlassCard } from "../../ui/admin/components";
 import { ADMIN_PALETTE as P } from "../../ui/admin/adminTokens";
 import ConectarAlexa from "../autenticacion/ConectarAlexa";
-import api from "../../api";
-import Swal from "sweetalert2";
-import { useCart } from "../../context/CartContext";
-import { descargarTicketInsumosPDF } from "../../utils/ticketInsumosPDF";
-import { resolveServicioImagenUrl } from "../../utils/resolveServicioImagenUrl";
-import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 
 const MotionBox = motion.create(Box);
 
@@ -49,7 +41,6 @@ const springIn = {
 };
 
 function MiPerfilCliente() {
-  const { addToCart } = useCart();
   const user = useMemo(() => {
     try {
       const raw = localStorage.getItem("user");
@@ -74,120 +65,6 @@ function MiPerfilCliente() {
   const [form, setForm] = useState(initialForm);
   const [lastSaved, setLastSaved] = useState(initialForm);
   const [toast, setToast] = useState({ open: false, message: "" });
-
-  const [compras, setCompras] = useState([]);
-  const [cargandoCompras, setCargandoCompras] = useState(false);
-
-  useEffect(() => {
-    let cancel = false;
-    const fetchCompras = async () => {
-      try {
-        setCargandoCompras(true);
-        const { data } = await api.get("/api/cliente/compras");
-        if (!cancel) setCompras(data || []);
-      } catch (e) {
-        console.error("Error al cargar historial de compras:", e);
-      } finally {
-        if (!cancel) setCargandoCompras(false);
-      }
-    };
-    fetchCompras();
-    return () => {
-      cancel = true;
-    };
-  }, []);
-
-  function moneyMXN(value) {
-    if (value == null || value === "") return "$0.00";
-    const n = Number(value);
-    if (!Number.isFinite(n)) return "$0.00";
-    return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(n);
-  }
-
-  const handleVerComprobanteCompra = (compra) => {
-    const total = Number(compra.total || 0);
-    const dateStr = compra.fecha ? new Date(compra.fecha).toLocaleDateString("es-MX", { dateStyle: "long" }) : "—";
-    const timeStr = compra.fecha ? new Date(compra.fecha).toLocaleTimeString("es-MX", { hour12: false }) : "—";
-
-    Swal.fire({
-      title: "Comprobante de Pago",
-      html: `
-        <div style="text-align: left; font-family: monospace; font-size: 0.85rem; line-height: 1.6; color: #334155;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.15rem; color: #1E3A5F;">LADY BARBER</h3>
-            <span style="font-size: 0.75rem; color: #64748B; font-weight: 700;">ITZA D'M SALÓN</span>
-            <div style="font-size: 0.7rem; color: #64748B; margin-top: 4px;">TICKET COMPRA PRODUCTO</div>
-            <div style="font-size: 0.68rem; color: #94A3B8;">Pedido ID: #${compra.id}</div>
-          </div>
-
-          <hr style="border: 0; border-top: 1px dashed #CBD5E1; margin: 12px 0;" />
-
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span><strong>FECHA:</strong></span>
-            <span>${dateStr}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span><strong>HORA:</strong></span>
-            <span>${timeStr}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span><strong>ESTADO:</strong></span>
-            <span style="color: #15803D; font-weight: 800; text-transform: uppercase;">PAGADO</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span><strong>REF MP:</strong></span>
-            <span style="font-size: 0.72rem;">${compra.mp_payment_id || "—"}</span>
-          </div>
-
-          <hr style="border: 0; border-top: 1px dashed #CBD5E1; margin: 12px 0;" />
-
-          <div style="font-weight: bold; margin-bottom: 8px; font-size: 0.75rem;">PRODUCTOS ADQUIRIDOS:</div>
-          ${compra.items.map(it => `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-              <span>• ${it.nombre} x${it.cantidad}</span>
-              <span>${moneyMXN(it.precio_unitario * it.cantidad)}</span>
-            </div>
-          `).join('')}
-
-          <hr style="border: 0; border-top: 1px dashed #CBD5E1; margin: 12px 0;" />
-
-          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 0.95rem; margin-top: 8px;">
-            <span>TOTAL PAGADO:</span>
-            <span>${moneyMXN(total)}</span>
-          </div>
-          <div style="font-size: 0.7rem; color: #64748B; margin-top: 4px;">Método de Pago: Tarjeta (Online / Mercado Pago)</div>
-
-          <div style="text-align: center; margin-top: 25px; font-size: 0.72rem; color: #64748B; font-style: italic;">
-            ¡Gracias por apoyar el salón Lady Barber!
-          </div>
-        </div>
-      `,
-      confirmButtonText: "Cerrar",
-      confirmButtonColor: "#1E3A5F"
-    });
-  };
-
-  const handleComprarDeNuevo = (compra) => {
-    try {
-      (compra.items || []).forEach((item) => {
-        addToCart({
-          id: item.insumo_id,
-          nombre: item.nombre,
-          precioVenta: item.precio_unitario,
-          imagen: item.imagen
-        });
-      });
-      Swal.fire({
-        icon: "success",
-        title: "Productos Agregados",
-        text: "Se han agregado todos los productos de este pedido a tu carrito de compras.",
-        timer: 1800,
-        showConfirmButton: false
-      });
-    } catch (e) {
-      console.error("Error al volver a comprar:", e);
-    }
-  };
 
   const nombre = form.nombreCompleto?.trim() || "Cliente";
   const correo = form.correo?.trim() || "—";
@@ -644,200 +521,6 @@ function MiPerfilCliente() {
                 <Typography variant="caption" sx={{ display: "block", mt: 1.25, color: P.secondary }}>
                   Esto es una simulación: se guarda en tu navegador (localStorage), no en la base de datos.
                 </Typography>
-              </Box>
-            </GlassCard>
-          </MotionBox>
-
-          <MotionBox
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 240, damping: 22, delay: 0.1 }}
-            sx={{ mt: 3 }}
-          >
-            <GlassCard
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                overflow: "hidden",
-                boxShadow: `0 22px 50px ${alpha("#0B1220", 0.08)}`
-              }}
-            >
-              <Box sx={{ p: { xs: 2, md: 3 } }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 900, color: P.primary, letterSpacing: -0.3, fontFamily: '"Cinzel", serif' }}>
-                      Mis Compras
-                    </Typography>
-                    <Typography sx={{ color: P.secondary, mt: 0.35, fontSize: "0.82rem" }}>
-                      Administra tus pedidos y descarga tus comprobantes para recogerlos en sucursal.
-                    </Typography>
-                  </Box>
-                  <ShoppingBagRounded sx={{ color: alpha(P.accent, 0.8), fontSize: 28 }} />
-                </Stack>
-
-                {cargandoCompras ? (
-                  <Box sx={{ py: 6, display: "flex", justifyContent: "center", alignItems: "center", gap: 1.5 }}>
-                    <RefreshRounded sx={{ fontSize: 26, color: P.navy, animation: "spin 1.5s linear infinite" }} />
-                    <Typography sx={{ color: P.secondary, fontSize: "0.88rem", fontWeight: 700 }}>Cargando tus compras...</Typography>
-                  </Box>
-                ) : compras.length === 0 ? (
-                  <Box sx={{ py: 8, textAlign: "center" }}>
-                    <ShoppingBagRounded sx={{ fontSize: 50, color: P.secondary, opacity: 0.3, mb: 1.5 }} />
-                    <Typography sx={{ color: P.secondary, fontWeight: 700, fontSize: "0.95rem" }}>
-                      Aún no has realizado ninguna compra de productos.
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Stack spacing={3}>
-                    {compras.map((compra) => {
-                      const dateStr = compra.fecha ? new Date(compra.fecha).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }) : "—";
-                      const timeStr = compra.fecha ? new Date(compra.fecha).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
-                      return (
-                        <Box
-                          key={compra.id}
-                          sx={{
-                            borderRadius: 3,
-                            border: `1px solid ${alpha(P.border, 0.95)}`,
-                            bgcolor: "#FFFFFF",
-                            overflow: "hidden",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-                            transition: "all 0.2s ease-in-out",
-                            "&:hover": {
-                              boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-                              borderColor: alpha(P.accent, 0.45)
-                            }
-                          }}
-                        >
-                          {/* ML Header: Status & Fecha */}
-                          <Box
-                            sx={{
-                              px: 2.5,
-                              py: 1.5,
-                              bgcolor: "#F8FAFC",
-                              borderBottom: `1px solid ${alpha(P.border, 0.8)}`,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                              gap: 1
-                            }}
-                          >
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <CheckCircleRounded sx={{ color: "#15803D", fontSize: 18 }} />
-                              <Typography sx={{ color: "#15803D", fontWeight: 800, fontSize: "0.82rem" }}>
-                                Pago aprobado
-                              </Typography>
-                            </Stack>
-                            <Typography sx={{ color: P.secondary, fontSize: "0.78rem", fontWeight: 700 }}>
-                              Comprado el {dateStr} {timeStr && `a las ${timeStr}`}
-                            </Typography>
-                          </Box>
-
-                          {/* ML Body: Products Preview & Actions */}
-                          <Box sx={{ p: 2.5 }}>
-                            <Grid container spacing={3} alignItems="center">
-                              {/* Left & Middle: List of all products in this order */}
-                              <Grid item xs={12} sm={8}>
-                                <Stack spacing={2} divider={<Divider flexItem sx={{ borderStyle: "dashed", opacity: 0.6 }} />}>
-                                  {(compra.items || []).map((item, idx) => (
-                                    <Stack key={item.insumo_id || idx} direction="row" spacing={2.5} alignItems="center">
-                                      <Box
-                                        component="img"
-                                        src={resolveServicioImagenUrl(item.imagen, api.defaults.baseURL)}
-                                        alt={item.nombre || "Producto"}
-                                        sx={{
-                                          width: 64,
-                                          height: 64,
-                                          objectFit: "contain",
-                                          borderRadius: 2,
-                                          bgcolor: "#F8FAFC",
-                                          border: `1px solid ${alpha(P.border, 0.8)}`,
-                                          p: 0.5,
-                                          flexShrink: 0
-                                        }}
-                                      />
-                                      <Box sx={{ flexGrow: 1 }}>
-                                        <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "0.92rem", mb: 0.25 }}>
-                                          {item.nombre || "Producto"}
-                                        </Typography>
-                                        <Typography sx={{ color: P.secondary, fontSize: "0.78rem", fontWeight: 750 }}>
-                                          Cantidad: {item.cantidad} u. • Precio unitario: {moneyMXN(item.precio_unitario)}
-                                        </Typography>
-                                      </Box>
-                                    </Stack>
-                                  ))}
-                                </Stack>
-                                
-                                <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${alpha(P.border, 0.4)}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                  <Typography sx={{ color: P.secondary, fontSize: "0.78rem", fontWeight: 700 }}>
-                                    ID Pedido: #{compra.id}
-                                  </Typography>
-                                  <Typography sx={{ color: P.primary, fontWeight: 900, fontSize: "1rem" }}>
-                                    Total: <Box component="span" sx={{ color: "#15803D", fontWeight: 900 }}>{moneyMXN(compra.total)}</Box>
-                                  </Typography>
-                                </Box>
-                              </Grid>
-
-                              {/* Right: Actions */}
-                              <Grid item xs={12} sm={4}>
-                                <Stack spacing={1.2} sx={{ borderLeft: { sm: `1px solid ${alpha(P.border, 0.4)}` }, pl: { sm: 3 } }}>
-                                  <Button
-                                    fullWidth
-                                    variant="contained"
-                                    onClick={() => handleComprarDeNuevo(compra)}
-                                    sx={{
-                                      bgcolor: P.navy,
-                                      color: "#FFFFFF",
-                                      fontWeight: 800,
-                                      fontSize: "0.78rem",
-                                      textTransform: "none",
-                                      borderRadius: "8px",
-                                      py: 1,
-                                      "&:hover": { bgcolor: "#152a41" }
-                                    }}
-                                  >
-                                    Volver a comprar
-                                  </Button>
-                                  <Button
-                                    fullWidth
-                                    variant="outlined"
-                                    onClick={() => descargarTicketInsumosPDF(compra)}
-                                    sx={{
-                                      borderColor: P.border,
-                                      color: P.navy,
-                                      fontWeight: 800,
-                                      fontSize: "0.78rem",
-                                      textTransform: "none",
-                                      borderRadius: "8px",
-                                      py: 1,
-                                      "&:hover": { borderColor: P.navy, bgcolor: "rgba(30, 58, 90, 0.04)" }
-                                    }}
-                                  >
-                                    Descargar Comprobante
-                                  </Button>
-                                  <Button
-                                    fullWidth
-                                    variant="text"
-                                    onClick={() => handleVerComprobanteCompra(compra)}
-                                    sx={{
-                                      color: P.secondary,
-                                      fontWeight: 800,
-                                      fontSize: "0.75rem",
-                                      textTransform: "none",
-                                      "&:hover": { color: P.navy, bgcolor: "transparent" }
-                                    }}
-                                  >
-                                    Ver recibo de compra
-                                  </Button>
-                                </Stack>
-                              </Grid>
-                            </Grid>
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                )}
               </Box>
             </GlassCard>
           </MotionBox>

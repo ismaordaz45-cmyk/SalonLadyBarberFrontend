@@ -27,6 +27,7 @@ import ServiciosClienteReservar from "./componentes/cliente/ServiciosClienteRese
 import ProductosCliente from "./componentes/cliente/ProductosCliente";
 import MisCitasCliente from "./componentes/cliente/MisCitasCliente";
 import MiPerfilCliente from "./componentes/cliente/MiPerfilCliente";
+import MisComprasCliente from "./componentes/cliente/MisComprasCliente";
 import PaginaPrincipalRecepcion from "./paginas/PaginaPrincipalRecepcion";
 import GestionCitasRecepcion from "./componentes/recepcion/GestionCitasRecepcion";
 import HorariosEstilistasRecepcion from "./componentes/recepcion/HorariosEstilistasRecepcion";
@@ -432,6 +433,7 @@ const App = () => {
           <Route path="productos" element={<ProductosCliente />} />
           <Route path="citas" element={<MisCitasCliente />} />
           <Route path="perfil" element={<MiPerfilCliente />} />
+          <Route path="compras" element={<MisComprasCliente />} />
           <Route path="nosotros" element={<PaginaNosotrosPublico />} />
           <Route path="novedades" element={<PaginaNovedadesPublico />} />
           <Route path="*" element={<Navigate to="/cliente" replace />} />

@@ -479,7 +479,7 @@ function EncabezadoCliente() {
 
         <MenuItem
           component={Link}
-          to="/cliente/perfil"
+          to="/cliente/compras"
           sx={{
             py: 1.2,
             px: 2.2,

@@ -184,7 +184,7 @@ const PagoExito = () => {
           variant="outlined"
           fullWidth
           endIcon={<ArrowForwardRoundedIcon />}
-          onClick={() => navigate("/cliente/perfil")}
+          onClick={() => navigate("/cliente/compras")}
           sx={{
             borderColor: P.border,
             color: P.navy,
