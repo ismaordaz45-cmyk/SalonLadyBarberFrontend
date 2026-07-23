@@ -14,16 +14,11 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  Typography,
-  Alert
+  Typography
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
-import AutoGraphRoundedIcon from "@mui/icons-material/AutoGraphRounded";
 
 import AdminPageShell from "../../../ui/admin/AdminPageShell";
 import AdminHeader from "../../../ui/admin/AdminHeader";
@@ -128,50 +123,6 @@ function formatFechaRegistro(val) {
   }
 }
 
-function segmentoChip(segmentoNombre = "", clusterId) {
-  const str = String(segmentoNombre).toLowerCase();
-  let color = PALETA.primary;
-  let bg = `${PALETA.primary}15`;
-  let icon = <CategoryRoundedIcon sx={{ fontSize: 14 }} />;
-
-  if (str.includes("vip") || str.includes("frecuente")) {
-    color = PALETA.acento;
-    bg = `${PALETA.acento}22`;
-    icon = <StarRoundedIcon sx={{ fontSize: 14, color: PALETA.acento }} />;
-  } else if (str.includes("riesgo") || str.includes("inactivo") || str.includes("fuga")) {
-    color = PALETA.error;
-    bg = `${PALETA.error}15`;
-    icon = <WarningRoundedIcon sx={{ fontSize: 14, color: PALETA.error }} />;
-  }
-
-  return (
-    <Stack direction="row" spacing={0.8} alignItems="center" justifyContent="center">
-      <Chip
-        label={`Cluster #${clusterId}`}
-        size="small"
-        sx={{
-          bgcolor: `${PALETA.oscuro}15`,
-          color: PALETA.oscuro,
-          fontWeight: 800,
-          fontSize: 10.5,
-          height: 20
-        }}
-      />
-      <Chip
-        icon={icon}
-        label={segmentoNombre}
-        size="small"
-        sx={{
-          bgcolor: bg,
-          color,
-          fontWeight: 700,
-          fontSize: 11,
-          height: 22
-        }}
-      />
-    </Stack>
-  );
-}
 
 function Clientes() {
   const [loading, setLoading] = useState(true);
@@ -184,7 +135,7 @@ function Clientes() {
 
   // Estado para la Segmentación K-Means (.pkl)
   const [loadingSeg, setLoadingSeg] = useState(true);
-  const [errorSeg, setErrorSeg] = useState("");
+  const [_errorSeg, _setErrorSeg] = useState("");
   const [segmentosData, setSegmentosData] = useState([]);
 
   const getSimulatedSegment = (user) => {
@@ -421,7 +372,7 @@ function Clientes() {
 
   const fetchSegmentacion = useCallback(async () => {
     setLoadingSeg(true);
-    setErrorSeg("");
+    _setErrorSeg("");
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -434,7 +385,7 @@ function Clientes() {
       const list = Array.isArray(data?.clientes) ? data.clientes : Array.isArray(data) ? data : [];
       setSegmentosData(list);
     } catch (e) {
-      setErrorSeg(
+      _setErrorSeg(
         e.response?.data?.error ||
           e.message ||
           "El modelo de clustering K-Means en Render está iniciando o no respondió a tiempo."
@@ -459,17 +410,6 @@ function Clientes() {
       label: ROL_LABEL[rol] || rol
     }));
   }, [porRol]);
-
-  const conteoClusters = useMemo(() => {
-    const counts = { vip: 0, ocasional: 0, riesgo: 0 };
-    segmentosData.forEach((c) => {
-      const str = String(c.nombre_segmento || "").toLowerCase();
-      if (str.includes("vip") || str.includes("frecuente")) counts.vip += 1;
-      else if (str.includes("riesgo") || str.includes("inactivo") || str.includes("fuga")) counts.riesgo += 1;
-      else counts.ocasional += 1;
-    });
-    return counts;
-  }, [segmentosData]);
 
   return (
     <AdminPageShell maxWidth="lg" sx={{ "& .pcDisplay": { fontFamily: '"Cinzel", ui-serif, Georgia, serif' } }}>
