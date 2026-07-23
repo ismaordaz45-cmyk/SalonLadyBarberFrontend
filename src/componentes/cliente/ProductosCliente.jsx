@@ -33,6 +33,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ShoppingBagRounded from "@mui/icons-material/ShoppingBagRounded";
+import RecomendacionesProductosCliente from "./RecomendacionesProductosCliente";
 
 function moneyMXN(value) {
   if (value == null || value === "") return null;
@@ -293,6 +294,16 @@ export default function ProductosCliente() {
             })}
           </Grid>
         )}
+
+        {productos.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <RecomendacionesProductosCliente
+              cart={cart}
+              todosLosProductos={productos}
+              onAddToCart={addToCart}
+            />
+          </Box>
+        )}
       </AdminPageShell>
 
       {/* MODAL DEL CARRITO */}
@@ -351,6 +362,15 @@ export default function ProductosCliente() {
                 </Box>
               ))}
             </Stack>
+          )}
+
+          {/* SECCIÓN DE RECOMENDACIONES SIMULADAS DENTRO DEL CARRITO */}
+          {productos.length > 0 && (
+            <RecomendacionesProductosCliente
+              cart={cart}
+              todosLosProductos={productos}
+              onAddToCart={addToCart}
+            />
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2.5, flexDirection: "column", gap: 1.5 }}>

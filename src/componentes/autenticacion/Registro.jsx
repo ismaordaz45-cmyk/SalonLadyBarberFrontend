@@ -29,8 +29,8 @@ const API_URL = "https://salonladybarberbackend.onrender.com";
 
 const ROL_CLIENTE = "CLIENTE";
 
-/** Imagen pública: usamos asset existente en public/images/landing */
-const IMG_REGISTER = `${process.env.PUBLIC_URL || ""}/images/landing/hero-salon.svg`;
+/** Imagen pública oficial de Cloudinary */
+const IMG_REGISTER = "https://res.cloudinary.com/dwrgjc7ta/image/upload/v1784811670/%D0%94%D0%B8%D0%B7%D0%B0%D0%B9%D0%BD_%D0%91%D0%B0%D1%80%D0%B1%D0%B5%D1%80%D1%88%D0%BE%D0%BF%D0%B0_itk8t4.jpg";
 
 const COLORS = {
   text: "#1E293B",
@@ -39,7 +39,7 @@ const COLORS = {
   white: "#FFFFFF",
   primaryBlue: "#2563EB",
   imageLetterbox: "#0F172A",
-  overlay: "rgba(0,0,0,0.45)",
+  overlay: "linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.88) 100%)",
   strengthOk: "#16A34A"
 };
 
@@ -348,64 +348,105 @@ function RegistroUsuarios() {
         sx={{
           position: "relative",
           width: { xs: "100%", md: "50%" },
-          minHeight: { xs: 280, md: "100vh" },
-          maxHeight: { xs: 360, md: "none" },
+          minHeight: { xs: 300, md: "100vh" },
+          maxHeight: { xs: 400, md: "none" },
           bgcolor: COLORS.imageLetterbox,
           overflow: "hidden"
         }}
       >
+        {/* Imagen con animación Ken Burns continua y zoom suave */}
         <Box
           component="img"
           src={IMG_REGISTER}
-          alt=""
+          alt="Diseño Barbería Lady Barber"
           sx={{
             width: "100%",
-            height: { xs: 280, md: "100vh" },
+            height: { xs: 300, md: "100vh" },
             objectFit: "cover",
             objectPosition: "center",
-            display: "block"
+            display: "block",
+            transform: "scale(1)",
+            animation: "kenBurnsZoom 20s ease-in-out infinite alternate",
+            "@keyframes kenBurnsZoom": {
+              "0%": { transform: "scale(1)" },
+              "100%": { transform: "scale(1.12)" }
+            }
           }}
         />
+
+        {/* Gradiente multicapa de elegancia + Destello radial dorado */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            bgcolor: COLORS.overlay,
+            background: `${COLORS.overlay}, radial-gradient(circle at 85% 15%, rgba(212, 175, 55, 0.28) 0%, rgba(0,0,0,0) 60%)`,
             pointerEvents: "none"
           }}
         />
+
+        {/* Tarjeta de texto en estilo Glassmorphism Pro */}
         <Box
           sx={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            p: { xs: 2.5, md: 4 },
-            zIndex: 1,
+            left: { xs: 16, md: 32 },
+            right: { xs: 16, md: 32 },
+            bottom: { xs: 20, md: 40 },
+            p: { xs: 2.5, md: 3.5 },
+            zIndex: 2,
+            borderRadius: 3.5,
+            bgcolor: "rgba(15, 23, 42, 0.55)",
+            backdropFilter: "blur(14px)",
+            border: "1px solid rgba(212, 175, 55, 0.35)",
+            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
             textAlign: "left"
           }}
         >
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.8,
+              px: 1.25,
+              py: 0.4,
+              borderRadius: 2,
+              bgcolor: "rgba(212, 175, 55, 0.2)",
+              border: "1px solid rgba(212, 175, 55, 0.4)",
+              color: "#F5E6AB",
+              fontWeight: 800,
+              fontSize: "0.75rem",
+              mb: 1.5,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase"
+            }}
+          >
+            ★ 5.0 Experiencia Exclusiva
+          </Box>
+
           <Typography
             component="h2"
             sx={{
               color: COLORS.white,
-              fontWeight: 700,
-              fontSize: { xs: "1.5rem", md: "2rem" },
+              fontWeight: 900,
+              fontSize: { xs: "1.45rem", md: "2.1rem" },
               lineHeight: 1.2,
-              mb: 1
+              mb: 1,
+              fontFamily: '"Cinzel", ui-serif, Georgia, serif',
+              letterSpacing: "-0.01em",
+              textShadow: "0 2px 10px rgba(0,0,0,0.5)"
             }}
           >
             Donde tu estilo cobra vida.
           </Typography>
           <Typography
             sx={{
-              color: "rgba(255,255,255,0.95)",
-              fontSize: { xs: "0.9rem", md: "1rem" },
+              color: "rgba(255,255,255,0.92)",
+              fontSize: { xs: "0.85rem", md: "0.98rem" },
               lineHeight: 1.55,
-              maxWidth: 440
+              maxWidth: 460,
+              fontWeight: 500
             }}
           >
-            Donde cada detalle está pensado para resaltar tu estilo
+            Donde cada detalle está pensado para resaltar tu estilo con el cuidado y la elegancia que mereces.
           </Typography>
         </Box>
       </Box>

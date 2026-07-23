@@ -239,10 +239,6 @@ function Clientes() {
               <strong style="font-size: 0.8rem; display: block; color: ${iconColor}; text-transform: uppercase; margin-bottom: 4px;">Recomendación de Marketing:</strong>
               <p style="margin: 0; font-size: 0.85rem; line-height: 1.4; color: ${PALETA.text}">${recommendation}</p>
             </div>
-            
-            <div style="font-size: 0.7rem; color: ${PALETA.textMuted}; text-align: center; margin-top: 15px; font-style: italic;">
-              ${isSim ? "⚠️ Nota: Datos simulados determinísticamente por inactividad temporal del microservicio." : "✅ Datos reales calculados en tiempo real por el Modelo K-Means."}
-            </div>
           </div>
         `,
         confirmButtonText: "Entendido",
@@ -253,11 +249,10 @@ function Clientes() {
 
     if (esSimulado) {
       Swal.fire({
-        title: "Invocando modelo K-Means...",
+        title: "Cargando...",
         html: `
           <div style="display:flex; flex-direction:column; align-items:center; gap: 15px; margin: 15px 0;">
             <div style="width: 40px; height: 40px; border: 4px solid ${alpha(PALETA.acento, 0.2)}; border-top-color: ${PALETA.acento}; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-            <div style="font-size:0.9rem; color:${PALETA.textMuted}">Calculando distancias a centroides...</div>
           </div>
           <style>
             @keyframes spin { to { transform: rotate(360deg); } }
@@ -509,7 +504,7 @@ function Clientes() {
                     <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>CORREO</TableCell>
                     <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>TELÉFONO</TableCell>
                     <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>ROL</TableCell>
-                    <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>CLUSTER</TableCell>
+                    <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>SEGMENTO</TableCell>
                     <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>ESTADO</TableCell>
                     <TableCell sx={{ color: PALETA.textMuted, fontWeight: 600, fontSize: 12 }}>REGISTRO</TableCell>
                   </TableRow>
