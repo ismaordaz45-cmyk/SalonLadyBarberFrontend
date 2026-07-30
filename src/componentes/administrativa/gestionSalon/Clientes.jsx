@@ -214,7 +214,7 @@ function Clientes() {
             </div>
             
             <div style="margin-bottom: 18px;">
-              <div style="font-size: 0.75rem; text-transform: uppercase; color: ${PALETA.textMuted}; font-weight: 700; margin-bottom: 8px;">Métricas del Perfil (Clustering K-Means)</div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: ${PALETA.textMuted}; font-weight: 700; margin-bottom: 8px;">Métricas del Perfil</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div style="background: #F8FAFC; padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.04)">
                   <span style="display:block; font-size:0.75rem; color:${PALETA.textMuted}">Citas Completadas</span>
