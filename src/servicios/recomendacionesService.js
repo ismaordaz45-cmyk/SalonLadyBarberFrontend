@@ -1,107 +1,96 @@
+import api from "../api";
+
 /**
- * Servicio de Recomendaciones Inteligentes (Simulación de extracción BD & Algoritmo Cross-Selling)
+ * Servicio de Recomendaciones Inteligentes (Reglas de Asociación Market Basket Analysis ML)
  */
 
-// Reglas de asociación y palabras clave simulares para afinidad
-const AFINIDADES_CATEGORIA = {
-  shampoo: ["acondicionador", "mascarilla", "tónico", "shampoo"],
-  barba: ["aceite", "bálsamo", "peine", "jabón"],
-  cera: ["spray", "pomada", "peine", "gel"],
-  aceite: ["bálsamo", "shampoo", "jabón"],
-  corte: ["cera", "pomada", "laca"]
-};
-
-const RAZONES_SIMULADAS = [
+const RAZONES_ML = [
   "Clientes que compraron estos artículos también agregaron esto",
-  "Ideal para complementar los productos de tu carrito",
-  "Recomendado según patrones de compra en el salón",
-  "Top complemento con alto índice de satisfacción"
-];
-
-const TAGS_SIMULADOS = [
-  "98% Coincidencia",
-  "Más Popular Junto",
-  "Recomendado para ti",
-  "Complemento Top"
+  "Basado en patrones de co-compra frecuentes del salón",
+  "Asociación estadística con alta confianza",
+  "Top producto complementario sugerido por ML"
 ];
 
 /**
- * Simula la extracción de la BD y la ejecución del motor de recomendación
+ * Obtiene recomendaciones de productos reales consultando el microservicio ML via backend API.
+ * Caída automática a scoring local si el servicio no está disponible o el carrito es nuevo.
+ *
  * @param {Array} cart - Lista de productos en el carrito actual
- * @param {Array} productos - Catálogo completo de insumos/productos
+ * @param {Array} productos - Catálogo completo de insumos/productos activos
  * @param {number} limit - Cantidad máxima de recomendaciones
- * @returns {Promise<Array>} Lista de productos recomendados enriquecidos con métricas simuladas
+ * @returns {Promise<Array>} Lista de productos del catálogo enriquecidos con métricas ML
  */
 export async function simularExtraccionRecomendaciones(cart = [], productos = [], limit = 3) {
-  // Simular un pequeño retardo de consulta a la BD (150ms - 300ms)
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
   if (!Array.isArray(productos) || productos.length === 0) {
     return [];
   }
 
-  const idsEnCarrito = new Set(cart.map((item) => Number(item.id)));
-  
-  // Filtrar productos disponibles y que NO estén ya en el carrito
-  const elegibles = productos.filter((p) => {
-    const stock = Number(p.stockActual ?? 1);
-    return !idsEnCarrito.has(Number(p.id)) && stock > 0;
-  });
+  const idsEnCarrito = cart.map((item) => Number(item.id)).filter(Boolean);
+  const mapaProductos = new Map(productos.map((p) => [Number(p.id), p]));
+
+  try {
+    // 1. Consultar endpoint proxy backend
+    const { data } = await api.post("/api/prediccion/recomendar-productos", {
+      carrito: idsEnCarrito,
+      top_n: limit
+    });
+
+    if (data && Array.isArray(data.recomendaciones) && data.recomendaciones.length > 0) {
+      const resultadoML = [];
+
+      for (let i = 0; i < data.recomendaciones.length; i++) {
+        const rec = data.recomendaciones[i];
+        const prodId = Number(rec.producto_id);
+
+        // Si el producto está en el catálogo local y no está en el carrito
+        if (mapaProductos.has(prodId) && !idsEnCarrito.includes(prodId)) {
+          const prodObj = mapaProductos.get(prodId);
+          const stock = Number(prodObj.stockActual ?? 1);
+          if (stock <= 0) continue;
+
+          let coincidenciaStr = "Recomendado ML";
+          let tagStr = "Patrón Frecuente";
+
+          if (rec.fuente === "regla_asociacion" && rec.confianza != null) {
+            const confPct = Math.round(rec.confianza * 100);
+            coincidenciaStr = `${confPct}% Confianza`;
+            tagStr = rec.lift ? `${Number(rec.lift).toFixed(1)}x Más Probable` : "Regla Frecuente";
+          } else if (rec.fuente === "top_populares_fallback") {
+            coincidenciaStr = "Top Popular";
+            tagStr = "Más Vendido";
+          }
+
+          resultadoML.push({
+            ...prodObj,
+            coincidenciaPorcentaje: coincidenciaStr,
+            razonRecomendacion: RAZONES_ML[i % RAZONES_ML.length],
+            tagRecomendacion: tagStr,
+            _mlFuente: rec.fuente
+          });
+        }
+      }
+
+      if (resultadoML.length > 0) {
+        return resultadoML.slice(0, limit);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ API ML de recomendaciones no disponible, usando fallback local:", err.message);
+  }
+
+  // Fallback local determinista si la API no está disponible
+  const idsSet = new Set(idsEnCarrito);
+  const elegibles = productos.filter((p) => !idsSet.has(Number(p.id)) && Number(p.stockActual ?? 1) > 0);
 
   if (elegibles.length === 0) return [];
 
-  // Calcular score de afinidad para cada producto elegible
-  const puntuados = elegibles.map((p, index) => {
-    let score = 50; // Base score
-    const pNombre = String(p.nombre || "").toLowerCase();
-
-    // Si hay items en el carrito, buscar coincidencias de afinidad
-    if (cart.length > 0) {
-      cart.forEach((cItem) => {
-        const cNombre = String(cItem.nombre || "").toLowerCase();
-        
-        // Coincidencias de palabras clave
-        Object.keys(AFINIDADES_CATEGORIA).forEach((cat) => {
-          if (cNombre.includes(cat)) {
-            AFINIDADES_CATEGORIA[cat].forEach((rel) => {
-              if (pNombre.includes(rel)) {
-                score += 35;
-              }
-            });
-          }
-        });
-
-        // Simulación de rango de precio complementario
-        const diffPrecio = Math.abs(Number(p.precioUnitario || 0) - Number(cItem.precioUnitario || 0));
-        if (diffPrecio < 150) {
-          score += 15;
-        }
-      });
-    } else {
-      // Si el carrito está vacío, dar prioridad a stock alto y precios populares
-      score += (Number(p.stockActual || 0) > 5 ? 20 : 5);
-    }
-
-    // Variación determinista para simular ponderación de BD
-    score += (Number(p.id) * 7) % 25;
-
-    return { ...p, _score: score, _origIndex: index };
-  });
-
-  // Ordenar por score descendente
-  puntuados.sort((a, b) => b._score - a._score);
-
-  // Tomar los N mejores
-  const recomendados = puntuados.slice(0, limit);
-
-  // Enriquecer con metadatos simulados de Inteligencia/BD
-  return recomendados.map((rec, i) => {
-    const coincidencia = Math.min(99, Math.max(82, 98 - i * 4 - ((rec.id * 3) % 5)));
-    return {
-      ...rec,
-      coincidenciaPorcentaje: `${coincidencia}% Coincidencia`,
-      razonRecomendacion: RAZONES_SIMULADAS[i % RAZONES_SIMULADAS.length],
-      tagRecomendacion: TAGS_SIMULADOS[i % TAGS_SIMULADOS.length]
-    };
-  });
+  const ordenados = [...elegibles].sort((a, b) => (Number(b.stockActual || 0) - Number(a.stockActual || 0)));
+  return ordenados.slice(0, limit).map((rec, i) => ({
+    ...rec,
+    coincidenciaPorcentaje: "Sugerencia Top",
+    razonRecomendacion: RAZONES_ML[i % RAZONES_ML.length],
+    tagRecomendacion: "Más Popular",
+    _mlFuente: "fallback_local"
+  }));
 }
+
