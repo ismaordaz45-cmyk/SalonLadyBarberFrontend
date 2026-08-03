@@ -33,7 +33,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ShoppingBagRounded from "@mui/icons-material/ShoppingBagRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import RecomendacionesProductosCliente from "./RecomendacionesProductosCliente";
+import { simularExtraccionRecomendaciones } from "../../servicios/recomendacionesService";
 
 function moneyMXN(value) {
   if (value == null || value === "") return null;
@@ -48,6 +50,7 @@ export default function ProductosCliente() {
   const [q, setQ] = useState("");
   const [cartModalOpen, setCartModalOpen] = useState(false);
   const [buyingNow, setBuyingNow] = useState(null); // id del producto en proceso
+  const [recsDestacadas, setRecsDestacadas] = useState([]);
 
   const { cart, addToCart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
 
@@ -71,6 +74,29 @@ export default function ProductosCliente() {
       cancel = true;
     };
   }, []);
+
+  // Cargar lista de productos recomendados por ML dinámicamente según el carrito
+  useEffect(() => {
+    let cancel = false;
+    if (productos.length > 0) {
+      simularExtraccionRecomendaciones(cart, productos, 6)
+        .then((recs) => {
+          if (!cancel && Array.isArray(recs)) {
+            setRecsDestacadas(recs);
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancel = true;
+    };
+  }, [cart, productos]);
+
+  const mapaRecs = useMemo(() => {
+    const map = new Map();
+    recsDestacadas.forEach((r) => map.set(Number(r.id), r));
+    return map;
+  }, [recsDestacadas]);
 
   const filtrados = useMemo(() => {
     const query = String(q || "").trim().toLowerCase();
@@ -161,13 +187,32 @@ export default function ProductosCliente() {
               const stock = Number(p?.stockActual);
               const stockMin = Number(p?.stockMinimo);
               const isLow = Number.isFinite(stock) && Number.isFinite(stockMin) && stock < stockMin;
+              const recInfo = mapaRecs.get(Number(p.id));
 
               return (
                 <Grid item xs={12} sm={6} md={4} key={p.id}>
                   <GlassCard
                     elevation={0}
-                    sx={{ height: "100%", borderRadius: 4, overflow: "hidden" }}
+                    sx={{ height: "100%", borderRadius: 4, overflow: "hidden", position: "relative" }}
                   >
+                    {recInfo && (
+                      <Chip
+                        icon={<AutoAwesomeRoundedIcon sx={{ fontSize: "12px !important", color: "#1E293B !important" }} />}
+                        label={recInfo.tagRecomendacion || "Sugerido por IA"}
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: 12,
+                          right: 12,
+                          bgcolor: alpha("#D4AF37", 0.92),
+                          color: "#1E293B",
+                          fontWeight: 900,
+                          fontSize: "0.68rem",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                          zIndex: 2
+                        }}
+                      />
+                    )}
                     {imgSrc ? (
                       <Box
                         component="img"

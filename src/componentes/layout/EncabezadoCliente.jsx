@@ -43,8 +43,7 @@ import BarberPole from "../compartidos/BarberPole";
 import { useCart } from "../../context/CartContext";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
 import { resolveServicioImagenUrl } from "../../utils/resolveServicioImagenUrl";
-
-
+import RecomendacionesProductosCliente from "../cliente/RecomendacionesProductosCliente";
 
 const COLORS = {
   background: "#FFFFFF",
@@ -66,7 +65,7 @@ function EncabezadoCliente() {
   const location = useLocation();
   const navigate = useNavigate();
   const { runWithOverlay } = useBarberActionOverlay();
-  const { cart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
 
   // Estados locales
   const [active, setActive] = useState("inicio");
@@ -74,6 +73,24 @@ function EncabezadoCliente() {
   const [nombreEmpresa, setNombreEmpresa] = useState("Lady Barber ID'M");
   const [logoUrl, setLogoUrl] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [todosLosProductos, setTodosLosProductos] = useState([]);
+
+  // Cargar productos para recomendaciones cuando el carrito se abra
+  useEffect(() => {
+    let cancel = false;
+    if (cartOpen && todosLosProductos.length === 0) {
+      api.get("/api/insumos", { params: { incluirInactivos: 0 } })
+        .then(({ data }) => {
+          if (!cancel && Array.isArray(data)) {
+            setTodosLosProductos(data.filter((p) => p?.estaActivo === 1));
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancel = true;
+    };
+  }, [cartOpen, todosLosProductos.length]);
 
   // Menú de Perfil
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -652,6 +669,18 @@ function EncabezadoCliente() {
                 </Box>
               ))}
             </Stack>
+          )}
+
+          {/* SECCIÓN DE RECOMENDACIONES DE PRODUCTOS ML */}
+          {todosLosProductos.length > 0 && (
+            <Box sx={{ mt: 2.5 }}>
+              <RecomendacionesProductosCliente
+                cart={cart}
+                todosLosProductos={todosLosProductos}
+                onAddToCart={addToCart}
+                variant="cartModal"
+              />
+            </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 3, flexDirection: "column", gap: 2 }}>
