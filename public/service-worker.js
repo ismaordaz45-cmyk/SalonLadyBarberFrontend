@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME_STATIC = "slb-static-v1";
-const CACHE_NAME_DYNAMIC = "slb-dynamic-v1";
+const CACHE_NAME_STATIC = "slb-static-v2";
+const CACHE_NAME_DYNAMIC = "slb-dynamic-v2";
 
 // Recursos esenciales que se precargan inmediatamente al instalar el Service Worker
 const STATIC_ASSETS = [
