@@ -64,8 +64,25 @@ const EncabezadoPublico = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  const [nombreEmpresa, setNombreEmpresa] = useState("Lady Barber ID'M");
-  const [logoUrl, setLogoUrl] = useState("");
+  // Nombre por defecto consistente oficial
+  const DEFAULT_NOMBRE = "Salón Lady Barber Itza D´M";
+
+  // Intentar leer nombre persistido en caché para evitar parpadeo al recargar
+  const [nombreEmpresa, setNombreEmpresa] = useState(() => {
+    try {
+      return localStorage.getItem("slb_nombre_empresa") || DEFAULT_NOMBRE;
+    } catch {
+      return DEFAULT_NOMBRE;
+    }
+  });
+
+  const [logoUrl, setLogoUrl] = useState(() => {
+    try {
+      return localStorage.getItem("slb_logo_url") || "";
+    } catch {
+      return "";
+    }
+  });
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -108,10 +125,21 @@ const EncabezadoPublico = () => {
 
         if (data?.nombre) {
           setNombreEmpresa(data.nombre);
+          try {
+            localStorage.setItem("slb_nombre_empresa", data.nombre);
+          } catch {
+            /* storage limit */
+          }
         }
 
         if (data?.logo) {
-          setLogoUrl(logoBase64ToDataUrl(data.logo));
+          const formattedLogo = logoBase64ToDataUrl(data.logo);
+          setLogoUrl(formattedLogo);
+          try {
+            localStorage.setItem("slb_logo_url", formattedLogo);
+          } catch {
+            /* storage limit */
+          }
         }
       } catch (error) {
         console.warn("Perfil público no disponible:", error?.message);
@@ -217,14 +245,14 @@ const EncabezadoPublico = () => {
             <Box
               component="span"
               sx={{
-                fontWeight: 600,
+                fontWeight: 700,
                 color: COLORS.text,
-                fontSize: { xs: "1rem", md: "1.15rem" },
+                fontSize: { xs: "0.95rem", sm: "1.05rem", md: "1.15rem" },
                 letterSpacing: "0.01em",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: { xs: 130, sm: 220, md: 280 }
+                maxWidth: { xs: 180, sm: 280, md: 360 }
               }}
             >
               {nombreEmpresa}
