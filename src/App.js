@@ -2,8 +2,8 @@ import React from "react";
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import { BarberActionOverlayProvider } from "./context/BarberActionOverlayContext";
-import { CartProvider } from "./context/CartContext";
+import { BarberActionOverlayProvider } from "./theme/context/BarberActionOverlayContext";
+import { CartProvider } from "./theme/context/CartContext";
 import MigasDePan from "./componentes/compartidos/MigasDePan";
 
 import LayoutConEncabezado from "./componentes/layout/LayoutConEncabezado";
@@ -18,6 +18,9 @@ import PaginaCatalogoPublico from "./paginas/PaginaCatalogoPublico";
 import PaginaNosotrosPublico from "./paginas/PaginaNosotrosPublico";
 import PaginaNovedadesPublico from "./paginas/PaginaNovedadesPublico";
 import PaginaPrivacidadPublico from "./paginas/PaginaPrivacidadPublico";
+import PaginaTerminosPublico from "./paginas/PaginaTerminosPublico";
+import PaginaMisionVisionPublico from "./paginas/PaginaMisionVisionPublico";
+import PaginaAyudaContactoPublico from "./paginas/PaginaAyudaContactoPublico";
 import PaginaPrincipalAdministrativa from "./paginas/PaginaPrincipalAdminitrativo";
 import PaginaAdminRespaldo from "./paginas/PaginaAdminRespaldo";
 import PaginaAdminImportExport from "./paginas/PaginaAdminImportExport";
@@ -179,6 +182,78 @@ const App = () => {
           element={
             <LayoutPublico>
               <PaginaPrivacidadPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/terminos"
+          element={
+            <LayoutPublico>
+              <PaginaTerminosPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/terminospca"
+          element={
+            <LayoutPublico>
+              <PaginaTerminosPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/mision"
+          element={
+            <LayoutPublico>
+              <PaginaMisionVisionPublico tipo="mision" />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/misionpca"
+          element={
+            <LayoutPublico>
+              <PaginaMisionVisionPublico tipo="mision" />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/vision"
+          element={
+            <LayoutPublico>
+              <PaginaMisionVisionPublico tipo="vision" />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/visionpca"
+          element={
+            <LayoutPublico>
+              <PaginaMisionVisionPublico tipo="vision" />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/ayuda"
+          element={
+            <LayoutPublico>
+              <PaginaAyudaContactoPublico />
+            </LayoutPublico>
+          }
+        />
+
+        <Route
+          path="/contacto"
+          element={
+            <LayoutPublico>
+              <PaginaAyudaContactoPublico />
             </LayoutPublico>
           }
         />

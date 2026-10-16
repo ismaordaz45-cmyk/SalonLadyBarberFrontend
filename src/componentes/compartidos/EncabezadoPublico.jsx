@@ -3,13 +3,14 @@
 // ============================================
 
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
 import BarberPole from "./BarberPole";
 
 import {
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  Search as SearchIcon
 } from "@mui/icons-material";
 
 import {
@@ -19,6 +20,7 @@ import {
   IconButton,
   Button,
   TextField,
+  InputAdornment,
   Drawer,
   List,
   ListItemButton,
@@ -56,6 +58,7 @@ const headerStyle = {
 
 const EncabezadoPublico = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [active, setActive] = useState("inicio");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -63,6 +66,17 @@ const EncabezadoPublico = () => {
 
   const [nombreEmpresa, setNombreEmpresa] = useState("Lady Barber ID'M");
   const [logoUrl, setLogoUrl] = useState("");
+
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    const query = searchValue.trim();
+    if (query) {
+      navigate(`/catalogo?q=${encodeURIComponent(query)}`);
+    } else {
+      navigate("/catalogo");
+    }
+    setMobileOpen(false);
+  };
 
   /* ============================
      Ruta activa
@@ -219,11 +233,13 @@ const EncabezadoPublico = () => {
 
           {/* Input de búsqueda compacto */}
           <Box
+            component="form"
+            onSubmit={handleSearch}
             sx={{
               display: { xs: "none", md: "block" },
               ml: 4,
               mr: 2,
-              width: 210
+              width: 220
             }}
           >
             <TextField
@@ -231,12 +247,22 @@ const EncabezadoPublico = () => {
               fullWidth
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Búsqueda"
+              placeholder="Buscar servicio..."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
+                      <SearchIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 999,
                   backgroundColor: "#FFFFFF",
                   color: COLORS.text,
+                  pr: 1,
                   "& fieldset": {
                     borderColor: COLORS.border
                   },
@@ -362,19 +388,29 @@ const EncabezadoPublico = () => {
             {nombreEmpresa}
           </Box>
 
-          <TextField
-            size="small"
-            fullWidth
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Búsqueda"
-            sx={{
-              mb: 2,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 999
-              }
-            }}
-          />
+          <Box component="form" onSubmit={handleSearch} sx={{ mb: 2 }}>
+            <TextField
+              size="small"
+              fullWidth
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Buscar servicio..."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
+                      <SearchIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 999
+                }
+              }}
+            />
+          </Box>
 
           <List disablePadding>
             {navItems.map(({ key, label }) => (

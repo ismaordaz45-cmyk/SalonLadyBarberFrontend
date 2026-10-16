@@ -63,11 +63,22 @@ function Login() {
     setError("");
   };
 
+  // Validación estricta de correo electrónico
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.correo || !formData.password) {
+    const correoLimpio = String(formData.correo || "").trim();
+    const passwordLimpio = String(formData.password || "").trim();
+
+    if (!correoLimpio || !passwordLimpio) {
       setError("Por favor ingresa tu correo y contraseña.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(correoLimpio)) {
+      setError("Por favor ingresa un correo electrónico válido (ejemplo: usuario@correo.com). No se permiten números solos ni formatos inválidos.");
       return;
     }
 
