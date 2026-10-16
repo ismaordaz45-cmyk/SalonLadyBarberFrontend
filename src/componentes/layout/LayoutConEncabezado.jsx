@@ -11,6 +11,9 @@ import EncabezadoPublico from "../compartidos/EncabezadoPublico";
 // Pies de página
 import PieDePaginaPublico from "../compartidos/PieDePaginaPublico";
 
+// Indicador de estado Offline (PWA)
+import IndicadorConexionOffline from "../compartidos/IndicadorConexionOffline";
+
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
@@ -63,6 +66,8 @@ const LayoutConEncabezado = ({ children }) => {
 
   return (
     <div className={`layout-container ${isPublico ? "layout-publico" : ""}`}>
+      {/* Indicador global Offline PWA */}
+      <IndicadorConexionOffline />
 
       <header className={isPublico ? "layout-header-publico" : undefined}>
         {encabezado}

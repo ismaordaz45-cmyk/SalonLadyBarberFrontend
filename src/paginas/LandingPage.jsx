@@ -205,18 +205,38 @@ function LandingPage() {
   }, []);
 
   useEffect(() => {
+    // 1. Cargar caché inmediata de localStorage si existe (para render offline instantáneo)
+    try {
+      const cached = localStorage.getItem("slb_offline_productos");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProductos(parsed.slice(0, 12));
+        }
+      }
+    } catch {
+      /* fallback */
+    }
+
     const fetchProductos = async () => {
       try {
         const { data } = await axios.get("https://salonladybarberbackend.onrender.com/api/insumos");
         const activos = Array.isArray(data) ? data.filter(p => p.estaActivo === 1 || p.estaActivo === true) : [];
         if (activos.length > 0) {
-          setProductos(activos);
+          // Tomar los primeros 12 productos más destacados / más vendidos
+          const top12 = activos.slice(0, 12);
+          setProductos(top12);
+          try {
+            localStorage.setItem("slb_offline_productos", JSON.stringify(top12));
+          } catch {
+            /* storage limit */
+          }
         } else {
           setProductos(FALLBACK_PRODUCTS);
         }
       } catch (err) {
-        console.error("Error al cargar productos en landing:", err);
-        setProductos(FALLBACK_PRODUCTS);
+        console.warn("Sin conexión con API de insumos, manteniendo caché:", err);
+        setProductos((prev) => (prev.length > 0 ? prev : FALLBACK_PRODUCTS));
       }
     };
     fetchProductos();
