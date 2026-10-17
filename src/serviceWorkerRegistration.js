@@ -2,7 +2,7 @@
 
 export function register() {
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
+    const registerWorker = () => {
       const swUrl = `${process.env.PUBLIC_URL || ""}/service-worker.js`;
 
       navigator.serviceWorker
@@ -28,7 +28,13 @@ export function register() {
         .catch((error) => {
           console.warn("⚠️ [PWA] Error al registrar el Service Worker:", error);
         });
-    });
+    };
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      registerWorker();
+    } else {
+      window.addEventListener("load", registerWorker);
+    }
   }
 }
 

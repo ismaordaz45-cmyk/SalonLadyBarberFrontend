@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME_STATIC = "slb-core-v4";
-const CACHE_NAME_API = "slb-data-v4";
+const CACHE_NAME_STATIC = "slb-core-v5";
+const CACHE_NAME_API = "slb-data-v5";
 
-// Páginas de la SPA
+// Rutas clave de la aplicación
 const APP_ROUTES = [
   "/",
   "/index.html",
@@ -27,7 +27,25 @@ const APP_ROUTES = [
   "/registro"
 ];
 
-// Endpoints de API requeridos para offline
+// Imágenes esenciales de la landing
+const ESSENTIAL_IMAGES = [
+  "/images/landing/hero-salon.jpg",
+  "/images/landing/hero-salon.svg",
+  "/images/landing/tradicion-calidad.jpg",
+  "/images/landing/login-salon.jpg",
+  "/images/landing/register-salon.jpg",
+  "/images/landing/categoria-barberia.svg",
+  "/images/landing/categoria-cortes.svg",
+  "/images/landing/categoria-coloracion.svg",
+  "/images/landing/categoria-peinados.svg",
+  "/images/landing/categoria-especiales.svg",
+  "/images/landing/evento-bodas.jpg",
+  "/images/landing/evento-graduaciones.jpg",
+  "/images/landing/evento-xv-anos.jpg",
+  "/images/landing/evento-presentaciones.jpg"
+];
+
+// Endpoints de la API
 const API_ENDPOINTS_TO_PRECACHE = [
   "https://salonladybarberbackend.onrender.com/api/perfil-empresa",
   "https://salonladybarberbackend.onrender.com/api/insumos",
@@ -35,22 +53,22 @@ const API_ENDPOINTS_TO_PRECACHE = [
   "https://salonladybarberbackend.onrender.com/api/terminos-condiciones"
 ];
 
-// 1. INSTALACIÓN
+// 1. INSTALACIÓN: Precarga agresiva de TODO en el primer impacto
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     (async () => {
       const staticCache = await caches.open(CACHE_NAME_STATIC);
 
-      // A. Precargar rutas HTML de la app
+      // A. Precargar rutas y recursos locales
       try {
-        await staticCache.addAll(APP_ROUTES);
-        console.log("[SW] Rutas base y estáticos precargados.");
+        await staticCache.addAll([...APP_ROUTES, ...ESSENTIAL_IMAGES]);
+        console.log("[SW] Rutas y multimedia de landing precheadas exitosamente.");
       } catch (err) {
-        console.warn("[SW] Advertencia precaching rutas:", err);
+        console.warn("[SW] Precaching parcial:", err);
       }
 
-      // B. Descubrir y precargar automáticamente los bundles JS y CSS de index.html
+      // B. Descubrir bundles JS y CSS leyendo index.html directamente en el install
       try {
         const indexRes = await fetch("/index.html", { cache: "reload" });
         if (indexRes && indexRes.status === 200) {
@@ -58,29 +76,26 @@ self.addEventListener("install", (event) => {
           await staticCache.put("/index.html", indexRes);
           await staticCache.put("/", indexRes.clone());
 
-          // Buscar automáticamente todos los archivos /static/js/ y /static/css/
           const scriptMatches = [...indexHtml.matchAll(/src=["'](\/static\/js\/[^"']+)["']/g)].map((m) => m[1]);
           const cssMatches = [...indexHtml.matchAll(/href=["'](\/static\/css\/[^"']+)["']/g)].map((m) => m[1]);
-          const bundlesToCache = [...new Set([...scriptMatches, ...cssMatches])];
+          const bundles = [...new Set([...scriptMatches, ...cssMatches])];
 
-          console.log("[SW] Bundles de producción descubiertos para precachear:", bundlesToCache);
-
+          console.log("[SW] Precargando bundles React automáticamente:", bundles);
           await Promise.allSettled(
-            bundlesToCache.map(async (bundleUrl) => {
+            bundles.map(async (bundleUrl) => {
               try {
                 const bRes = await fetch(bundleUrl, { cache: "reload" });
                 if (bRes && bRes.status === 200) {
                   await staticCache.put(bundleUrl, bRes);
-                  console.log("[SW] Bundle precargado con éxito:", bundleUrl);
                 }
               } catch (e) {
-                console.warn("[SW] No se pudo precargar bundle:", bundleUrl, e);
+                console.warn("[SW] Bundle warning:", bundleUrl, e);
               }
             })
           );
         }
       } catch (err) {
-        console.warn("[SW] Error al descubrir bundles de index.html:", err);
+        console.warn("[SW] Error al precargar bundles en install:", err);
       }
 
       // C. Precargar datos de la API (catálogo, insumos, servicios, perfil)
@@ -91,10 +106,10 @@ self.addEventListener("install", (event) => {
             const res = await fetch(url, { cache: "reload" });
             if (res && res.status === 200) {
               await apiCache.put(url, res);
-              console.log("[SW] API precargada en caché:", url);
+              console.log("[SW] API precargada en primera visita:", url);
             }
           } catch (e) {
-            console.warn("[SW] No se pudo precargar endpoint API:", url, e);
+            console.warn("[SW] API precache warning:", url, e);
           }
         })
       );
@@ -102,7 +117,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// 2. ACTIVACIÓN: Reclamar clientes inmediatamente y limpiar versiones obsoletas
+// 2. ACTIVACIÓN: Reclamar inmediatamente a todos los clientes (¡Clave para no requerir 2da recarga!)
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
@@ -110,13 +125,15 @@ self.addEventListener("activate", (event) => {
       await Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME_STATIC && key !== CACHE_NAME_API) {
-            console.log("[SW] Eliminando caché antigua:", key);
+            console.log("[SW] Limpiando versión previa:", key);
             return caches.delete(key);
           }
           return null;
         })
       );
+      // self.clients.claim() le dice al navegador: "Toma el control de esta pestaña AHORA MISMO"
       await self.clients.claim();
+      console.log("[SW] Service Worker activo y controlando clientes desde la primera carga.");
     })()
   );
 });
@@ -126,12 +143,10 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Solo peticiones GET
   if (req.method !== "GET") return;
   if (!url.protocol.startsWith("http")) return;
 
-  // CASO A: Navegación de páginas HTML (SPA de React)
-  // Estrategia: Network-First con fallback a index.html en caché
+  // CASO A: Navegación SPA
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
@@ -144,14 +159,14 @@ self.addEventListener("fetch", (event) => {
           }
           return networkRes;
         } catch (err) {
-          console.log("[SW] Offline navegación. Entregando index.html en caché");
+          console.log("[SW] Offline navegación. Entregando index.html");
           const cachedPage =
             (await caches.match(req)) ||
             (await caches.match("/index.html")) ||
             (await caches.match("/"));
           if (cachedPage) return cachedPage;
 
-          return new Response("Offline - Lady Barber", {
+          return new Response("Offline - Salón Lady Barber", {
             headers: { "Content-Type": "text/html; charset=utf-8" }
           });
         }
@@ -160,7 +175,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // CASO B: Backend API (Render)
+  // CASO B: Backend API
   if (url.hostname.includes("onrender.com") && url.pathname.startsWith("/api/")) {
     event.respondWith(
       (async () => {
@@ -172,7 +187,6 @@ self.addEventListener("fetch", (event) => {
           }
           return networkRes;
         } catch (err) {
-          console.log("[SW] Offline API. Entregando caché para:", req.url);
           const cachedRes = await apiCache.match(req);
           if (cachedRes) return cachedRes;
 
@@ -185,7 +199,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // CASO C: Fuentes externas (Google Fonts)
+  // CASO C: Fuentes externas
   if (url.hostname.includes("googleapis.com") || url.hostname.includes("gstatic.com")) {
     event.respondWith(
       (async () => {
@@ -207,22 +221,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // CASO D: Archivos Estáticos (JS bundles, CSS, imágenes)
+  // CASO D: Archivos Estáticos (JS bundles, CSS, imágenes y multimedia)
   // Estrategia: Cache-First
   event.respondWith(
     (async () => {
       const staticCache = await caches.open(CACHE_NAME_STATIC);
 
-      // 1. Coincidencia exacta por Request
       let cachedRes = await staticCache.match(req);
-
-      // 2. Si no coincide el objeto request exacto, buscar por pathname (/static/js/main....js)
       if (!cachedRes) {
         cachedRes = await staticCache.match(url.pathname);
       }
 
       if (cachedRes) {
-        // Si hay red, actualizamos en segundo plano
         fetch(req)
           .then((networkRes) => {
             if (networkRes && networkRes.status === 200) {
@@ -233,7 +243,7 @@ self.addEventListener("fetch", (event) => {
         return cachedRes;
       }
 
-      // Si no estaba en caché, intentar red y almacenar inmediatamente
+      // Si no estaba en caché, pedir a la red y guardar inmediatamente
       try {
         const networkRes = await fetch(req);
         if (networkRes && (networkRes.status === 200 || networkRes.type === "opaque")) {
@@ -242,12 +252,9 @@ self.addEventListener("fetch", (event) => {
         }
         return networkRes;
       } catch (err) {
-        console.warn("[SW] Offline: recurso estático no encontrado en caché:", req.url);
-        // Si es un archivo CSS que faltó, retornar CSS vacío para que no rompa la pantalla
         if (url.pathname.endsWith(".css")) {
           return new Response("", { headers: { "Content-Type": "text/css" } });
         }
-        // Si es un archivo JS que faltó, retornar JS vacío
         if (url.pathname.endsWith(".js")) {
           return new Response("", { headers: { "Content-Type": "application/javascript" } });
         }
