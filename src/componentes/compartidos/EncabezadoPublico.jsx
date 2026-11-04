@@ -10,8 +10,12 @@ import BarberPole from "./BarberPole";
 
 import {
   Menu as MenuIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  GetAppRounded as GetAppRoundedIcon
 } from "@mui/icons-material";
+
+import { usePWAInstall } from "../../utils/usePWAInstall";
+import ModalInstalarPWA from "./ModalInstalarPWA";
 
 import {
   Box,
@@ -83,6 +87,15 @@ const EncabezadoPublico = () => {
       return "";
     }
   });
+
+  const {
+    isInstallable,
+    isInstalled,
+    isIOS,
+    showInstallModal,
+    setShowInstallModal,
+    promptInstall
+  } = usePWAInstall();
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -354,8 +367,33 @@ const EncabezadoPublico = () => {
             ))}
           </Box>
 
-          {/* Login desktop */}
-          <Box sx={{ display: { xs: "none", md: "block" }, ml: 2 }}>
+          {/* Acciones desktop: Descargar App e Iniciar sesión */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1.2, ml: 2 }}>
+            {!isInstalled && (
+              <Button
+                variant="outlined"
+                onClick={() => promptInstall()}
+                startIcon={<GetAppRoundedIcon sx={{ fontSize: 18 }} />}
+                sx={{
+                  color: "#1E293B",
+                  borderColor: "rgba(30, 41, 59, 0.25)",
+                  borderRadius: "10px",
+                  px: 1.5,
+                  py: 0.7,
+                  fontWeight: 600,
+                  fontSize: "0.82rem",
+                  minHeight: 36,
+                  textTransform: "none",
+                  "&:hover": {
+                    borderColor: "#1E293B",
+                    bgcolor: "rgba(30, 41, 59, 0.05)"
+                  }
+                }}
+              >
+                Descargar App
+              </Button>
+            )}
+
             <Button
               component={Link}
               to={getPath("login")}
@@ -472,6 +510,31 @@ const EncabezadoPublico = () => {
               </ListItemButton>
             ))}
 
+            {!isInstalled && (
+              <ListItemButton
+                onClick={() => {
+                  setMobileOpen(false);
+                  promptInstall();
+                }}
+                sx={{
+                  borderRadius: 2,
+                  mt: 1,
+                  border: "1px solid rgba(37, 99, 235, 0.4)",
+                  backgroundColor: "rgba(37, 99, 235, 0.06)",
+                  color: "#2563EB",
+                  "&:hover": {
+                    backgroundColor: "rgba(37, 99, 235, 0.12)"
+                  }
+                }}
+              >
+                <GetAppRoundedIcon sx={{ fontSize: 20, mr: 1.5, color: "#2563EB" }} />
+                <ListItemText
+                  primary="Descargar Aplicación"
+                  primaryTypographyProps={{ fontWeight: 600, fontSize: "0.9rem" }}
+                />
+              </ListItemButton>
+            )}
+
             <ListItemButton
               component={Link}
               to={getPath("login")}
@@ -497,6 +560,14 @@ const EncabezadoPublico = () => {
           </List>
         </Box>
       </Drawer>
+
+      <ModalInstalarPWA
+        open={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        isIOS={isIOS}
+        hasDirectPrompt={isInstallable}
+        onDirectInstall={promptInstall}
+      />
     </>
   );
 };
