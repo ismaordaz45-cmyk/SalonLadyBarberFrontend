@@ -13,8 +13,8 @@ import {
   Menu as MenuIcon,
   NotificationsNoneRounded,
   MicRounded as MicIcon
-} from "@mui/icons-material";
 import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
+} from "@mui/icons-material";
 
 const COLORS = {
   topbarBg: "#FFFFFF",
@@ -131,7 +131,6 @@ function Topbar({ onOpenSidebar }) {
               <MicIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>
-
           <IconButton sx={{ color: COLORS.textSecondary }} aria-label="Notificaciones">
             <Badge variant="dot" color="error">
               <NotificationsNoneRounded />
