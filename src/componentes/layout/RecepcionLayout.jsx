@@ -8,10 +8,13 @@ import {
   Toolbar,
   Typography,
   Avatar,
-  Stack
+  Stack,
+  Tooltip
 } from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import MicRoundedIcon from "@mui/icons-material/MicRounded";
+import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
 import SidebarRecepcion from "./SidebarRecepcion";
 import Swal from "sweetalert2";
 import { useBarberActionOverlay } from "../../context/BarberActionOverlayContext";
@@ -29,6 +32,7 @@ function readStoredUser() {
 }
 
 function RecepcionLayout() {
+  const { openVoiceSearch } = useVoiceSearchContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { runWithOverlay } = useBarberActionOverlay();
@@ -146,7 +150,20 @@ function RecepcionLayout() {
             </Stack>
 
             {/* Profile Detail Block */}
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Tooltip title="Búsqueda por Voz (Sensor de Micrófono) [Alt+V]">
+                <IconButton
+                  onClick={() => openVoiceSearch()}
+                  sx={{
+                    color: "#2563EB",
+                    bgcolor: "rgba(37, 99, 235, 0.08)",
+                    "&:hover": { bgcolor: "rgba(37, 99, 235, 0.16)" }
+                  }}
+                  aria-label="Búsqueda por voz"
+                >
+                  <MicRoundedIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
               {/* Profile Meta (Desktop) */}
               <Box sx={{ display: { xs: "none", sm: "block" }, textAlign: "right" }}>
                 <Typography sx={{ fontWeight: 800, fontSize: "0.85rem", color: "#1E3A5F" }}>

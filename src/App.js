@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import { BarberActionOverlayProvider } from "./theme/context/BarberActionOverlayContext";
 import { CartProvider } from "./theme/context/CartContext";
+import { VoiceSearchProvider } from "./context/VoiceSearchContext";
 import MigasDePan from "./componentes/compartidos/MigasDePan";
 
 import LayoutConEncabezado from "./componentes/layout/LayoutConEncabezado";
@@ -84,6 +85,7 @@ const App = () => {
   return (
     <BarberActionOverlayProvider>
     <CartProvider>
+    <VoiceSearchProvider>
     <LayoutConEncabezado>
       <Routes>
 
@@ -537,6 +539,7 @@ const App = () => {
 
       </Routes>
     </LayoutConEncabezado>
+    </VoiceSearchProvider>
     </CartProvider>
     </BarberActionOverlayProvider>
   );

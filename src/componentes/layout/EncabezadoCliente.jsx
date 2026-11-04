@@ -22,7 +22,8 @@ import {
   MenuItem,
   Stack,
   Toolbar,
-  Typography
+  Typography,
+  Tooltip
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeRounded from "@mui/icons-material/HomeRounded";
@@ -37,6 +38,8 @@ import LogoutRounded from "@mui/icons-material/LogoutRounded";
 import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import ShoppingBagRounded from "@mui/icons-material/ShoppingBagRounded";
 import CloseIcon from "@mui/icons-material/Close";
+import MicRoundedIcon from "@mui/icons-material/MicRounded";
+import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
 import api from "../../api";
 import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
 import BarberPole from "../compartidos/BarberPole";
@@ -62,6 +65,7 @@ function moneyMXN(value) {
 }
 
 function EncabezadoCliente() {
+  const { openVoiceSearch } = useVoiceSearchContext();
   const location = useLocation();
   const navigate = useNavigate();
   const { runWithOverlay } = useBarberActionOverlay();
@@ -335,6 +339,22 @@ function EncabezadoCliente() {
 
           {/* ACCIONES Y PERFIL (DERECHA) */}
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ ml: "auto" }}>
+            {/* Búsqueda por Voz (Sensor de Micrófono) */}
+            <Tooltip title="Búsqueda por Voz (Sensor de Micrófono) [Alt+V]">
+              <IconButton
+                onClick={() => openVoiceSearch()}
+                sx={{
+                  color: "#2563EB",
+                  bgcolor: "rgba(37, 99, 235, 0.08)",
+                  p: 1,
+                  "&:hover": { bgcolor: "rgba(37, 99, 235, 0.16)" }
+                }}
+                aria-label="Búsqueda por voz"
+              >
+                <MicRoundedIcon sx={{ fontSize: 22 }} />
+              </IconButton>
+            </Tooltip>
+
             {/* Campana de Notificaciones (mock limpio de captura) */}
             <IconButton
               sx={{ color: COLORS.textSecondary, p: 1 }}

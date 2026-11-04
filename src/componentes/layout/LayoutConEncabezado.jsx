@@ -13,6 +13,8 @@ import PieDePaginaPublico from "../compartidos/PieDePaginaPublico";
 
 // Indicador de estado Offline (PWA)
 import IndicadorConexionOffline from "../compartidos/IndicadorConexionOffline";
+import ModalBusquedaVozGlobal from "../compartidos/ModalBusquedaVozGlobal";
+import BotonFlotanteVoz from "../compartidos/BotonFlotanteVoz";
 
 // ============================================
 // COMPONENTE PRINCIPAL
@@ -68,6 +70,8 @@ const LayoutConEncabezado = ({ children }) => {
     <div className={`layout-container ${isPublico ? "layout-publico" : ""}`}>
       {/* Indicador global Offline PWA */}
       <IndicadorConexionOffline />
+      <ModalBusquedaVozGlobal />
+      <BotonFlotanteVoz />
 
       <header className={isPublico ? "layout-header-publico" : undefined}>
         {encabezado}

@@ -6,12 +6,15 @@ import {
   Box,
   IconButton,
   Toolbar,
-  Typography
+  Typography,
+  Tooltip
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  NotificationsNoneRounded
+  NotificationsNoneRounded,
+  MicRounded as MicIcon
 } from "@mui/icons-material";
+import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
 
 const COLORS = {
   topbarBg: "#FFFFFF",
@@ -49,6 +52,7 @@ function initialsFromName(name) {
 }
 
 function Topbar({ onOpenSidebar }) {
+  const { openVoiceSearch } = useVoiceSearchContext();
   const storedUser = useMemo(() => readStoredUser(), []);
 
   const [perfil, setPerfil] = useState(() => ({
@@ -114,6 +118,20 @@ function Topbar({ onOpenSidebar }) {
         </IconButton>
 
         <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1.2 }}>
+          <Tooltip title="Búsqueda por Voz (Sensor de Micrófono) [Alt+V]">
+            <IconButton
+              onClick={() => openVoiceSearch()}
+              sx={{
+                color: "#2563EB",
+                bgcolor: "rgba(37, 99, 235, 0.08)",
+                "&:hover": { bgcolor: "rgba(37, 99, 235, 0.15)" }
+              }}
+              aria-label="Búsqueda por voz"
+            >
+              <MicIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+
           <IconButton sx={{ color: COLORS.textSecondary }} aria-label="Notificaciones">
             <Badge variant="dot" color="error">
               <NotificationsNoneRounded />

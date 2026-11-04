@@ -11,8 +11,11 @@ import BarberPole from "./BarberPole";
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
-  GetAppRounded as GetAppRoundedIcon
+  GetAppRounded as GetAppRoundedIcon,
+  MicRounded as MicIcon
 } from "@mui/icons-material";
+
+import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
 
 import { usePWAInstall } from "../../utils/usePWAInstall";
 import ModalInstalarPWA from "./ModalInstalarPWA";
@@ -96,6 +99,17 @@ const EncabezadoPublico = () => {
     setShowInstallModal,
     promptInstall
   } = usePWAInstall();
+
+  const { openVoiceSearch } = useVoiceSearchContext();
+
+  const handleVoiceSearch = () => {
+    openVoiceSearch((textoVoz) => {
+      setSearchValue(textoVoz);
+      if (textoVoz && textoVoz.trim()) {
+        navigate(`/catalogo?q=${encodeURIComponent(textoVoz.trim())}`);
+      }
+    });
+  };
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -291,7 +305,15 @@ const EncabezadoPublico = () => {
               placeholder="Buscar servicio..."
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">
+                  <InputAdornment position="end" sx={{ gap: 0.2 }}>
+                    <IconButton
+                      size="small"
+                      onClick={handleVoiceSearch}
+                      title="Búsqueda por voz (Micrófono)"
+                      sx={{ color: "#2563EB" }}
+                    >
+                      <MicIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
                     <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
                       <SearchIcon sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -463,7 +485,15 @@ const EncabezadoPublico = () => {
               placeholder="Buscar servicio..."
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">
+                  <InputAdornment position="end" sx={{ gap: 0.2 }}>
+                    <IconButton
+                      size="small"
+                      onClick={handleVoiceSearch}
+                      title="Búsqueda por voz (Micrófono)"
+                      sx={{ color: "#2563EB" }}
+                    >
+                      <MicIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
                     <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
                       <SearchIcon sx={{ fontSize: 18 }} />
                     </IconButton>
