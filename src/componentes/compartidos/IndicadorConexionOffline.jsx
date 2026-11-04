@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, IconButton, Tooltip } from "@mui/material";
+import { Box, IconButton, Tooltip, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
-import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
-import CloseFullscreenRoundedIcon from "@mui/icons-material/CloseFullscreenRounded";
-import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 
 import { usePWAInstall } from "../../utils/usePWAInstall";
@@ -16,9 +13,8 @@ import ModalInstalarPWA from "./ModalInstalarPWA";
 export default function IndicadorConexionOffline() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showRestored, setShowRestored] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  // Hook para gestión de instalación de la PWA
   const {
     isInstallable,
     isInstalled,
@@ -34,7 +30,7 @@ export default function IndicadorConexionOffline() {
       setShowRestored(true);
       const timer = setTimeout(() => {
         setShowRestored(false);
-      }, 4500);
+      }, 3500);
       return () => clearTimeout(timer);
     };
 
@@ -52,18 +48,26 @@ export default function IndicadorConexionOffline() {
     };
   }, []);
 
+  const handleOpenMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
   const handleRecargar = () => {
+    handleCloseMenu();
     window.location.reload();
   };
 
-  const handleDescargarApp = async (e) => {
-    if (e) e.stopPropagation();
+  const handleDescargar = async () => {
+    handleCloseMenu();
     await promptInstall();
   };
 
   return (
     <>
-      {/* 1. Modal de Instrucciones de Instalación PWA */}
       <ModalInstalarPWA
         open={showInstallModal}
         onClose={() => setShowInstallModal(false)}
@@ -72,263 +76,119 @@ export default function IndicadorConexionOffline() {
         onDirectInstall={promptInstall}
       />
 
-      {/* 2. Banner Flotante y Arrastrable (Draggable) cuando está Offline */}
+      {/* 1. Icono discreto flotante cuando NO hay conexión */}
       <AnimatePresence>
         {isOffline && (
           <motion.div
-            drag
-            dragMomentum={false}
-            initial={{ opacity: 0, y: -40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            whileDrag={{ scale: 1.03, boxShadow: "0 22px 45px rgba(0, 0, 0, 0.6)" }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
             style={{
               position: "fixed",
-              top: 24,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 99999,
-              touchAction: "none"
+              top: 16,
+              right: 16,
+              zIndex: 9999
             }}
           >
-            {isMinimized ? (
-              // Versión compacta / minimizada (también arrastrable libremente)
-              <Box
+            <Tooltip
+              title="No hay conexión a internet (Modo offline activo)"
+              arrow
+              placement="left"
+            >
+              <IconButton
+                onClick={handleOpenMenu}
+                size="small"
+                aria-label="No hay conexión"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  px: 2,
-                  py: 1,
-                  borderRadius: "50px",
-                  bgcolor: "rgba(15, 23, 42, 0.95)",
-                  backdropFilter: "blur(14px)",
+                  width: 38,
+                  height: 38,
+                  bgcolor: "#D97706",
                   color: "#FFFFFF",
-                  boxShadow: "0 12px 30px rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(245, 158, 11, 0.5)",
-                  cursor: "grab",
-                  userSelect: "none",
-                  "&:active": { cursor: "grabbing" }
+                  boxShadow: "0 4px 14px rgba(217, 119, 6, 0.45)",
+                  border: "2px solid rgba(255, 255, 255, 0.8)",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    bgcolor: "#B45309",
+                    transform: "scale(1.08)"
+                  }
                 }}
               >
-                <DragIndicatorRoundedIcon sx={{ fontSize: 18, color: "rgba(255,255,255,0.4)" }} />
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "#F59E0B",
-                    boxShadow: "0 0 10px #F59E0B"
-                  }}
+                <WifiOffRoundedIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+
+            {/* Menú contextual sutil solo si el usuario decide hacer clic */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleCloseMenu}
+              transformOrigin={{ horizontal: "right", vertical: "top" }}
+              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+              PaperProps={{
+                sx: {
+                  borderRadius: "12px",
+                  bgcolor: "#0F172A",
+                  color: "#FFFFFF",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)",
+                  minWidth: 190,
+                  py: 0.5
+                }
+              }}
+            >
+              <MenuItem onClick={handleRecargar} sx={{ py: 1, "&:hover": { bgcolor: "rgba(255,255,255,0.08)" } }}>
+                <ListItemIcon sx={{ color: "#FBBF24", minWidth: 32 }}>
+                  <RefreshRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Reintentar conexión" primaryTypographyProps={{ fontSize: "0.82rem", fontWeight: 600 }} />
+              </MenuItem>
+              <MenuItem onClick={handleDescargar} sx={{ py: 1, "&:hover": { bgcolor: "rgba(255,255,255,0.08)" } }}>
+                <ListItemIcon sx={{ color: isInstalled ? "#10B981" : "#38BDF8", minWidth: 32 }}>
+                  {isInstalled ? <CheckCircleRoundedIcon fontSize="small" /> : <GetAppRoundedIcon fontSize="small" />}
+                </ListItemIcon>
+                <ListItemText
+                  primary={isInstalled ? "App instalada" : "Descargar App PWA"}
+                  primaryTypographyProps={{ fontSize: "0.82rem", fontWeight: 600 }}
                 />
-                <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#FBBF24" }}>
-                  Sin conexión
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMinimized(false);
-                  }}
-                  sx={{ color: "rgba(255,255,255,0.8)", p: 0.5, "&:hover": { color: "#FFF" } }}
-                >
-                  <OpenInFullRoundedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Box>
-            ) : (
-              // Versión completa con arrastre, estado, recargar y descargar PWA
-              <Box
-                sx={{
-                  width: { xs: "calc(100vw - 32px)", sm: 540 },
-                  maxWidth: "95vw",
-                  borderRadius: "18px",
-                  bgcolor: "rgba(15, 23, 42, 0.96)",
-                  backdropFilter: "blur(16px)",
-                  color: "#FFFFFF",
-                  boxShadow: "0 18px 45px rgba(0, 0, 0, 0.45)",
-                  border: "1px solid rgba(245, 158, 11, 0.45)",
-                  p: { xs: 1.8, sm: 2.2 },
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1.5,
-                  userSelect: "none"
-                }}
-              >
-                {/* Cabecera / Barra de arrastre */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    pb: 0.8,
-                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-                    cursor: "grab",
-                    "&:active": { cursor: "grabbing" }
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <DragIndicatorRoundedIcon sx={{ fontSize: 18, color: "rgba(255, 255, 255, 0.45)" }} />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px"
-                      }}
-                    >
-                      Arrastra para mover en la pantalla
-                    </Typography>
-                  </Box>
-
-                  <Tooltip title="Minimizar barra">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMinimized(true);
-                      }}
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.6)",
-                        p: 0.4,
-                        "&:hover": { color: "#FFFFFF", bgcolor: "rgba(255, 255, 255, 0.1)" }
-                      }}
-                    >
-                      <CloseFullscreenRoundedIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-
-                {/* Contenido principal del aviso offline */}
-                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.8 }}>
-                  <Box
-                    sx={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: "12px",
-                      bgcolor: "rgba(245, 158, 11, 0.16)",
-                      color: "#F59E0B",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      border: "1px solid rgba(245, 158, 11, 0.3)"
-                    }}
-                  >
-                    <WifiOffRoundedIcon sx={{ fontSize: 24 }} />
-                  </Box>
-
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: "0.95rem", color: "#FBBF24", mb: 0.3 }}>
-                      Modo sin conexión activo
-                    </Typography>
-                    <Typography sx={{ fontSize: "0.82rem", color: "rgba(255, 255, 255, 0.85)", lineHeight: 1.35 }}>
-                      Estás navegando con el contenido guardado en tu dispositivo. Puedes mover este aviso a cualquier lugar o instalar la app para acceso directo.
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Botones de acción: Descargar App PWA y Reintentar */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    gap: 1.2,
-                    pt: 0.5
-                  }}
-                >
-                  {/* Botón para descargar/instalar la Aplicación Web Progresiva */}
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={handleDescargarApp}
-                    startIcon={isInstalled ? <CheckCircleRoundedIcon sx={{ fontSize: 17 }} /> : <GetAppRoundedIcon sx={{ fontSize: 17 }} />}
-                    sx={{
-                      bgcolor: isInstalled ? "#059669" : "#2563EB",
-                      color: "#FFFFFF",
-                      textTransform: "none",
-                      fontWeight: 700,
-                      fontSize: "0.8rem",
-                      borderRadius: "10px",
-                      px: 2,
-                      py: 0.7,
-                      boxShadow: isInstalled ? "0 4px 12px rgba(5, 150, 105, 0.35)" : "0 4px 14px rgba(37, 99, 235, 0.4)",
-                      "&:hover": {
-                        bgcolor: isInstalled ? "#047857" : "#1D4ED8"
-                      }
-                    }}
-                  >
-                    {isInstalled ? "App instalada" : "Descargar App PWA"}
-                  </Button>
-
-                  {/* Botón para reintentar conexión */}
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={handleRecargar}
-                    startIcon={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-                    sx={{
-                      color: "#FFFFFF",
-                      borderColor: "rgba(255, 255, 255, 0.28)",
-                      textTransform: "none",
-                      fontWeight: 700,
-                      fontSize: "0.8rem",
-                      borderRadius: "10px",
-                      px: 1.8,
-                      py: 0.7,
-                      "&:hover": {
-                        borderColor: "#FBBF24",
-                        bgcolor: "rgba(245, 158, 11, 0.12)"
-                      }
-                    }}
-                  >
-                    Reintentar
-                  </Button>
-                </Box>
-              </Box>
-            )}
+              </MenuItem>
+            </Menu>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 3. Notificación Verde Flotante cuando se recupera la conexión */}
+      {/* 2. Mini-icono verde sutil cuando se restablece la conexión */}
       <AnimatePresence>
         {showRestored && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
             style={{
               position: "fixed",
-              top: 24,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 99999
+              top: 16,
+              right: 16,
+              zIndex: 9999
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                px: 3,
-                py: 1.25,
-                borderRadius: "14px",
-                bgcolor: "rgba(16, 185, 129, 0.96)",
-                backdropFilter: "blur(12px)",
-                color: "#FFFFFF",
-                boxShadow: "0 10px 30px rgba(16, 185, 129, 0.35)",
-                border: "1px solid rgba(255, 255, 255, 0.3)"
-              }}
-            >
-              <WifiRoundedIcon sx={{ fontSize: 22 }} />
-              <Typography sx={{ fontWeight: 700, fontSize: "0.9rem" }}>
-                ¡Conexión a internet restablecida!
-              </Typography>
-            </Box>
+            <Tooltip title="¡Conexión a internet restablecida!" arrow placement="left">
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  bgcolor: "#059669",
+                  color: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 14px rgba(5, 150, 105, 0.45)",
+                  border: "2px solid rgba(255, 255, 255, 0.8)"
+                }}
+              >
+                <WifiRoundedIcon sx={{ fontSize: 20 }} />
+              </Box>
+            </Tooltip>
           </motion.div>
         )}
       </AnimatePresence>
