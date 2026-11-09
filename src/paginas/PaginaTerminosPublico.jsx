@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Box, Container, Typography, Card, CardContent, Button, Divider, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Divider,
+  CircularProgress
+} from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import SmartphoneOutlinedIcon from "@mui/icons-material/SmartphoneOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import axios from "axios";
 
 const API_URL = "https://salonladybarberbackend.onrender.com";
@@ -118,7 +130,8 @@ export default function PaginaTerminosPublico() {
       }}
     >
       <Container maxWidth="md">
-        <Box sx={{ mb: 3 }}>
+        {/* Barra superior de navegación */}
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
           <Button
             component={RouterLink}
             to="/"
@@ -131,6 +144,25 @@ export default function PaginaTerminosPublico() {
             }}
           >
             Volver al inicio
+          </Button>
+
+          <Button
+            component={RouterLink}
+            to="/privacidad"
+            startIcon={<SecurityOutlinedIcon />}
+            variant="outlined"
+            size="small"
+            sx={{
+              color: PALETTE.primary,
+              borderColor: PALETTE.border,
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 2,
+              bgcolor: "#FFFFFF",
+              "&:hover": { borderColor: PALETTE.primary, bgcolor: "rgba(30, 41, 59, 0.04)" }
+            }}
+          >
+            Ver Política de Privacidad
           </Button>
         </Box>
 
@@ -167,7 +199,8 @@ export default function PaginaTerminosPublico() {
                 color: "#D4AF37",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
+                flexShrink: 0
               }}
             >
               <DescriptionOutlinedIcon sx={{ fontSize: 28 }} />
@@ -206,6 +239,134 @@ export default function PaginaTerminosPublico() {
               </Typography>
             </Box>
 
+            {/* ============================================================== */}
+            {/* SECCIÓN ESTÁTICA Y FIJA: CONDICIONES ESPECÍFICAS DE LADYBARBERAPP */}
+            {/* Se muestra SIEMPRE, con independencia de la respuesta de la API */}
+            {/* ============================================================== */}
+            <Box
+              sx={{
+                p: { xs: 2.5, md: 3.5 },
+                mb: 4,
+                bgcolor: "#F8FAFC",
+                borderRadius: 2.5,
+                border: "1.5px solid #CBD5E1",
+                boxShadow: "0 4px 16px rgba(15, 23, 42, 0.05)"
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2,
+                    bgcolor: "#1E3A5F",
+                    color: "#38BDF8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}
+                >
+                  <SmartphoneOutlinedIcon sx={{ fontSize: 24 }} />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    sx={{ fontWeight: 800, color: PALETTE.text, fontSize: "1.15rem", lineHeight: 1.3 }}
+                  >
+                    Condiciones específicas de LadyBarberApp
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: PALETTE.textMuted, fontWeight: 600 }}>
+                    Términos vigentes aplicables exclusivamente a la aplicación móvil oficial
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 2, fontSize: "0.96rem" }}>
+                Las siguientes condiciones aplican a todos los usuarios que accedan a nuestros servicios mediante la aplicación móvil:
+              </Typography>
+
+              <Box component="ul" sx={{ pl: 3, m: 0, mb: 2.5, color: PALETTE.textMuted, lineHeight: 1.85, fontSize: "0.95rem" }}>
+                <li>LadyBarberApp es la aplicación móvil de Salón Lady Barber Itza D’M.</li>
+                <li>Para registrarse y utilizar la aplicación móvil, el usuario debe ser mayor de 18 años.</li>
+                <li>
+                  Al crear una cuenta, el usuario acepta los{" "}
+                  <Typography
+                    component={RouterLink}
+                    to="/terminos"
+                    sx={{ color: "#1E3A5F", fontWeight: 700, textDecoration: "underline", display: "inline" }}
+                  >
+                    Términos y Condiciones
+                  </Typography>{" "}
+                  y la{" "}
+                  <Typography
+                    component={RouterLink}
+                    to="/privacidad"
+                    sx={{ color: "#1E3A5F", fontWeight: 700, textDecoration: "underline", display: "inline" }}
+                  >
+                    Política de Privacidad
+                  </Typography>.
+                </li>
+                <li>El usuario debe proporcionar información correcta y proteger su contraseña.</li>
+                <li>Las citas dependen de los horarios, servicios y personal disponibles.</li>
+                <li>El usuario debe revisar fecha, hora, precio, servicios y condiciones de cancelación antes de confirmar.</li>
+                <li>Cuando los pagos estén disponibles, se utilizarán para anticipos de servicios físicos.</li>
+                <li>LadyBarberApp no vende contenido digital ni funciones virtuales.</li>
+                <li>El catálogo móvil de productos es informativo.</li>
+                <li>La versión móvil v0.1.0 no permite comprar productos desde la aplicación.</li>
+                <li>Precios, imágenes y existencias de productos pueden cambiar.</li>
+                <li>El usuario puede eliminar su cuenta desde Mi Perfil.</li>
+                <li>
+                  También puede solicitar la eliminación desde la sección pública de privacidad.
+                </li>
+              </Box>
+
+              {/* Botones de acción hacia la política de privacidad y eliminación */}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, pt: 1 }}>
+                <Button
+                  component={RouterLink}
+                  to="/privacidad#eliminar-cuenta"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DeleteOutlineRoundedIcon />}
+                  sx={{
+                    color: "#DC2626",
+                    borderColor: "#FCA5A5",
+                    textTransform: "none",
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    bgcolor: "#FFF5F5",
+                    "&:hover": {
+                      borderColor: "#DC2626",
+                      bgcolor: "#FEE2E2"
+                    }
+                  }}
+                >
+                  Ir a Eliminación de cuenta (/privacidad#eliminar-cuenta)
+                </Button>
+
+                <Button
+                  component={RouterLink}
+                  to="/privacidad"
+                  variant="text"
+                  size="small"
+                  startIcon={<SecurityOutlinedIcon />}
+                  sx={{
+                    color: "#1E3A5F",
+                    textTransform: "none",
+                    fontWeight: 700,
+                    "&:hover": { bgcolor: "rgba(30, 58, 95, 0.05)", textDecoration: "underline" }
+                  }}
+                >
+                  Consultar Política de Privacidad completa →
+                </Button>
+              </Box>
+            </Box>
+
+            <Divider sx={{ borderColor: PALETTE.border, mb: 4 }} />
+
+            {/* Listado dinámico de Términos Generales (API / Fallback) */}
             {cargando ? (
               <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                 <CircularProgress size={36} sx={{ color: "#1E3A5F" }} />

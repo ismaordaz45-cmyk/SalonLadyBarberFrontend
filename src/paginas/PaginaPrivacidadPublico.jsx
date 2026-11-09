@@ -1,8 +1,22 @@
-import React from "react";
-import { Box, Container, Typography, Card, CardContent, Button, Divider } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import React, { useEffect } from "react";
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Divider,
+  Alert
+} from "@mui/material";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import SmartphoneOutlinedIcon from "@mui/icons-material/SmartphoneOutlined";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 
 const PALETTE = {
   pageBg: "#F1F5F9",
@@ -15,6 +29,27 @@ const PALETTE = {
 };
 
 function PaginaPrivacidadPublico() {
+  const location = useLocation();
+
+  // Desplazamiento automático al hash (ej. #eliminar-cuenta)
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const elem = document.getElementById(id);
+      if (elem) {
+        setTimeout(() => {
+          elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 120);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location]);
+
+  const emailDestino = "itzadinorasaenzhernandez@gmail.com";
+  const emailAsunto = "Solicitud de eliminación de cuenta LadyBarberApp";
+  const mailtoUrl = `mailto:${emailDestino}?subject=${encodeURIComponent(emailAsunto)}`;
+
   return (
     <Box
       sx={{
@@ -28,7 +63,8 @@ function PaginaPrivacidadPublico() {
       }}
     >
       <Container maxWidth="md">
-        <Box sx={{ mb: 3 }}>
+        {/* Barra superior de navegación */}
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
           <Button
             component={RouterLink}
             to="/"
@@ -41,6 +77,25 @@ function PaginaPrivacidadPublico() {
             }}
           >
             Volver al inicio
+          </Button>
+
+          <Button
+            component={RouterLink}
+            to="/terminos"
+            startIcon={<DescriptionOutlinedIcon />}
+            variant="outlined"
+            size="small"
+            sx={{
+              color: PALETTE.primary,
+              borderColor: PALETTE.border,
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 2,
+              bgcolor: "#FFFFFF",
+              "&:hover": { borderColor: PALETTE.primary, bgcolor: "rgba(22, 48, 80, 0.04)" }
+            }}
+          >
+            Ver Términos y Condiciones
           </Button>
         </Box>
 
@@ -78,7 +133,8 @@ function PaginaPrivacidadPublico() {
                 color: "#D4AF37",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
+                flexShrink: 0
               }}
             >
               <SecurityOutlinedIcon sx={{ fontSize: 28 }} />
@@ -116,7 +172,7 @@ function PaginaPrivacidadPublico() {
               <Typography sx={{ color: PALETTE.text, fontSize: "0.92rem", mt: 0.5 }}>
                 📞 <strong>Teléfono:</strong> <a href="tel:7711136094" style={{ color: "#163050", textDecoration: "none", fontWeight: 700 }}>771 113 6094</a>
                 <br />
-                ✉️ <strong>Correo electrónico:</strong> <a href="mailto:itzadinorasaenzhernandez@gmail.com" style={{ color: "#163050", textDecoration: "none", fontWeight: 700 }}>itzadinorasaenzhernandez@gmail.com</a>
+                ✉️ <strong>Correo electrónico:</strong> <a href={`mailto:${emailDestino}`} style={{ color: "#163050", textDecoration: "none", fontWeight: 700 }}>{emailDestino}</a>
               </Typography>
             </Box>
 
@@ -237,8 +293,302 @@ function PaginaPrivacidadPublico() {
                 </Typography>
               </Box>
 
+              <Divider sx={{ borderColor: PALETTE.border }} />
+
+              {/* ============================================================== */}
+              {/* 10. PRIVACIDAD EN LADYBARBERAPP (APLICACIÓN MÓVIL)             */}
+              {/* ============================================================== */}
+              <Box
+                sx={{
+                  p: { xs: 2.5, md: 3.5 },
+                  bgcolor: "#F8FAFC",
+                  borderRadius: 2.5,
+                  border: "1px solid #CBD5E1",
+                  boxShadow: "0 4px 14px rgba(15, 23, 42, 0.04)"
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 2,
+                      bgcolor: "#163050",
+                      color: "#38BDF8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}
+                  >
+                    <SmartphoneOutlinedIcon sx={{ fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      sx={{ fontWeight: 800, color: PALETTE.text, fontSize: "1.15rem", lineHeight: 1.3 }}
+                    >
+                      Privacidad en LadyBarberApp
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: PALETTE.textMuted, fontWeight: 600 }}>
+                      Términos de protección específicos para usuarios de la aplicación móvil
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 2.5, fontSize: "0.96rem" }}>
+                  LadyBarberApp es la aplicación móvil de Salón Lady Barber Itza D’M. Esta política también aplica al registro, autenticación, recuperación de acceso, perfil del cliente, consulta de servicios y productos, gestión de citas y demás funciones disponibles en la aplicación móvil.
+                </Typography>
+
+                {/* Subsección: DATOS UTILIZADOS POR LA APLICACIÓN */}
+                <Typography sx={{ fontWeight: 800, color: PALETTE.text, mb: 1, fontSize: "0.98rem" }}>
+                  DATOS UTILIZADOS POR LA APLICACIÓN
+                </Typography>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 1, fontSize: "0.95rem" }}>
+                  LadyBarberApp puede utilizar los siguientes datos:
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, m: 0, mb: 2, color: PALETTE.textMuted, lineHeight: 1.8, fontSize: "0.95rem" }}>
+                  <li>Nombre y apellidos.</li>
+                  <li>Correo electrónico.</li>
+                  <li>Número telefónico opcional.</li>
+                  <li>Identificador interno de usuario.</li>
+                  <li>Credenciales protegidas mediante mecanismos de hash.</li>
+                  <li>Información del perfil del cliente.</li>
+                  <li>Información de citas y servicios seleccionados.</li>
+                  <li>Información operativa relacionada con pagos o transacciones cuando esa función se encuentre disponible.</li>
+                </Box>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 2.5, fontSize: "0.95rem", fontStyle: "italic" }}>
+                  LadyBarberApp no solicita ni almacena directamente los datos completos de las tarjetas bancarias.
+                </Typography>
+
+                {/* Subsección: FINALIDADES */}
+                <Typography sx={{ fontWeight: 800, color: PALETTE.text, mb: 1, fontSize: "0.98rem" }}>
+                  FINALIDADES
+                </Typography>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 1, fontSize: "0.95rem" }}>
+                  Los datos se utilizan para:
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, m: 0, mb: 2.5, color: PALETTE.textMuted, lineHeight: 1.8, fontSize: "0.95rem" }}>
+                  <li>Crear y proteger la cuenta.</li>
+                  <li>Iniciar sesión.</li>
+                  <li>Recuperar el acceso.</li>
+                  <li>Mostrar y actualizar el perfil.</li>
+                  <li>Consultar servicios y productos.</li>
+                  <li>Reservar y administrar citas.</li>
+                  <li>Enviar mensajes operativos relacionados con la cuenta, seguridad o citas.</li>
+                  <li>Procesar anticipos de servicios físicos cuando la función esté disponible.</li>
+                </Box>
+
+                {/* Subsección: PROVEEDORES TECNOLÓGICOS */}
+                <Typography sx={{ fontWeight: 800, color: PALETTE.text, mb: 1, fontSize: "0.98rem" }}>
+                  PROVEEDORES TECNOLÓGICOS
+                </Typography>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 1, fontSize: "0.95rem" }}>
+                  Para prestar sus servicios, LadyBarberApp puede utilizar:
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, m: 0, mb: 1.5, color: PALETTE.textMuted, lineHeight: 1.8, fontSize: "0.95rem" }}>
+                  <li><strong>Render</strong> para alojar la API.</li>
+                  <li><strong>Hostinger</strong> para almacenar información en la base de datos.</li>
+                  <li><strong>Brevo</strong> para enviar correos operativos.</li>
+                  <li><strong>Mercado Pago</strong> para procesar pagos cuando el usuario decide utilizar esa función.</li>
+                </Box>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 1, fontSize: "0.95rem" }}>
+                  Cada proveedor procesa solamente la información necesaria para realizar su función y conforme a sus propias políticas.
+                </Typography>
+                <Typography sx={{ color: PALETTE.text, fontWeight: 700, lineHeight: 1.75, mb: 2.5, fontSize: "0.95rem" }}>
+                  No vendemos los datos personales ni los utilizamos para publicidad de terceros.
+                </Typography>
+
+                {/* Subsección: SEGURIDAD */}
+                <Typography sx={{ fontWeight: 800, color: PALETTE.text, mb: 1, fontSize: "0.98rem" }}>
+                  SEGURIDAD
+                </Typography>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, mb: 2.5, fontSize: "0.95rem" }}>
+                  La aplicación se comunica con su API mediante HTTPS. Las contraseñas no se almacenan en texto legible y las operaciones privadas requieren autenticación.
+                </Typography>
+
+                {/* Subsección: EDAD MÍNIMA */}
+                <Typography sx={{ fontWeight: 800, color: PALETTE.text, mb: 1, fontSize: "0.98rem" }}>
+                  EDAD MÍNIMA
+                </Typography>
+                <Typography sx={{ color: PALETTE.textMuted, lineHeight: 1.75, fontSize: "0.95rem" }}>
+                  LadyBarberApp está dirigida exclusivamente a personas mayores de 18 años. Al registrarse, el usuario declara cumplir esta condición.
+                </Typography>
+              </Box>
+
+              <Divider sx={{ borderColor: PALETTE.border }} />
+
+              {/* ============================================================== */}
+              {/* 11. ELIMINACIÓN DE CUENTA DENTRO DE PRIVACIDAD (id="eliminar-cuenta") */}
+              {/* ============================================================== */}
+              <Box
+                id="eliminar-cuenta"
+                sx={{
+                  p: { xs: 2.5, md: 3.5 },
+                  bgcolor: "#FEF2F2",
+                  borderRadius: 2.5,
+                  border: "1.5px solid #FCA5A5",
+                  boxShadow: "0 6px 20px rgba(239, 68, 68, 0.08)",
+                  scrollMarginTop: "90px"
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 2,
+                      bgcolor: "#DC2626",
+                      color: "#FFFFFF",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}
+                  >
+                    <DeleteForeverOutlinedIcon sx={{ fontSize: 26 }} />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      sx={{ fontWeight: 800, color: "#991B1B", fontSize: "1.18rem", lineHeight: 1.3 }}
+                    >
+                      Eliminación de cuenta de LadyBarberApp
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#B91C1C", fontWeight: 600 }}>
+                      Derecho a la eliminación y procedimiento formal de baja
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, mb: 2.5, fontSize: "0.96rem" }}>
+                  Esta sección es pública, visible y accesible sin necesidad de iniciar sesión, para garantizar en todo momento tu derecho a cancelar el servicio y dar de baja tu información.
+                </Typography>
+
+                {/* Paso a paso desde la aplicación */}
+                <Typography sx={{ fontWeight: 800, color: "#7F1D1D", mb: 1, fontSize: "1rem" }}>
+                  ELIMINACIÓN DESDE LA APLICACIÓN
+                </Typography>
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, mb: 1.2, fontSize: "0.95rem" }}>
+                  El usuario puede eliminar su cuenta directamente desde LadyBarberApp mediante el siguiente procedimiento:
+                </Typography>
+                <Box component="ol" sx={{ pl: 3, m: 0, mb: 2, color: "#7F1D1D", lineHeight: 1.85, fontSize: "0.95rem" }}>
+                  <li>Iniciar sesión.</li>
+                  <li>Abrir la sección Mi Perfil.</li>
+                  <li>Seleccionar Eliminar cuenta.</li>
+                  <li>Ingresar la contraseña actual.</li>
+                  <li>Escribir la palabra ELIMINAR.</li>
+                  <li>Confirmar la eliminación definitiva.</li>
+                </Box>
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, mb: 3, fontSize: "0.94rem" }}>
+                  La eliminación revoca el acceso a la cuenta y elimina o anonimiza los datos personales asociados. Algunos registros pueden conservarse cuando exista una obligación legal, contable, de seguridad o prevención de fraude.
+                </Typography>
+
+                <Divider sx={{ borderColor: "#FCA5A5", my: 2.5 }} />
+
+                {/* Solicitud sin tener instalada la aplicación */}
+                <Typography sx={{ fontWeight: 800, color: "#7F1D1D", mb: 1, fontSize: "1rem" }}>
+                  SOLICITUD SIN TENER INSTALADA LA APLICACIÓN
+                </Typography>
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, mb: 1.5, fontSize: "0.95rem" }}>
+                  Si el usuario no puede acceder a LadyBarberApp, puede iniciar una solicitud de eliminación enviando un correo a:{" "}
+                  <a
+                    href={mailtoUrl}
+                    style={{ color: "#991B1B", fontWeight: 700, textDecoration: "underline" }}
+                  >
+                    {emailDestino}
+                  </a>
+                </Typography>
+
+                {/* Botón directo de correo */}
+                <Box sx={{ my: 2 }}>
+                  <Button
+                    variant="contained"
+                    href={mailtoUrl}
+                    startIcon={<MailOutlineIcon />}
+                    sx={{
+                      bgcolor: "#DC2626",
+                      color: "#FFFFFF",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      borderRadius: 2,
+                      px: 2.5,
+                      py: 1,
+                      boxShadow: "0 4px 12px rgba(220, 38, 38, 0.3)",
+                      "&:hover": { bgcolor: "#B91C1C" }
+                    }}
+                  >
+                    Enviar correo de solicitud de eliminación
+                  </Button>
+                </Box>
+
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, mb: 1, fontSize: "0.95rem" }}>
+                  El usuario deberá proporcionar:
+                </Typography>
+                <Box component="ul" sx={{ pl: 3, m: 0, mb: 2.5, color: "#7F1D1D", lineHeight: 1.8, fontSize: "0.95rem" }}>
+                  <li>Nombre registrado.</li>
+                  <li>Correo asociado a la cuenta.</li>
+                  <li>Número telefónico, solamente si se encuentra registrado.</li>
+                </Box>
+
+                {/* Advertencia visible */}
+                <Alert
+                  severity="warning"
+                  icon={<WarningAmberRoundedIcon sx={{ color: "#B45309" }} />}
+                  sx={{
+                    bgcolor: "#FFFBEB",
+                    color: "#92400E",
+                    border: "1px solid #FCD34D",
+                    borderRadius: 2,
+                    mb: 2,
+                    "& .MuiAlert-message": { fontSize: "0.92rem", lineHeight: 1.6 }
+                  }}
+                >
+                  <strong>Advertencia:</strong> Nunca envíes tu contraseña, códigos de recuperación, tokens, datos bancarios ni información completa de tarjetas por correo electrónico.
+                </Alert>
+
+                <Typography sx={{ color: "#7F1D1D", lineHeight: 1.75, fontSize: "0.92rem", fontStyle: "italic" }}>
+                  Podrá solicitarse una verificación razonable de identidad antes de completar la eliminación para proteger la titularidad de tu cuenta.
+                </Typography>
+              </Box>
+
+              {/* Enlace complementario a Términos y Condiciones */}
+              <Box
+                sx={{
+                  p: 2.5,
+                  bgcolor: "#F8FAFC",
+                  borderRadius: 2,
+                  border: "1px dashed #CBD5E1",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 1.5
+                }}
+              >
+                <Typography sx={{ color: PALETTE.textMuted, fontSize: "0.92rem" }}>
+                  Para revisar las reglas de uso, citas y condiciones del servicio:
+                </Typography>
+                <Button
+                  component={RouterLink}
+                  to="/terminos"
+                  startIcon={<DescriptionOutlinedIcon />}
+                  size="small"
+                  sx={{
+                    color: PALETTE.primary,
+                    fontWeight: 700,
+                    textTransform: "none",
+                    "&:hover": { bgcolor: "transparent", textDecoration: "underline" }
+                  }}
+                >
+                  Consultar Términos y Condiciones completos →
+                </Button>
+              </Box>
+
               {/* Footer con fecha de actualización */}
-              <Box sx={{ mt: 3, pt: 3, borderTop: "2px dashed #E2E8F0", textAlign: "center" }}>
+              <Box sx={{ mt: 2, pt: 3, borderTop: "2px dashed #E2E8F0", textAlign: "center" }}>
                 <Typography variant="caption" sx={{ color: "#64748B", fontWeight: 600, display: "block" }}>
                   Última actualización: 11/09/2025
                 </Typography>
