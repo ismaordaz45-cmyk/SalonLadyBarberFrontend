@@ -2,7 +2,7 @@
 // COMPONENTE: EncabezadoPublico.jsx
 // ============================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { logoBase64ToDataUrl } from "../../utils/logoDataUrl";
@@ -15,7 +15,7 @@ import {
   MicRounded as MicIcon
 } from "@mui/icons-material";
 
-import { useVoiceSearchContext } from "../../context/VoiceSearchContext";
+import { useVoiceSearch } from "../../utils/useVoiceSearch";
 
 import { usePWAInstall } from "../../utils/usePWAInstall";
 import ModalInstalarPWA from "./ModalInstalarPWA";
@@ -31,7 +31,8 @@ import {
   Drawer,
   List,
   ListItemButton,
-  ListItemText
+  ListItemText,
+  Tooltip
 } from "@mui/material";
 
 /* ============================
@@ -100,15 +101,43 @@ const EncabezadoPublico = () => {
     promptInstall
   } = usePWAInstall();
 
-  const { openVoiceSearch } = useVoiceSearchContext();
+  // Búsqueda por voz directa en el buscador
+  const handleAutoSearch = useCallback((textoFinal) => {
+    if (textoFinal && textoFinal.trim()) {
+      const clean = textoFinal.trim();
+      setSearchValue(clean);
+      setMobileOpen(false);
+      navigate(`/catalogo?q=${encodeURIComponent(clean)}`);
+    }
+  }, [navigate]);
 
-  const handleVoiceSearch = () => {
-    openVoiceSearch((textoVoz) => {
-      setSearchValue(textoVoz);
-      if (textoVoz && textoVoz.trim()) {
-        navigate(`/catalogo?q=${encodeURIComponent(textoVoz.trim())}`);
-      }
-    });
+  const handleInterimVoice = useCallback((textoEnVivo) => {
+    if (textoEnVivo) {
+      setSearchValue(textoEnVivo);
+    }
+  }, []);
+
+  const {
+    isListening: isListeningVoice,
+    startListening: startListeningVoice,
+    stopListening: stopListeningVoice
+  } = useVoiceSearch({
+    onResult: handleAutoSearch,
+    onInterim: handleInterimVoice,
+    lang: "es-MX"
+  });
+
+  const handleToggleVoiceSearch = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isListeningVoice) {
+      stopListeningVoice();
+    } else {
+      setSearchValue("");
+      startListeningVoice();
+    }
   };
 
   const handleSearch = (e) => {
@@ -302,18 +331,28 @@ const EncabezadoPublico = () => {
               fullWidth
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Buscar servicio..."
+              placeholder={isListeningVoice ? "Escuchando... habla ahora" : "Buscar servicio..."}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ gap: 0.2 }}>
-                    <IconButton
-                      size="small"
-                      onClick={handleVoiceSearch}
-                      title="Búsqueda por voz (Micrófono)"
-                      sx={{ color: "#2563EB" }}
-                    >
-                      <MicIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
+                    <Tooltip title={isListeningVoice ? "Escuchando... habla ahora (clic para parar)" : "Buscar por voz (Micrófono)"}>
+                      <IconButton
+                        size="small"
+                        onClick={handleToggleVoiceSearch}
+                        sx={{
+                          color: isListeningVoice ? "#DC2626" : "#2563EB",
+                          bgcolor: isListeningVoice ? "rgba(220, 38, 38, 0.12)" : "transparent",
+                          borderRadius: "50%",
+                          transition: "all 0.2s ease",
+                          boxShadow: isListeningVoice ? "0 0 8px rgba(220, 38, 38, 0.5)" : "none",
+                          "&:hover": {
+                            bgcolor: isListeningVoice ? "rgba(220, 38, 38, 0.2)" : "rgba(37, 99, 235, 0.08)"
+                          }
+                        }}
+                      >
+                        <MicIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                     <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
                       <SearchIcon sx={{ fontSize: 18 }} />
                     </IconButton>
@@ -482,18 +521,28 @@ const EncabezadoPublico = () => {
               fullWidth
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Buscar servicio..."
+              placeholder={isListeningVoice ? "Escuchando... habla ahora" : "Buscar servicio..."}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end" sx={{ gap: 0.2 }}>
-                    <IconButton
-                      size="small"
-                      onClick={handleVoiceSearch}
-                      title="Búsqueda por voz (Micrófono)"
-                      sx={{ color: "#2563EB" }}
-                    >
-                      <MicIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
+                    <Tooltip title={isListeningVoice ? "Escuchando... habla ahora (clic para parar)" : "Buscar por voz (Micrófono)"}>
+                      <IconButton
+                        size="small"
+                        onClick={handleToggleVoiceSearch}
+                        sx={{
+                          color: isListeningVoice ? "#DC2626" : "#2563EB",
+                          bgcolor: isListeningVoice ? "rgba(220, 38, 38, 0.12)" : "transparent",
+                          borderRadius: "50%",
+                          transition: "all 0.2s ease",
+                          boxShadow: isListeningVoice ? "0 0 8px rgba(220, 38, 38, 0.5)" : "none",
+                          "&:hover": {
+                            bgcolor: isListeningVoice ? "rgba(220, 38, 38, 0.2)" : "rgba(37, 99, 235, 0.08)"
+                          }
+                        }}
+                      >
+                        <MicIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                     <IconButton size="small" onClick={handleSearch} edge="end" sx={{ color: COLORS.text }}>
                       <SearchIcon sx={{ fontSize: 18 }} />
                     </IconButton>

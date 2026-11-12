@@ -13,9 +13,7 @@ export default function ModalBusquedaVozGlobal() {
 
   const handleVoiceCompleted = (recognizedText) => {
     if (recognizedText && recognizedText.trim()) {
-      setTimeout(() => {
-        processVoiceResult(recognizedText);
-      }, 500);
+      processVoiceResult(recognizedText.trim());
     }
   };
 
